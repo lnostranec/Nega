@@ -1,0 +1,242 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id                String             @id @default(cuid())
+  email             String             @unique
+  passwordHash      String
+  phone             String?            @unique
+  firstName         String?
+  lastName          String?
+  middleName        String?
+  role              UserRole           @default(USER)
+  points            Int                @default(0)
+  createdAt         DateTime           @default(now())
+  updatedAt         DateTime           @updatedAt
+  orders            Order[]
+  pointTransactions PointTransaction[]
+  sessions          Session[]
+}
+
+enum UserRole {
+  USER
+  ADMIN
+}
+
+model Session {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  token     String   @unique
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+}
+
+model Collection {
+  id          String              @id @default(cuid())
+  name        String
+  slug        String              @unique
+  description String?
+  imageUrl    String?
+  sortOrder   Int                 @default(0)
+  isActive    Boolean             @default(true)
+  products    ProductCollection[]
+  createdAt   DateTime            @default(now())
+  updatedAt   DateTime            @updatedAt
+}
+
+model Product {
+  id           String              @id @default(cuid())
+  name         String
+  slug         String              @unique
+  description  String?
+  composition  String?
+  care         String?
+  price        Decimal
+  comparePrice Decimal?
+  sku          String?             @unique
+  style        String?
+  country      String?
+  pattern      String?
+  material     String?
+  isActive     Boolean             @default(true)
+  images       ProductImage[]
+  variants     ProductVariant[]
+  collections  ProductCollection[]
+  createdAt    DateTime            @default(now())
+  updatedAt    DateTime            @updatedAt
+}
+
+model ProductImage {
+  id        String  @id @default(cuid())
+  productId String
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  url       String
+  alt       String?
+  sortOrder Int     @default(0)
+}
+
+model ProductVariant {
+  id         String      @id @default(cuid())
+  productId  String
+  product    Product     @relation(fields: [productId], references: [id], onDelete: Cascade)
+  size       String
+  color      String?
+  stock      Int         @default(0)
+  sku        String?     @unique
+  orderItems OrderItem[]
+}
+
+model ProductCollection {
+  productId    String
+  collectionId String
+  product      Product    @relation(fields: [productId], references: [id], onDelete: Cascade)
+  collection   Collection @relation(fields: [collectionId], references: [id], onDelete: Cascade)
+
+  @@id([productId, collectionId])
+}
+
+model Order {
+  id              String         @id @default(cuid())
+  orderNumber     String         @unique
+  userId          String?
+  user            User?          @relation(fields: [userId], references: [id])
+  status          OrderStatus    @default(PENDING)
+  customerName    String?
+  customerPhone   String
+  customerEmail   String?
+  subtotal        Decimal
+  deliveryCost    Decimal        @default(0)
+  promoCodeId     String?
+  promoCode       PromoCode?     @relation(fields: [promoCodeId], references: [id], onDelete: SetNull)
+  promoDiscount   Decimal        @default(0)
+  pointsUsed      Int            @default(0)
+  pointsEarned    Int            @default(0)
+  total           Decimal
+  paymentMethod   PaymentMethod?
+  paymentStatus   PaymentStatus  @default(PENDING)
+  deliveryMethod  String?
+  cdekPvzCode     String?
+  cdekPvzName     String?
+  cdekCityCode    Int?
+  cdekCityName    String?
+  deliveryAddress String?
+  comment         String?
+  paymentExpiresAt DateTime?
+  stockReleased   Boolean        @default(false)
+  items           OrderItem[]
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+}
+
+model OrderItem {
+  id        String          @id @default(cuid())
+  orderId   String
+  order     Order           @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  productId       String
+  variantId       String?
+  sourceVariantId String?
+  variant         ProductVariant? @relation(fields: [variantId], references: [id])
+  name      String
+  size      String?
+  color     String?
+  price     Decimal
+  quantity  Int
+}
+
+enum OrderStatus {
+  PENDING
+  PAID
+  PROCESSING
+  SHIPPED
+  DELIVERED
+  CANCELLED
+}
+
+enum PaymentMethod {
+  CARD
+  DOLYAMI
+  YANDEX_SPLIT
+}
+
+enum PaymentStatus {
+  PENDING
+  PAID
+  FAILED
+  REFUNDED
+}
+
+model PointTransaction {
+  id        String    @id @default(cuid())
+  userId    String
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  amount    Int
+  type      PointType
+  orderId   String?
+  note      String?
+  createdAt DateTime  @default(now())
+}
+
+enum PointType {
+  EARNED
+  SPENT
+  ADJUSTMENT
+}
+
+model SiteSettings {
+  id                  String @id @default("default")
+  shopName            String @default("Nega")
+  pointsPercent       Int    @default(5)
+  minOrderForPoints   Int    @default(0)
+  cdekPvzBaseCost     Int    @default(350)
+  cdekCourierBaseCost Int    @default(500)
+  freeDeliveryFrom    Int?
+}
+
+enum EmailStatus {
+  PENDING
+  SENT
+  FAILED
+}
+
+model EmailOutbox {
+  id        String      @id @default(cuid())
+  to        String
+  subject   String
+  html      String
+  template  String?
+  orderId   String?
+  status    EmailStatus @default(PENDING)
+  attempts  Int         @default(0)
+  lastError String?
+  sentAt    DateTime?
+  createdAt DateTime    @default(now())
+}
+
+model PromoCode {
+  id             String        @id @default(cuid())
+  code           String        @unique
+  type           PromoCodeType @default(FIXED)
+  value          Int
+  minOrderAmount Int           @default(0)
+  maxUses        Int?
+  usedCount      Int           @default(0)
+  expiresAt      DateTime?
+  isActive       Boolean       @default(true)
+  isGiftCert     Boolean       @default(false)
+  sourceOrderId  String?
+  orders         Order[]
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+}
+
+enum PromoCodeType {
+  FIXED
+  PERCENT
+}

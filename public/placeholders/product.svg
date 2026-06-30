@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="600" height="800" viewBox="0 0 600 800">
+  <rect width="600" height="800" fill="#f8f4f4"/>
+  <ellipse cx="300" cy="360" rx="120" ry="140" fill="#e8d5d8" opacity="0.6"/>
+  <text x="300" y="680" text-anchor="middle" fill="#260402" font-family="Arial,sans-serif" font-size="18" letter-spacing="4">NEGA</text>
+</svg>

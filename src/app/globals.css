@@ -2,25 +2,99 @@
 
 :root {
   --background: #ffffff;
-  --foreground: #171717;
+  --foreground: #260402;
+  --brand: #260402;
+  --site-max-width: 1800px;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-brand: var(--brand);
+  --font-sans: var(--font-montserrat);
+  --default-transition-duration: 300ms;
+  --default-transition-timing-function: ease;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+html {
+  scroll-behavior: smooth;
+}
+
+html.scroll-locked [data-site-header] {
+  padding-right: var(--scrollbar-width, 0px);
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-montserrat), system-ui, sans-serif;
+}
+
+input[type="checkbox"] {
+  accent-color: var(--brand);
+}
+
+.card-hover-border {
+  border: 1px solid transparent;
+  transition: border-color 0.3s ease;
+}
+
+.group:hover .card-hover-border {
+  border-color: var(--brand);
+}
+
+.site-card {
+  border: 1px solid transparent;
+  transition: border-color 0.3s ease;
+}
+
+.site-card:hover {
+  border-color: var(--brand);
+}
+
+.btn-site {
+  transition:
+    background-color 0.3s ease,
+    color 0.3s ease,
+    border-color 0.3s ease,
+    opacity 0.3s ease;
+}
+
+.btn-site:hover:not(:disabled):not(.btn-site-filled) {
+  background-color: var(--brand);
+  color: #ffffff;
+  border-color: var(--brand);
+}
+
+.btn-site-filled:hover:not(:disabled) {
+  opacity: 0.88;
+}
+
+.snap-carousel {
+  touch-action: pan-y pinch-zoom;
+  overscroll-behavior-x: none;
+}
+
+.snap-carousel img {
+  -webkit-user-drag: none;
+  user-drag: none;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+.search-input::-webkit-search-cancel-button {
+  -webkit-appearance: none;
+  height: 14px;
+  width: 14px;
+  cursor: pointer;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23260402' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M18 6 6 18'/%3E%3Cpath d='m6 6 12 12'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: 14px 14px;
+}
+
+.search-input::-moz-search-clear-button {
+  cursor: pointer;
+  filter: brightness(0) saturate(100%) invert(8%) sepia(28%) saturate(5454%) hue-rotate(346deg)
+    brightness(95%) contrast(101%);
 }

@@ -1,36 +1,86 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Nega — интернет-магазин женского белья
 
-## Getting Started
+Технический стек: **Next.js**, **TypeScript**, **PostgreSQL**, **Prisma**, **Tailwind CSS**.
 
-First, run the development server:
+## Что уже есть
+
+- Главная страница, каталог, карточка товара
+- Поиск и фильтр по коллекциям
+- Корзина (сохраняется в браузере)
+- Страница оформления заказа (заготовка)
+- Личный кабинет и вход по SMS (заготовка)
+- Админ-панель: товары, коллекции, заказы, настройки
+- Схема БД: товары, варианты (размер/цвет), заказы, баллы, пользователи
+
+## Быстрый старт
+
+### 1. Установка зависимостей
+
+```bash
+npm install
+```
+
+### 2. База данных
+
+Скопируйте `.env.example` в `.env` и укажите `DATABASE_URL`.
+
+**Вариант A — бесплатно в облаке (для тестов):**
+1. Зарегистрируйтесь на [neon.tech](https://neon.tech) или [supabase.com](https://supabase.com)
+2. Создайте проект PostgreSQL
+3. Скопируйте строку подключения в `.env`
+
+**Вариант B — локально:**
+Установите PostgreSQL и укажите:
+```
+DATABASE_URL="postgresql://postgres:password@localhost:5432/belyo_shop"
+```
+
+### 3. Применить схему и тестовые данные
+
+```bash
+npm run db:push
+npm run db:seed
+```
+
+### 4. Запуск
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Откройте [http://localhost:3000](http://localhost:3000)
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+- Магазин: `/`
+- Админка: `/admin`
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Структура проекта
 
-## Learn More
+```
+src/
+  app/
+    (shop)/          # Страницы магазина
+    admin/           # Админ-панель
+  components/        # UI-компоненты
+  lib/               # БД, форматирование, запросы
+  store/             # Корзина (Zustand)
+prisma/
+  schema.prisma      # Схема базы данных
+  seed.ts            # Тестовые товары
+```
 
-To learn more about Next.js, take a look at the following resources:
+## Деплой на Git + Vercel
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+1. Залейте проект на GitHub
+2. Подключите репозиторий на [vercel.com](https://vercel.com)
+3. Добавьте переменную `DATABASE_URL` в настройках Vercel
+4. Vercel выдаст тестовый URL для показа заказчику
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Следующие этапы
 
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- [ ] SMS-авторизация
+- [ ] Оформление заказа + СДЭК
+- [ ] Оплата (ЮKassa, Долями, Яндекс Сплит)
+- [ ] Программа баллов
+- [ ] Редактирование товаров в админке
+- [ ] Дизайн по референсам заказчика
+- [ ] Защита админ-панели паролем
