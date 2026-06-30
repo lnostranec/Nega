@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/Button";
 import { useCartStore } from "@/store/cart";
 
@@ -34,7 +33,6 @@ export function AddToCart({
   imageUrl,
   variants,
 }: AddToCartProps) {
-  const router = useRouter();
   const addItem = useCartStore((s) => s.addItem);
   const cartItems = useCartStore((s) => s.items);
 
@@ -77,7 +75,6 @@ export function AddToCart({
       price,
       imageUrl,
     });
-    router.push("/cart");
   }
 
   return (
