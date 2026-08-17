@@ -53,6 +53,16 @@ export default function PrivacyPage() {
         </p>
       </InfoPage.Section>
 
+      <InfoPage.Section title="Оператор персональных данных">
+        <p>
+          Оператор: [НАИМЕНОВАНИЕ ЮРЛИЦА / ИП]
+          <br />
+          ИНН: [ИНН] · Адрес: [АДРЕС]
+          <br />
+          Контакт по вопросам ПДн: support@nega.ru · [ТЕЛЕФОН]
+        </p>
+      </InfoPage.Section>
+
       <InfoPage.Section title="Изменения политики">
         <p>
           Мы можем обновлять настоящую Политику. Актуальная версия всегда

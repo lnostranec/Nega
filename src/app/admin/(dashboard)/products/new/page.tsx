@@ -1,11 +1,15 @@
 import Link from "next/link";
 import { ProductForm } from "@/components/admin/ProductForm";
+import { listAdminProductOptions } from "@/lib/admin-products";
 import { getCollections } from "@/lib/data";
 
 export const dynamic = "force-dynamic";
 
 export default async function AdminNewProductPage() {
-  const collections = await getCollections();
+  const [collections, productOptions] = await Promise.all([
+    getCollections(),
+    listAdminProductOptions(),
+  ]);
 
   return (
     <div>
@@ -20,6 +24,7 @@ export default async function AdminNewProductPage() {
             name: c.name,
             slug: c.slug,
           }))}
+          productOptions={productOptions}
           initial={{
             name: "",
             price: 0,
@@ -35,6 +40,9 @@ export default async function AdminNewProductPage() {
             collectionIds: [],
             imageUrls: [],
             variants: [],
+            bottomModels: [],
+            setAddons: [],
+            relatedProductIds: [],
           }}
         />
       </div>

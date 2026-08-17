@@ -105,8 +105,8 @@ export function AccountDashboard({
           Данные профиля
         </h2>
         <dl className="mt-6 space-y-4 text-sm">
-          <div className="flex flex-col gap-1 sm:flex-row sm:gap-8">
-            <dt className="w-32 shrink-0 text-stone-500">С нами с</dt>
+          <div className="flex flex-wrap items-baseline gap-x-2 gap-y-1">
+            <dt className="text-stone-500">С нами с</dt>
             <dd className="text-stone-900">
               {new Date(user.createdAt).toLocaleDateString("ru-RU", {
                 day: "numeric",
@@ -215,6 +215,11 @@ export function AccountDashboard({
                   </div>
                   <div className="text-right">
                     <p className="font-medium">{formatPrice(order.total)}</p>
+                    {order.loyaltyDiscount > 0 && (
+                      <p className="mt-1 text-xs text-stone-500">
+                        Скидка клиента −{formatPrice(order.loyaltyDiscount)}
+                      </p>
+                    )}
                     {order.promoDiscount > 0 && (
                       <p className="mt-1 text-xs text-stone-500">
                         Промокод −{formatPrice(order.promoDiscount)}
@@ -228,6 +233,11 @@ export function AccountDashboard({
                     <p className="mt-1 text-xs uppercase tracking-widest text-stone-500">
                       {order.statusLabel}
                     </p>
+                    {order.trackingNumber ? (
+                      <p className="mt-1 font-mono text-xs text-stone-600">
+                        Трек: {order.trackingNumber}
+                      </p>
+                    ) : null}
                   </div>
                 </div>
 

@@ -6,6 +6,8 @@ import {
 type TariffBody = {
   type?: DeliveryType;
   subtotal?: number;
+  cityCode?: number;
+  address?: string;
 };
 
 export async function POST(request: Request) {
@@ -18,11 +20,21 @@ export async function POST(request: Request) {
 
   const type = body.type;
   const subtotal = body.subtotal ?? 0;
+  const cityCode = body.cityCode;
 
-  if (type !== "cdek_pvz" && type !== "cdek_courier") {
+  if (
+    type !== "cdek_pvz" &&
+    type !== "cdek_courier" &&
+    type !== "yandex_courier"
+  ) {
     return Response.json({ error: "Некорректный тип доставки" }, { status: 400 });
   }
 
-  const cost = await calculateDeliveryCost(type, subtotal);
+  const cost = await calculateDeliveryCost(
+    type,
+    subtotal,
+    cityCode,
+    body.address,
+  );
   return Response.json({ cost, type });
 }

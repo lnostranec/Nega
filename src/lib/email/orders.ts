@@ -2,7 +2,9 @@ import { enqueueEmail } from "./outbox";
 import {
   orderCancelledEmail,
   orderCreatedEmail,
+  orderDeliveredEmail,
   orderPaidEmail,
+  orderProcessingEmail,
   orderShippedEmail,
   type OrderEmailData,
 } from "./templates";
@@ -27,6 +29,21 @@ export async function sendOrderPaidEmail(
   await enqueueEmail({ to, subject, html, template: "order_paid", orderId });
 }
 
+export async function sendOrderProcessingEmail(
+  to: string,
+  orderId: string,
+  data: OrderEmailData,
+): Promise<void> {
+  const { subject, html } = orderProcessingEmail(data);
+  await enqueueEmail({
+    to,
+    subject,
+    html,
+    template: "order_processing",
+    orderId,
+  });
+}
+
 export async function sendOrderShippedEmail(
   to: string,
   orderId: string,
@@ -34,6 +51,21 @@ export async function sendOrderShippedEmail(
 ): Promise<void> {
   const { subject, html } = orderShippedEmail(data);
   await enqueueEmail({ to, subject, html, template: "order_shipped", orderId });
+}
+
+export async function sendOrderDeliveredEmail(
+  to: string,
+  orderId: string,
+  data: OrderEmailData,
+): Promise<void> {
+  const { subject, html } = orderDeliveredEmail(data);
+  await enqueueEmail({
+    to,
+    subject,
+    html,
+    template: "order_delivered",
+    orderId,
+  });
 }
 
 export async function sendOrderCancelledEmail(
@@ -58,6 +90,7 @@ export function orderToEmailData(order: {
   deliveryAddress: string | null;
   cdekPvzName: string | null;
   cdekCityName: string | null;
+  trackingNumber?: string | null;
   items: {
     id: string;
     name: string;
@@ -80,6 +113,7 @@ export function orderToEmailData(order: {
     deliveryAddress: order.deliveryAddress,
     cdekPvzName: order.cdekPvzName,
     cdekCityName: order.cdekCityName,
+    trackingNumber: order.trackingNumber ?? null,
     items: order.items.map((item) => ({
       id: item.id,
       name: item.name,

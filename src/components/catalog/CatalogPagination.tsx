@@ -15,6 +15,7 @@ type CatalogPaginationProps = {
   country?: string;
   material?: string;
   pattern?: string;
+  size?: string;
 };
 
 function pageRange(current: number, total: number) {
@@ -42,6 +43,7 @@ export function CatalogPagination({
   country,
   material,
   pattern,
+  size,
 }: CatalogPaginationProps) {
   if (totalPages <= 1) return null;
 
@@ -58,6 +60,7 @@ export function CatalogPagination({
     country,
     material,
     pattern,
+    size,
   };
 
   return (

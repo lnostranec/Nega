@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { AddToCart } from "@/components/product/AddToCart";
+import { SetAddToCart } from "@/components/product/SetAddToCart";
 import { ProductFavoriteButton } from "@/components/product/ProductFavoriteButton";
 import { SplitBadge } from "@/components/ui/SplitBadge";
 import { formatPrice } from "@/lib/format";
@@ -11,6 +12,20 @@ type Variant = {
   size: string;
   color: string | null;
   stock: number;
+  part?: string;
+};
+
+type BottomModel = {
+  id: string;
+  name: string;
+};
+
+type SetAddon = {
+  id: string;
+  name: string;
+  price: number;
+  imageUrl?: string | null;
+  note?: string | null;
 };
 
 type ProductInfoProps = {
@@ -28,6 +43,9 @@ type ProductInfoProps = {
   material?: string | null;
   imageUrl?: string;
   variants: Variant[];
+  isSet?: boolean;
+  bottomModels?: BottomModel[];
+  setAddons?: SetAddon[];
 };
 
 export function ProductInfo({
@@ -45,6 +63,9 @@ export function ProductInfo({
   material,
   imageUrl,
   variants,
+  isSet = false,
+  bottomModels = [],
+  setAddons = [],
 }: ProductInfoProps) {
   const [openSection, setOpenSection] = useState<
     "description" | "composition" | "care" | null
@@ -52,7 +73,7 @@ export function ProductInfo({
 
   const hasDiscount = comparePrice && comparePrice > price;
   const specs = [
-    style ? { label: "Стиль", value: style } : null,
+    style ? { label: "Коллекция", value: style } : null,
     country ? { label: "Страна производства", value: country } : null,
     material ? { label: "Материал", value: material } : null,
   ].filter(Boolean) as { label: string; value: string }[];
@@ -86,14 +107,30 @@ export function ProductInfo({
       </div>
 
       <div className="mt-8">
-        <AddToCart
-          productId={productId}
-          slug={slug}
-          name={name}
-          price={price}
-          imageUrl={imageUrl}
-          variants={variants}
-        />
+        {isSet ? (
+          <SetAddToCart
+            productId={productId}
+            slug={slug}
+            name={name}
+            price={price}
+            imageUrl={imageUrl}
+            variants={variants.map((v) => ({
+              ...v,
+              part: v.part ?? "STANDARD",
+            }))}
+            bottomModels={bottomModels}
+            setAddons={setAddons}
+          />
+        ) : (
+          <AddToCart
+            productId={productId}
+            slug={slug}
+            name={name}
+            price={price}
+            imageUrl={imageUrl}
+            variants={variants}
+          />
+        )}
       </div>
 
       {specs.length > 0 && (
@@ -157,11 +194,8 @@ export function ProductInfo({
         })}
       </div>
 
-      <p className="mt-6 text-xs text-stone-400">
-        Доставка СДЭК.{" "}
-        <a href="#contacts" className="underline hover:text-[#260402]">
-          Подобрать размер
-        </a>
+      <p className="mt-6 text-sm text-stone-500">
+        Доставка: СДЭК, Яндекс
       </p>
     </div>
   );

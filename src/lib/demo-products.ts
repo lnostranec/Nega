@@ -1,5 +1,6 @@
 import { SIZES } from "./constants";
 import { BRUNA_SET_GALLERY, LEO_SET_GALLERY, NEGRA_PHOTOS } from "./photos";
+import { SAMPLE_BRA_SIZES, SAMPLE_PANTY_SIZES } from "./size-calculator";
 
 export type DemoVariant = {
   id: string;
@@ -27,13 +28,17 @@ export type DemoProduct = {
   collection: { name: string; slug: string };
 };
 
-function buildVariants(productId: string, colors: string[]): DemoVariant[] {
+function buildVariants(
+  productId: string,
+  colors: string[],
+  sizes: readonly string[] = SIZES,
+): DemoVariant[] {
   return colors.flatMap((color, colorIndex) =>
-    SIZES.map((size, sizeIndex) => ({
+    sizes.map((size, sizeIndex) => ({
       id: `${productId}-v-${colorIndex}-${sizeIndex}`,
       size,
       color,
-      stock: size === "XS" || size === "XL" ? 2 : 8,
+      stock: sizeIndex === 0 || sizeIndex === sizes.length - 1 ? 2 : 8,
     })),
   );
 }
@@ -179,7 +184,7 @@ const DEMO_PRODUCTS: DemoProduct[] = [
     pattern: "Однотон",
     material: "Полиамид",
     images: [{ id: "1", url: NEGRA_PHOTOS.category.bras, alt: "Балконет White Petal Desire" }],
-    variants: buildVariants("fallback-7", ["Белый"]),
+    variants: buildVariants("fallback-7", ["Белый"], SAMPLE_BRA_SIZES),
     collection: { name: "Бюстгальтеры", slug: "bras" },
   },
   {
@@ -198,7 +203,7 @@ const DEMO_PRODUCTS: DemoProduct[] = [
     pattern: "Кружево",
     material: "Полиамид",
     images: [{ id: "1", url: NEGRA_PHOTOS.category.panties, alt: "Высокие стринги Red Pearl" }],
-    variants: buildVariants("fallback-8", ["Красный"]),
+    variants: buildVariants("fallback-8", ["Красный"], SAMPLE_PANTY_SIZES),
     collection: { name: "Трусики", slug: "panties" },
   },
   {
@@ -277,6 +282,158 @@ const DEMO_PRODUCTS: DemoProduct[] = [
     variants: buildVariants("fallback-12", ["Пудра", "Серый"]),
     collection: { name: "Одежда", slug: "homewear" },
   },
+  {
+    id: "fallback-13",
+    slug: "bra-lace-noir",
+    name: "Балконет Lace Noir",
+    description:
+      "Кружевной балконнет с мягкими чашками. Держит форму и подходит под облегающую одежду.",
+    composition: "85% полиамид, 15% эластан",
+    care: "Ручная стирка при 30 °C.",
+    price: 7900,
+    comparePrice: null,
+    sku: "NEGA-BRA-NOIR",
+    style: "Романтика",
+    country: "Италия",
+    pattern: "Кружево",
+    material: "Полиамид",
+    images: [{ id: "1", url: NEGRA_PHOTOS.card[1], alt: "Балконет Lace Noir" }],
+    variants: buildVariants("fallback-13", ["Чёрный"], SAMPLE_BRA_SIZES),
+    collection: { name: "Бюстгальтеры", slug: "bras" },
+  },
+  {
+    id: "fallback-14",
+    slug: "bra-soft-nude",
+    name: "Мягкая чашка Soft Nude",
+    description:
+      "Бесшовная мягкая чашка телесного оттенка. Незаметна под одеждой и комфортна на каждый день.",
+    composition: "82% полиамид, 18% эластан",
+    care: "Деликатная стирка.",
+    price: 6500,
+    comparePrice: null,
+    sku: "NEGA-BRA-NUDE",
+    style: "Минимализм",
+    country: "Россия",
+    pattern: "Однотон",
+    material: "Полиамид",
+    images: [{ id: "1", url: NEGRA_PHOTOS.card[3], alt: "Мягкая чашка Soft Nude" }],
+    variants: buildVariants("fallback-14", ["Телесный"], SAMPLE_BRA_SIZES),
+    collection: { name: "Бюстгальтеры", slug: "bras" },
+  },
+  {
+    id: "fallback-15",
+    slug: "bra-mesh-black",
+    name: "Бра Mesh Black",
+    description:
+      "Полупрозрачная сетка и классическая чашка. Лёгкая поддержка для вечернего образа.",
+    composition: "90% полиамид, 10% эластан",
+    care: "Ручная стирка.",
+    price: 7200,
+    comparePrice: 8400,
+    sku: "NEGA-BRA-MESH",
+    style: "Винтаж",
+    country: "Франция",
+    pattern: "Однотон",
+    material: "Полиамид",
+    images: [{ id: "1", url: NEGRA_PHOTOS.card[4], alt: "Бра Mesh Black" }],
+    variants: buildVariants("fallback-15", ["Чёрный"], SAMPLE_BRA_SIZES),
+    collection: { name: "Бюстгальтеры", slug: "bras" },
+  },
+  {
+    id: "fallback-16",
+    slug: "bra-bordo-line",
+    name: "Балконет Bordo Line",
+    description:
+      "Балконет в глубоком бордо. Выразительный цвет и аккуратная линия декольте.",
+    composition: "86% полиамид, 14% эластан",
+    care: "Стирать отдельно.",
+    price: 8100,
+    comparePrice: null,
+    sku: "NEGA-BRA-BORDO",
+    style: "Классика",
+    country: "Италия",
+    pattern: "Однотон",
+    material: "Полиамид",
+    images: [{ id: "1", url: NEGRA_PHOTOS.card[13], alt: "Балконет Bordo Line" }],
+    variants: buildVariants("fallback-16", ["Бордо"], SAMPLE_BRA_SIZES),
+    collection: { name: "Бюстгальтеры", slug: "bras" },
+  },
+  {
+    id: "fallback-17",
+    slug: "panties-classic-black",
+    name: "Слипы Classic Black",
+    description:
+      "Классические слипы с мягкой резинкой. Комфортная посадка на каждый день.",
+    composition: "88% полиамид, 12% эластан",
+    care: "Деликатная стирка.",
+    price: 2900,
+    comparePrice: null,
+    sku: "NEGA-PANT-BLACK",
+    style: "Классика",
+    country: "Россия",
+    pattern: "Однотон",
+    material: "Полиамид",
+    images: [{ id: "1", url: NEGRA_PHOTOS.card[12], alt: "Слипы Classic Black" }],
+    variants: buildVariants("fallback-17", ["Чёрный"], SAMPLE_PANTY_SIZES),
+    collection: { name: "Трусики", slug: "panties" },
+  },
+  {
+    id: "fallback-18",
+    slug: "panties-high-nude",
+    name: "Высокие стринги Nude",
+    description:
+      "Высокая посадка и телесный оттенок. Не видно под светлой одеждой.",
+    composition: "85% полиамид, 15% эластан",
+    care: "Ручная стирка.",
+    price: 3200,
+    comparePrice: null,
+    sku: "NEGA-PANT-NUDE",
+    style: "Минимализм",
+    country: "Турция",
+    pattern: "Однотон",
+    material: "Полиамид",
+    images: [{ id: "1", url: NEGRA_PHOTOS.card[14], alt: "Высокие стринги Nude" }],
+    variants: buildVariants("fallback-18", ["Телесный"], SAMPLE_PANTY_SIZES),
+    collection: { name: "Трусики", slug: "panties" },
+  },
+  {
+    id: "fallback-19",
+    slug: "panties-lace-wine",
+    name: "Кружевные бразильяна Wine",
+    description:
+      "Кружевные бразильяна винного оттенка. Мягкая резинка и аккуратная отделка.",
+    composition: "88% полиамид, 12% эластан",
+    care: "Деликатная стирка.",
+    price: 3600,
+    comparePrice: 4100,
+    sku: "NEGA-PANT-WINE",
+    style: "Романтика",
+    country: "Италия",
+    pattern: "Кружево",
+    material: "Полиамид",
+    images: [{ id: "1", url: NEGRA_PHOTOS.card[15], alt: "Кружевные бразильяна Wine" }],
+    variants: buildVariants("fallback-19", ["Бордо"], SAMPLE_PANTY_SIZES),
+    collection: { name: "Трусики", slug: "panties" },
+  },
+  {
+    id: "fallback-20",
+    slug: "panties-brief-ivory",
+    name: "Трусы-шорты Ivory",
+    description:
+      "Закрытые трусы-шорты из мягкого полотна. Комфортны для повседневной носки.",
+    composition: "90% хлопок, 10% эластан",
+    care: "Машинная стирка при 30 °C.",
+    price: 2800,
+    comparePrice: null,
+    sku: "NEGA-PANT-IVORY",
+    style: "Классика",
+    country: "Россия",
+    pattern: "Однотон",
+    material: "Хлопок",
+    images: [{ id: "1", url: NEGRA_PHOTOS.category.panties, alt: "Трусы-шорты Ivory" }],
+    variants: buildVariants("fallback-20", ["Белый"], SAMPLE_PANTY_SIZES),
+    collection: { name: "Трусики", slug: "panties" },
+  },
 ];
 
 export function getDemoProductBySlug(slug: string): DemoProduct | null {
@@ -303,7 +460,9 @@ export function demoToPageProduct(product: DemoProduct) {
     material: product.material,
     pattern: product.pattern,
     images: product.images,
-    variants: product.variants,
+    variants: product.variants.map((v) => ({ ...v, part: "STANDARD" as const })),
+    bottomModels: [],
+    setAddons: [],
     collections: [{ collection: product.collection }],
   };
 }

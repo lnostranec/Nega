@@ -14,6 +14,10 @@ export type CartItem = {
   price: number;
   imageUrl?: string;
   quantity: number;
+  sizeTop?: string;
+  sizeBottom?: string;
+  bottomModel?: string;
+  bottomVariantId?: string;
 };
 
 type CartState = {

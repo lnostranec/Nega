@@ -1,5 +1,3 @@
-import { formatPrice } from "@/lib/format";
-
 type SplitBadgeProps = {
   price: number;
   parts?: number;

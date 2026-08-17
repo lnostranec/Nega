@@ -4,7 +4,7 @@ import { CategoryGrid } from "@/components/home/CategoryGrid";
 import { getDemoProducts } from "@/lib/demo-products";
 import { getProducts } from "@/lib/data";
 import { toCatalogItem } from "@/lib/product-display";
-import { isDbConfigured } from "@/lib/prisma";
+import { isDbAvailable } from "@/lib/prisma";
 import type { BestsellerProduct } from "@/components/home/BestsellerCard";
 
 export const dynamic = "force-dynamic";
@@ -12,8 +12,8 @@ export const dynamic = "force-dynamic";
 export default async function HomePage() {
   let bestsellers: BestsellerProduct[] = [];
 
-  if (isDbConfigured()) {
-    const products = await getProducts({ limit: 6 });
+  if (await isDbAvailable()) {
+    const products = await getProducts({ limit: 8 });
     bestsellers = products.map((product) => {
       const item = toCatalogItem(product);
       return {
@@ -25,7 +25,7 @@ export default async function HomePage() {
       };
     });
   } else {
-    bestsellers = getDemoProducts(6).map((demo) => ({
+    bestsellers = getDemoProducts(8).map((demo) => ({
       productId: demo.id,
       slug: demo.slug,
       name: demo.name,

@@ -1,20 +1,17 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
 import { HeartIcon } from "@/components/icons";
 import { useFavoritesStore } from "@/store/favorites";
+import { useIsClient } from "@/hooks/useIsClient";
 import {
   HEADER_ICON_BUTTON_CLASS,
   HEADER_ICON_CLASS,
 } from "./header-icon-styles";
+
 export function FavoritesButton() {
   const totalItems = useFavoritesStore((s) => s.totalItems());
-  const [mounted, setMounted] = useState(false);
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
+  const mounted = useIsClient();
 
   return (
     <Link

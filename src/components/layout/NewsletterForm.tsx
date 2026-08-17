@@ -15,9 +15,11 @@ export function NewsletterForm() {
 
   return (
     <div>
-      <h3 className="text-sm font-semibold text-[#260402]">Получить скидку 1000 ₽</h3>
+      <h3 className="text-sm font-semibold text-[#260402]">
+        Получить промокод на первый заказ
+      </h3>
       <p className="mt-2 text-sm text-stone-500">
-        Оставьте ваш email, а мы пришлём промокод на скидку.
+        Оставьте ваш email, а мы пришлём промокод.
       </p>
 
       <form onSubmit={handleSubmit} className="mt-4 space-y-3">

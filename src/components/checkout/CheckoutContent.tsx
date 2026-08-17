@@ -16,6 +16,8 @@ import type { DeliverySelection } from "@/lib/cdek";
 import { validateDeliverySelection } from "@/lib/cdek";
 import { sanitizePhoneInput, validateEmail } from "@/lib/validation";
 import { useCartStore } from "@/store/cart";
+import { calculateLoyaltyDiscount } from "@/lib/loyalty-shared";
+import { isGiftCertificateVariant } from "@/lib/gift-certificate";
 
 const inputClass =
   "w-full border border-stone-300 px-4 py-3 text-sm outline-none focus:border-[#260402]";
@@ -61,7 +63,17 @@ export function CheckoutContent() {
     color: item.color,
     price: item.price,
     quantity: item.quantity,
+    sizeTop: item.sizeTop,
+    sizeBottom: item.sizeBottom,
+    bottomModel: item.bottomModel,
+    bottomVariantId: item.bottomVariantId,
   }));
+
+  const loyaltyPercent = user?.loyaltyPercent ?? 0;
+  const discountable = items
+    .filter((item) => !isGiftCertificateVariant(item.variantId))
+    .reduce((sum, item) => sum + item.price * item.quantity, 0);
+  const loyaltyDiscount = calculateLoyaltyDiscount(discountable, loyaltyPercent);
 
   useEffect(() => {
     if (user?.firstName) setFirstName(user.firstName);
@@ -282,6 +294,10 @@ export function CheckoutContent() {
         color: item.color,
         price: item.price,
         quantity: item.quantity,
+        sizeTop: item.sizeTop,
+        sizeBottom: item.sizeBottom,
+        bottomModel: item.bottomModel,
+        bottomVariantId: item.bottomVariantId,
       }));
 
       const response = await fetch("/api/orders", {
@@ -316,8 +332,16 @@ export function CheckoutContent() {
       }
 
       const order = data.order as OrderView;
+      const paymentUrl =
+        typeof data.paymentUrl === "string" ? data.paymentUrl : null;
+
       clearCart();
       await refreshUser();
+
+      if (paymentUrl) {
+        window.location.href = paymentUrl;
+        return;
+      }
 
       if (order.giftCertificateCodes?.length) {
         setSuccess({
@@ -420,6 +444,8 @@ export function CheckoutContent() {
             <PointsTotal
               subtotal={totalPrice}
               promoDiscount={appliedPromo?.discount ?? 0}
+              loyaltyDiscount={loyaltyDiscount}
+              loyaltyPercent={user?.loyaltyPercent ?? 0}
               deliveryCost={delivery?.cost ?? 0}
               availablePoints={user?.points ?? 0}
               usePoints={usePoints}
@@ -483,10 +509,13 @@ export function CheckoutContent() {
 
           <section>
             <h2 className="text-sm font-medium uppercase tracking-widest text-stone-500">
-              Доставка СДЭК
+              Доставка
             </h2>
             <CdekDeliveryPicker
-              subtotal={totalPrice - (appliedPromo?.discount ?? 0)}
+              subtotal={Math.max(
+                0,
+                totalPrice - loyaltyDiscount - (appliedPromo?.discount ?? 0),
+              )}
               value={delivery}
               onChange={setDelivery}
             />
@@ -522,7 +551,7 @@ export function CheckoutContent() {
               ))}
             </div>
             <p className="mt-2 text-xs text-stone-400">
-              Товары резервируются на 15 минут. В демо-режиме оплата проходит сразу после оформления.
+              Товары резервируются на 15 минут. После оформления — переход к оплате выбранным способом. Без ключей провайдера заказ подтверждается сразу (режим разработки).
             </p>
           </section>
 

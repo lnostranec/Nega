@@ -7,6 +7,8 @@ import { calculatePointsRedemption } from "@/lib/points";
 type PointsTotalProps = {
   subtotal: number;
   promoDiscount?: number;
+  loyaltyDiscount?: number;
+  loyaltyPercent?: number;
   deliveryCost?: number;
   availablePoints: number;
   usePoints: boolean;
@@ -64,6 +66,8 @@ function pointsLabel(count: number): string {
 export function PointsTotal({
   subtotal,
   promoDiscount = 0,
+  loyaltyDiscount = 0,
+  loyaltyPercent = 0,
   deliveryCost = 0,
   availablePoints,
   usePoints,
@@ -72,17 +76,18 @@ export function PointsTotal({
   loading = false,
   className = "",
 }: PointsTotalProps) {
-  const afterPromo = Math.max(0, subtotal - promoDiscount);
-  const canUsePoints = isLoggedIn && availablePoints > 0 && afterPromo > 0;
+  const afterDiscounts = Math.max(0, subtotal - loyaltyDiscount - promoDiscount);
+  const canUsePoints = isLoggedIn && availablePoints > 0 && afterDiscounts > 0;
   const active = usePoints && canUsePoints;
   const { pointsUsed, total: totalAfterPoints } = calculatePointsRedemption(
-    afterPromo,
+    afterDiscounts,
     availablePoints,
     active,
   );
 
   const finalTotal =
-    (active && pointsUsed > 0 ? totalAfterPoints : afterPromo) + deliveryCost;
+    (active && pointsUsed > 0 ? totalAfterPoints : afterDiscounts) +
+    deliveryCost;
 
   useEffect(() => {
     if (!canUsePoints && usePoints) {
@@ -92,10 +97,22 @@ export function PointsTotal({
 
   return (
     <div className={className}>
+      {loyaltyDiscount > 0 && (
+        <div className="mb-3 flex items-baseline justify-between gap-4 text-sm">
+          <span className="text-stone-500">
+            Скидка клиента{loyaltyPercent > 0 ? ` ${loyaltyPercent}%` : ""}
+          </span>
+          <span className="font-medium text-brand">
+            −{formatPrice(loyaltyDiscount)}
+          </span>
+        </div>
+      )}
       {promoDiscount > 0 && (
         <div className="mb-3 flex items-baseline justify-between gap-4 text-sm">
           <span className="text-stone-500">Промокод</span>
-          <span className="font-medium text-brand">−{formatPrice(promoDiscount)}</span>
+          <span className="font-medium text-brand">
+            −{formatPrice(promoDiscount)}
+          </span>
         </div>
       )}
       {deliveryCost > 0 && (
@@ -140,7 +157,7 @@ export function PointsTotal({
           {active && pointsUsed > 0 && (
             <div className="shrink-0 text-right">
               <p className="text-sm text-stone-400 line-through">
-                {formatPrice(afterPromo + deliveryCost)}
+                {formatPrice(afterDiscounts + deliveryCost)}
               </p>
               <p className="mt-0.5 text-xs font-medium text-brand">
                 −{formatPrice(pointsUsed)}

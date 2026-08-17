@@ -22,6 +22,23 @@ model User {
   orders            Order[]
   pointTransactions PointTransaction[]
   sessions          Session[]
+  reviews           Review[]
+  passwordResetTokens PasswordResetToken[]
+  auditLogs         AdminAuditLog[]
+}
+
+model Review {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  rating    Int
+  text      String
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+  @@index([createdAt])
 }
 
 enum UserRole {
@@ -68,7 +85,11 @@ model Product {
   isActive     Boolean             @default(true)
   images       ProductImage[]
   variants     ProductVariant[]
+  bottomModels ProductBottomModel[]
+  setAddons    ProductSetAddon[]
   collections  ProductCollection[]
+  relatedProducts ProductRelated[] @relation("ProductRelatedSource")
+  relatedOf       ProductRelated[] @relation("ProductRelatedTarget")
   createdAt    DateTime            @default(now())
   updatedAt    DateTime            @updatedAt
 }
@@ -82,6 +103,12 @@ model ProductImage {
   sortOrder Int     @default(0)
 }
 
+enum VariantPart {
+  STANDARD
+  TOP
+  BOTTOM
+}
+
 model ProductVariant {
   id         String      @id @default(cuid())
   productId  String
@@ -90,7 +117,29 @@ model ProductVariant {
   color      String?
   stock      Int         @default(0)
   sku        String?     @unique
+  part       VariantPart @default(STANDARD)
   orderItems OrderItem[]
+}
+
+model ProductBottomModel {
+  id        String  @id @default(cuid())
+  productId String
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  name      String
+  sortOrder Int     @default(0)
+  isActive  Boolean @default(true)
+}
+
+model ProductSetAddon {
+  id          String  @id @default(cuid())
+  productId   String
+  product     Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  name        String
+  price       Decimal
+  imageUrl    String?
+  note        String?
+  isActive    Boolean @default(true)
+  sortOrder   Int     @default(0)
 }
 
 model ProductCollection {
@@ -100,6 +149,18 @@ model ProductCollection {
   collection   Collection @relation(fields: [collectionId], references: [id], onDelete: Cascade)
 
   @@id([productId, collectionId])
+}
+
+model ProductRelated {
+  id               String  @id @default(cuid())
+  productId        String
+  relatedProductId String
+  sortOrder        Int     @default(0)
+  product          Product @relation("ProductRelatedSource", fields: [productId], references: [id], onDelete: Cascade)
+  relatedProduct   Product @relation("ProductRelatedTarget", fields: [relatedProductId], references: [id], onDelete: Cascade)
+
+  @@unique([productId, relatedProductId])
+  @@index([productId])
 }
 
 model Order {
@@ -116,17 +177,22 @@ model Order {
   promoCodeId     String?
   promoCode       PromoCode?     @relation(fields: [promoCodeId], references: [id], onDelete: SetNull)
   promoDiscount   Decimal        @default(0)
+  loyaltyDiscount Decimal        @default(0)
   pointsUsed      Int            @default(0)
   pointsEarned    Int            @default(0)
   total           Decimal
   paymentMethod   PaymentMethod?
   paymentStatus   PaymentStatus  @default(PENDING)
+  externalPaymentId String?      @unique
   deliveryMethod  String?
   cdekPvzCode     String?
   cdekPvzName     String?
   cdekCityCode    Int?
   cdekCityName    String?
   deliveryAddress String?
+  cdekUuid        String?
+  yandexClaimId   String?
+  trackingNumber  String?
   comment         String?
   paymentExpiresAt DateTime?
   stockReleased   Boolean        @default(false)
@@ -145,6 +211,9 @@ model OrderItem {
   variant         ProductVariant? @relation(fields: [variantId], references: [id])
   name      String
   size      String?
+  sizeTop     String?
+  sizeBottom  String?
+  bottomModel String?
   color     String?
   price     Decimal
   quantity  Int
@@ -196,7 +265,14 @@ model SiteSettings {
   minOrderForPoints   Int    @default(0)
   cdekPvzBaseCost     Int    @default(350)
   cdekCourierBaseCost Int    @default(500)
-  freeDeliveryFrom    Int?
+  yandexDeliveryCost  Int    @default(450)
+  freeDeliveryFrom    Int?   @default(10000)
+  loyaltyThreshold1   Int    @default(10000)
+  loyaltyPercent1     Int    @default(3)
+  loyaltyThreshold2   Int    @default(30000)
+  loyaltyPercent2     Int    @default(5)
+  loyaltyThreshold3   Int    @default(50000)
+  loyaltyPercent3     Int    @default(10)
 }
 
 enum EmailStatus {
@@ -239,4 +315,30 @@ model PromoCode {
 enum PromoCodeType {
   FIXED
   PERCENT
+}
+
+model PasswordResetToken {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  token     String   @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+}
+
+model AdminAuditLog {
+  id         String   @id @default(cuid())
+  adminId    String?
+  admin      User?    @relation(fields: [adminId], references: [id], onDelete: SetNull)
+  action     String
+  entityType String
+  entityId   String?
+  meta       String?
+  createdAt  DateTime @default(now())
+
+  @@index([createdAt])
+  @@index([entityType, entityId])
 }

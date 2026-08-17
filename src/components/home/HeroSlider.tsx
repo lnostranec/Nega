@@ -89,7 +89,7 @@ export function HeroSlider() {
     return 1;
   }, [total]);
 
-  const { onPointerDown, dragStart } = usePointerDrag({
+  const { onPointerDown } = usePointerDrag({
     dragThreshold: 8,
     onDragStart: () => {
       suppressClick.current = false;
@@ -122,9 +122,8 @@ export function HeroSlider() {
       e.preventDefault();
       e.stopPropagation();
       suppressClick.current = false;
-      dragStart.current.moved = false;
     }
-  }, [dragStart]);
+  }, []);
 
   return (
     <section className="relative bg-white">
@@ -171,7 +170,7 @@ export function HeroSlider() {
                   </p>
                   <Link
                     href={s.href}
-                    className="pointer-events-auto mt-8 border border-white px-8 py-3 text-xs font-medium uppercase tracking-[0.2em] transition duration-300 hover:border-brand hover:bg-brand hover:text-white"
+                    className="pointer-events-auto mt-8 hidden border border-white px-8 py-3 text-xs font-medium uppercase tracking-[0.2em] transition duration-300 hover:border-brand hover:bg-brand hover:text-white sm:inline-block"
                   >
                     Смотреть
                   </Link>
@@ -180,11 +179,38 @@ export function HeroSlider() {
             ))}
           </div>
 
+          {/* Mobile: стрелки и «Смотреть» на одной линии */}
+          <div className="absolute inset-x-0 bottom-6 z-10 flex items-center justify-between px-3 sm:hidden">
+            <button
+              type="button"
+              onClick={prev}
+              aria-label="Предыдущий слайд"
+              className="p-2 text-white/80 transition hover:text-white"
+            >
+              <ChevronLeftIcon className="h-8 w-8" />
+            </button>
+            <Link
+              href={HERO_SLIDES[current]?.href ?? HERO_SLIDES[0].href}
+              className="border border-white px-8 py-3 text-xs font-medium uppercase tracking-[0.2em] text-white transition duration-300 hover:border-brand hover:bg-brand hover:text-white"
+            >
+              Смотреть
+            </Link>
+            <button
+              type="button"
+              onClick={next}
+              aria-label="Следующий слайд"
+              className="p-2 text-white/80 transition hover:text-white"
+            >
+              <ChevronRightIcon className="h-8 w-8" />
+            </button>
+          </div>
+
+          {/* Desktop: стрелки по центру */}
           <button
             type="button"
             onClick={prev}
             aria-label="Предыдущий слайд"
-            className="absolute left-3 top-1/2 z-10 -translate-y-1/2 p-2 text-white/80 transition hover:text-white sm:left-6"
+            className="absolute left-6 top-1/2 z-10 hidden -translate-y-1/2 p-2 text-white/80 transition hover:text-white sm:block"
           >
             <ChevronLeftIcon className="h-8 w-8" />
           </button>
@@ -192,7 +218,7 @@ export function HeroSlider() {
             type="button"
             onClick={next}
             aria-label="Следующий слайд"
-            className="absolute right-3 top-1/2 z-10 -translate-y-1/2 p-2 text-white/80 transition hover:text-white sm:right-6"
+            className="absolute right-6 top-1/2 z-10 hidden -translate-y-1/2 p-2 text-white/80 transition hover:text-white sm:block"
           >
             <ChevronRightIcon className="h-8 w-8" />
           </button>

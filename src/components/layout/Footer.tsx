@@ -1,6 +1,15 @@
+"use client";
+
 import Link from "next/link";
-import { FOOTER_CONTACTS_ID, FOOTER_HELP_LINKS, SHOP_NAME } from "@/lib/constants";
+import {
+  FOOTER_CONTACTS_ID,
+  FOOTER_HELP_LINKS,
+  FOOTER_LEGAL_LINKS,
+  SHOP_NAME,
+} from "@/lib/constants";
 import { MailIcon, PhoneIcon, TelegramIcon, VkIcon, InstagramIcon } from "@/components/icons";
+import { SizeCalculatorButton } from "@/components/size-calculator/SizeCalculatorButton";
+import { LeaveReviewButton } from "@/components/reviews/LeaveReviewButton";
 import { NewsletterForm } from "./NewsletterForm";
 import { SiteContainer } from "./SiteContainer";
 
@@ -8,8 +17,8 @@ export function Footer() {
   return (
     <footer className="mt-auto border-t border-stone-200 bg-white">
       <SiteContainer className="py-12">
-        <div className="grid gap-10 md:grid-cols-3 md:gap-8">
-          {/* Помощь */}
+        <div className="grid gap-10 sm:grid-cols-2 lg:grid-cols-4 lg:gap-8">
+          {/* 1. Помощь */}
           <div>
             <h3 className="text-base font-semibold text-[#260402]">Помощь</h3>
             <ul className="mt-4 space-y-2.5">
@@ -24,9 +33,27 @@ export function Footer() {
                 </li>
               ))}
             </ul>
+            <SizeCalculatorButton className="btn-site btn-site-filled mt-6 inline-block w-full bg-brand px-6 py-3.5 text-center text-sm font-medium text-white" />
           </div>
 
-          {/* Соцсети и контакты */}
+          {/* 2. Документы */}
+          <div>
+            <h3 className="text-base font-semibold text-[#260402]">Документы</h3>
+            <ul className="mt-4 space-y-2.5">
+              {FOOTER_LEGAL_LINKS.map((link) => (
+                <li key={link.href}>
+                  <Link
+                    href={link.href}
+                    className="text-sm text-stone-500 transition hover:text-[#260402]"
+                  >
+                    {link.label}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          {/* 3. Соцсети и контакты */}
           <div id={FOOTER_CONTACTS_ID} className="scroll-mt-28">
             <h3 className="text-base font-semibold text-[#260402]">Социальные сети</h3>
             <div className="mt-4 flex items-center gap-3 text-[#260402]">
@@ -63,17 +90,26 @@ export function Footer() {
             </p>
           </div>
 
-          {/* Подписка */}
-          <NewsletterForm />
+          {/* 4. Подписка + cookie + сертификат */}
+          <div>
+            <NewsletterForm />
+            <Link
+              href="/cookies"
+              className="mt-5 block text-sm text-stone-500 transition hover:text-[#260402]"
+            >
+              Согласие на использование cookie
+            </Link>
+            <Link
+              href="/gift-certificate"
+              className="btn-site btn-site-filled mt-6 inline-block w-full bg-brand px-6 py-3.5 text-center text-sm font-medium text-white"
+            >
+              Подарочный сертификат
+            </Link>
+            <LeaveReviewButton />
+          </div>
         </div>
 
-        <div className="mt-10 flex flex-col items-start gap-6 sm:flex-row sm:items-center sm:justify-between">
-          <Link
-            href="/gift-certificate"
-            className="btn-site btn-site-filled block w-full bg-brand px-10 py-3.5 text-center text-sm font-medium text-white sm:inline-block sm:w-auto"
-          >
-            Подарочный сертификат
-          </Link>
+        <div className="mt-10 border-t border-stone-100 pt-6">
           <p className="text-xs text-stone-400">
             © {new Date().getFullYear()} {SHOP_NAME}.{" "}
             <Link href="/privacy" className="transition hover:text-[#260402]">

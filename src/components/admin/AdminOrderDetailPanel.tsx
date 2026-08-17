@@ -19,24 +19,41 @@ export function AdminOrderDetailPanel({ order: initial }: Props) {
   const router = useRouter();
   const [order, setOrder] = useState(initial);
   const [updating, setUpdating] = useState(false);
+  const [tracking, setTracking] = useState(initial.trackingNumber ?? "");
+  const [message, setMessage] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
-  async function changeStatus(status: OrderStatus) {
+  async function patch(body: Record<string, unknown>) {
     setUpdating(true);
+    setMessage(null);
+    setError(null);
     try {
       const res = await fetch(`/api/admin/orders/${order.id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ status }),
+        body: JSON.stringify(body),
       });
       const data = await res.json();
-      if (res.ok && data.order) {
+      if (!res.ok) {
+        setError(data.error ?? "Не удалось обновить заказ");
+        return;
+      }
+      if (data.order) {
         setOrder(data.order);
+        setTracking(data.order.trackingNumber ?? "");
         router.refresh();
       }
+      setMessage("Сохранено");
     } finally {
       setUpdating(false);
     }
   }
+
+  const isCdek =
+    order.deliveryMethod === "cdek_pvz" ||
+    order.deliveryMethod === "cdek_courier";
+  const canRefund =
+    order.paymentStatus === "PAID" && order.status !== "CANCELLED";
 
   return (
     <div className="space-y-6">
@@ -56,7 +73,7 @@ export function AdminOrderDetailPanel({ order: initial }: Props) {
         <select
           value={order.status}
           disabled={updating}
-          onChange={(e) => void changeStatus(e.target.value as OrderStatus)}
+          onChange={(e) => void patch({ status: e.target.value as OrderStatus })}
           className="border border-stone-300 px-3 py-2 text-sm"
         >
           {STATUSES.map((status) => (
@@ -66,6 +83,12 @@ export function AdminOrderDetailPanel({ order: initial }: Props) {
           ))}
         </select>
       </div>
+
+      {(message || error) && (
+        <p className={`text-sm ${error ? "text-red-600" : "text-stone-500"}`}>
+          {error ?? message}
+        </p>
+      )}
 
       <div className="grid gap-6 lg:grid-cols-2">
         <section className="rounded-lg border border-stone-200 bg-white p-6">
@@ -126,6 +149,20 @@ export function AdminOrderDetailPanel({ order: initial }: Props) {
                 <dd>{order.deliveryAddress}</dd>
               </div>
             )}
+            {order.cdekUuid && (
+              <div className="flex gap-4">
+                <dt className="w-24 text-stone-500">СДЭК UUID</dt>
+                <dd className="break-all font-mono text-xs">{order.cdekUuid}</dd>
+              </div>
+            )}
+            {order.yandexClaimId && (
+              <div className="flex gap-4">
+                <dt className="w-24 text-stone-500">Яндекс ID</dt>
+                <dd className="break-all font-mono text-xs">
+                  {order.yandexClaimId}
+                </dd>
+              </div>
+            )}
             <div className="flex gap-4">
               <dt className="w-24 text-stone-500">Стоимость</dt>
               <dd>
@@ -135,6 +172,41 @@ export function AdminOrderDetailPanel({ order: initial }: Props) {
               </dd>
             </div>
           </dl>
+
+          <div className="mt-4 space-y-3 border-t border-stone-100 pt-4">
+            <label className="block text-sm">
+              <span className="text-stone-500">Трек-номер</span>
+              <div className="mt-1 flex gap-2">
+                <input
+                  value={tracking}
+                  onChange={(e) => setTracking(e.target.value)}
+                  className="min-w-0 flex-1 border border-stone-300 px-3 py-2 text-sm"
+                  placeholder="Номер отправления"
+                />
+                <button
+                  type="button"
+                  disabled={updating}
+                  onClick={() => void patch({ trackingNumber: tracking })}
+                  className="border border-stone-300 px-3 py-2 text-sm transition hover:border-stone-500 disabled:opacity-50"
+                >
+                  Сохранить
+                </button>
+              </div>
+            </label>
+
+            {isCdek && (
+              <button
+                type="button"
+                disabled={updating}
+                onClick={() => void patch({ action: "cdek_retry" })}
+                className="w-full border border-stone-300 px-3 py-2 text-sm transition hover:border-stone-500 disabled:opacity-50"
+              >
+                {order.cdekUuid
+                  ? "Повторно создать накладную СДЭК"
+                  : "Создать накладную СДЭК"}
+              </button>
+            )}
+          </div>
         </section>
       </div>
 
@@ -204,7 +276,31 @@ export function AdminOrderDetailPanel({ order: initial }: Props) {
           )}
           <p className="mt-2 text-stone-500">
             Оплата: {order.paymentStatus}
+            {order.externalPaymentId ? (
+              <span className="ml-2 font-mono text-xs">
+                ({order.externalPaymentId})
+              </span>
+            ) : null}
           </p>
+
+          {canRefund && (
+            <button
+              type="button"
+              disabled={updating}
+              onClick={() => {
+                if (
+                  window.confirm(
+                    "Оформить возврат оплаты и отменить заказ? Действие необратимо.",
+                  )
+                ) {
+                  void patch({ action: "refund" });
+                }
+              }}
+              className="mt-4 border border-red-300 px-4 py-2 text-sm text-red-700 transition hover:bg-red-50 disabled:opacity-50"
+            >
+              Возврат оплаты и отмена
+            </button>
+          )}
         </div>
       </section>
 

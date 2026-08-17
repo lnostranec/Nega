@@ -46,20 +46,20 @@ export function FavoritesContent() {
             Добавьте товары в избранное
           </h2>
           <p className="mt-3 text-sm leading-relaxed text-stone-500">
-            Вы можете начать с главной страницы или воспользоваться поиском, если
+            Вы можете начать с каталога или воспользоваться поиском, если
             ищете что-то конкретное.
           </p>
           <Link
-            href="/"
+            href="/catalog"
             className="btn-site mt-8 inline-block border border-brand px-8 py-3 text-sm font-medium uppercase tracking-widest text-brand"
           >
-            Перейти на главную
+            В каталог
           </Link>
         </div>
       ) : (
         <div className="mt-10 grid grid-cols-2 gap-6 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
           {items.map((item) => (
-            <article key={item.productId} className="group relative text-center">
+            <article key={item.productId} className="relative text-center">
               <button
                 type="button"
                 onClick={() => removeItem(item.productId)}
@@ -69,7 +69,7 @@ export function FavoritesContent() {
                 <RemoveIcon />
               </button>
 
-              <Link href={`/product/${item.slug}`} className="block">
+              <Link href={`/product/${item.slug}`} className="group block">
                 <div className="relative mx-auto aspect-[3/4] w-full max-w-[220px] overflow-hidden bg-stone-50 card-hover-border">
                   <Image
                     src={item.imageUrl || PLACEHOLDER_PRODUCT}

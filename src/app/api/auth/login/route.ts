@@ -9,6 +9,11 @@ import {
 } from "@/lib/auth";
 import { linkGuestOrdersToUser } from "@/lib/guest-orders";
 import { validateEmail, validatePassword } from "@/lib/validation";
+import {
+  clientIpFromRequest,
+  rateLimit,
+  rateLimitResponse,
+} from "@/lib/rate-limit";
 
 type LoginBody = {
   email?: string;
@@ -17,6 +22,10 @@ type LoginBody = {
 
 export async function POST(request: Request) {
   if (!isDbConfigured()) return dbUnavailableResponse();
+
+  const ip = clientIpFromRequest(request);
+  const limited = rateLimit(`login:${ip}`, 20, 15 * 60 * 1000);
+  if (!limited.ok) return rateLimitResponse(limited.retryAfterSec);
 
   let body: LoginBody;
   try {

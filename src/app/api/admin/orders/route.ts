@@ -1,4 +1,3 @@
-import { NextRequest } from "next/server";
 import { requireAdminUser } from "@/lib/admin";
 import { listAdminOrders } from "@/lib/admin-orders";
 import { isDbConfigured } from "@/lib/prisma";

@@ -1,25 +1,36 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useSyncExternalStore } from "react";
 import { CookieIcon } from "@/components/icons";
 import { COOKIE_CONSENT_KEY } from "@/lib/constants";
 
-export function CookieConsent() {
-  const [visible, setVisible] = useState(false);
+function subscribeConsent(onStoreChange: () => void) {
+  window.addEventListener("storage", onStoreChange);
+  return () => window.removeEventListener("storage", onStoreChange);
+}
 
-  useEffect(() => {
-    if (localStorage.getItem(COOKIE_CONSENT_KEY) !== "accepted") {
-      setVisible(true);
-    }
-  }, []);
+function getConsentSnapshot() {
+  return localStorage.getItem(COOKIE_CONSENT_KEY) === "accepted";
+}
+
+function getServerConsentSnapshot() {
+  return true;
+}
+
+export function CookieConsent() {
+  const accepted = useSyncExternalStore(
+    subscribeConsent,
+    getConsentSnapshot,
+    getServerConsentSnapshot,
+  );
 
   function accept() {
     localStorage.setItem(COOKIE_CONSENT_KEY, "accepted");
-    setVisible(false);
+    window.dispatchEvent(new Event("storage"));
   }
 
-  if (!visible) return null;
+  if (accepted) return null;
 
   return (
     <div
@@ -28,25 +39,23 @@ export function CookieConsent() {
       aria-describedby="cookie-consent-text"
       className="fixed bottom-4 left-4 z-50 w-[min(100%-2rem,22rem)] border border-stone-200 bg-white p-5 shadow-lg sm:w-96"
     >
-      <CookieIcon className="mx-auto h-10 w-10 text-[#260402]" />
-
-      <p id="cookie-consent-text" className="mt-4 text-sm leading-relaxed text-stone-600">
-        Продолжая использовать этот сайт и нажимая кнопку «Принимаю», вы даете{" "}
-        <Link
-          href="/cookies"
-          className="text-[#260402] underline underline-offset-2 transition hover:opacity-70"
-        >
-          согласие на обработку файлов cookie
-        </Link>{" "}
-        и использование Яндекс.Метрики.
-      </p>
-
+      <div className="flex gap-3">
+        <CookieIcon className="mt-0.5 h-5 w-5 shrink-0 text-[#260402]" />
+        <p id="cookie-consent-text" className="text-sm leading-relaxed text-stone-600">
+          Мы используем cookie для работы сайта и аналитики. Продолжая, вы
+          соглашаетесь с{" "}
+          <Link href="/cookies" className="text-[#260402] underline underline-offset-2 transition hover:opacity-70">
+            политикой cookie
+          </Link>
+          .
+        </p>
+      </div>
       <button
         type="button"
         onClick={accept}
-        className="btn-site btn-site-filled mt-5 w-full bg-brand px-4 py-3 text-sm font-medium text-white"
+        className="btn-site btn-site-filled mt-4 w-full bg-brand py-2.5 text-xs font-medium uppercase tracking-widest text-white"
       >
-        Принимаю
+        Принять
       </button>
     </div>
   );

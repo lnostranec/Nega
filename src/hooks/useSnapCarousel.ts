@@ -4,7 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { usePointerDrag } from "./usePointerDrag";
 
 function getVisibleCount(width: number) {
-  if (width >= 1024) return 5;
+  if (width >= 1024) return 4;
   if (width >= 640) return 3;
   return 2;
 }
@@ -39,10 +39,11 @@ export function useSnapCarousel({ itemCount, threshold = 50 }: UseSnapCarouselOp
       : 0;
   const step = itemWidth + gap;
   const maxIndex = Math.max(0, itemCount - visibleCount);
+  const safeIndex = Math.min(index, maxIndex);
 
   useEffect(() => {
-    indexRef.current = index;
-  }, [index]);
+    indexRef.current = safeIndex;
+  }, [safeIndex]);
 
   useEffect(() => {
     maxIndexRef.current = maxIndex;
@@ -61,10 +62,6 @@ export function useSnapCarousel({ itemCount, threshold = 50 }: UseSnapCarouselOp
     ro.observe(el);
     return () => ro.disconnect();
   }, []);
-
-  useEffect(() => {
-    setIndex((prev) => Math.min(prev, maxIndex));
-  }, [maxIndex]);
 
   const goTo = useCallback(
     (next: number) => {
@@ -132,8 +129,8 @@ export function useSnapCarousel({ itemCount, threshold = 50 }: UseSnapCarouselOp
 
   useEffect(() => {
     if (isDragging || step === 0) return;
-    applyTrackTransform(-index * step, true);
-  }, [index, step, isDragging, applyTrackTransform]);
+    applyTrackTransform(-safeIndex * step, true);
+  }, [safeIndex, step, isDragging, applyTrackTransform]);
 
   const onClickCapture = useCallback((e: React.MouseEvent) => {
     if (suppressClick.current) {
@@ -150,7 +147,7 @@ export function useSnapCarousel({ itemCount, threshold = 50 }: UseSnapCarouselOp
   return {
     viewportRef,
     trackRef,
-    index,
+    index: safeIndex,
     maxIndex,
     isDragging,
     itemWidth,

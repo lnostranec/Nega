@@ -5,6 +5,7 @@ import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/Button";
 import { useBodyScrollLock } from "@/hooks/useBodyScrollLock";
+import { useIsClient } from "@/hooks/useIsClient";
 import {
   sanitizePhoneInput,
   validateEmail,
@@ -36,7 +37,7 @@ export function AccountAuthModal({
 }: AccountAuthModalProps) {
   const router = useRouter();
   const { setUser } = useAuth();
-  const [mounted, setMounted] = useState(false);
+  const mounted = useIsClient();
 
   const [firstName, setFirstName] = useState("");
   const [email, setEmail] = useState("");
@@ -45,10 +46,6 @@ export function AccountAuthModal({
   const [passwordConfirm, setPasswordConfirm] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
 
   useEffect(() => {
     if (!open) {
@@ -290,6 +287,17 @@ export function AccountAuthModal({
               className={inputClass}
             />
           </div>
+          {mode === "login" && (
+            <p className="text-right text-xs text-stone-500">
+              <a
+                href="/account/forgot-password"
+                className="underline hover:text-[#260402]"
+                onClick={onClose}
+              >
+                Забыли пароль?
+              </a>
+            </p>
+          )}
 
           {mode === "register" && (
             <div>

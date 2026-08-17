@@ -1,7 +1,7 @@
 import { getDemoProducts } from "./demo-products";
 import { matchesSearchQuery } from "./search-utils";
 import { toCatalogItem } from "./product-display";
-import { getPrisma, isDbConfigured } from "./prisma";
+import { getPrisma, isDbAvailable } from "./prisma";
 
 export type SearchResultItem = {
   id: string;
@@ -36,7 +36,7 @@ export async function searchProducts(
   const trimmed = query.trim();
   if (!trimmed) return [];
 
-  if (!isDbConfigured()) {
+  if (!(await isDbAvailable())) {
     return filterDemoProducts(trimmed, limit);
   }
 

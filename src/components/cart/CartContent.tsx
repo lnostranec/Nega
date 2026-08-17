@@ -1,6 +1,5 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
 import { useEffect } from "react";
 import { PointsTotal } from "@/components/checkout/PointsTotal";
@@ -12,33 +11,26 @@ import { PLACEHOLDER_PRODUCT } from "@/lib/constants";
 import { Breadcrumbs } from "@/components/ui/Breadcrumbs";
 import { SiteContainer } from "@/components/layout/SiteContainer";
 import { QuantityControl } from "@/components/ui/QuantityControl";
-
-function RemoveIcon() {
-  return (
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      fill="none"
-      viewBox="0 0 24 24"
-      strokeWidth={1.5}
-      stroke="currentColor"
-      className="h-5 w-5"
-    >
-      <path strokeLinecap="round" strokeLinejoin="round" d="M6 18 18 6M6 6l12 12" />
-    </svg>
-  );
-}
+import { TrashIcon } from "@/components/icons";
+import { calculateLoyaltyDiscount } from "@/lib/loyalty-shared";
+import { isGiftCertificateVariant } from "@/lib/gift-certificate";
 
 export function CartContent() {
   const { user, openLogin, refreshUser, loading } = useAuth();
   const items = useCartStore((s) => s.items);
   const updateQuantity = useCartStore((s) => s.updateQuantity);
   const removeItem = useCartStore((s) => s.removeItem);
-  const clearCart = useCartStore((s) => s.clearCart);
   const usePoints = useCartStore((s) => s.usePoints);
   const setUsePoints = useCartStore((s) => s.setUsePoints);
   const totalPrice = useCartStore((s) => s.totalPrice());
   const totalItems = useCartStore((s) => s.totalItems());
   const { messages, stockByVariant, validating } = useCartValidation();
+
+  const loyaltyPercent = user?.loyaltyPercent ?? 0;
+  const discountable = items
+    .filter((item) => !isGiftCertificateVariant(item.variantId))
+    .reduce((sum, item) => sum + item.price * item.quantity, 0);
+  const loyaltyDiscount = calculateLoyaltyDiscount(discountable, loyaltyPercent);
 
   useEffect(() => {
     refreshUser();
@@ -87,80 +79,118 @@ export function CartContent() {
       )}
 
       <div className="mt-10 grid gap-10 lg:grid-cols-[1fr_320px] xl:grid-cols-[1fr_360px]">
-        <div>
-          <div className="space-y-0 divide-y divide-stone-200 border-y border-stone-200">
-            {items.map((item) => (
-              <article
-                key={item.variantId}
-                className="flex flex-col gap-5 py-8 sm:flex-row sm:items-center"
-              >
-                <Link
-                  href={`/product/${item.slug}`}
-                  className="relative h-36 w-32 shrink-0 overflow-hidden bg-stone-50 sm:h-40 sm:w-36"
-                >
-                  <Image
-                    src={item.imageUrl || PLACEHOLDER_PRODUCT}
-                    alt={item.name}
-                    fill
-                    className="object-contain p-2"
-                    sizes="144px"
-                  />
-                </Link>
+        <div className="min-w-0">
+          <div className="divide-y divide-stone-200 border-y border-stone-200">
+            {items.map((item) => {
+              const stockMax = stockByVariant[item.variantId] ?? undefined;
+              const onQtyChange = (qty: number) =>
+                updateQuantity(item.variantId, qty, stockMax);
+              const imageSrc = item.imageUrl || PLACEHOLDER_PRODUCT;
+              const meta = (
+                <>
+                  {item.color && `${item.color}, `}размер {item.size}
+                </>
+              );
 
-                <div className="min-w-0 flex-1">
-                  <Link
-                    href={`/product/${item.slug}`}
-                    className="text-sm font-medium uppercase tracking-wide text-[#260402] hover:underline"
-                  >
-                    {item.name}
-                  </Link>
-                  <p className="mt-2 text-sm text-stone-500">
-                    {item.color && `${item.color}, `}размер {item.size}
-                  </p>
+              return (
+                <div key={item.variantId}>
+                  {/* ——— Мобилка ——— */}
+                  <article className="relative flex flex-col items-center gap-4 py-8 text-center lg:hidden">
+                    <button
+                      type="button"
+                      onClick={() => removeItem(item.variantId)}
+                      aria-label="Удалить товар"
+                      className="absolute right-0 top-6 z-10 text-stone-400"
+                    >
+                      <TrashIcon className="h-5 w-5" />
+                    </button>
+
+                    <Link href={`/product/${item.slug}`} className="shrink-0">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
+                        src={imageSrc}
+                        alt={item.name}
+                        width={260}
+                        height={280}
+                        className="h-[280px] w-[260px] max-w-[calc(100vw-2rem)] object-contain bg-stone-50 p-2"
+                      />
+                    </Link>
+
+                    <div className="flex w-full flex-col items-center px-2">
+                      <Link
+                        href={`/product/${item.slug}`}
+                        className="text-sm font-medium uppercase tracking-wide text-[#260402]"
+                      >
+                        {item.name}
+                      </Link>
+                      <p className="mt-2 text-sm text-stone-500">{meta}</p>
+                      <p className="mt-3 text-sm font-medium text-stone-900">
+                        {formatPrice(item.price)}
+                      </p>
+                      <div className="mt-4 w-fit">
+                        <QuantityControl
+                          size="sm"
+                          value={item.quantity}
+                          max={stockMax}
+                          onChange={onQtyChange}
+                        />
+                      </div>
+                    </div>
+                  </article>
+
+                  {/* ——— ПК ——— */}
+                  <article className="hidden items-center gap-6 py-6 lg:flex">
+                    <Link href={`/product/${item.slug}`} className="shrink-0">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
+                        src={imageSrc}
+                        alt={item.name}
+                        width={112}
+                        height={144}
+                        className="h-36 w-28 object-contain bg-stone-50 p-1"
+                      />
+                    </Link>
+
+                    <div className="min-w-0 flex-1">
+                      <Link
+                        href={`/product/${item.slug}`}
+                        className="text-sm font-medium uppercase tracking-wide text-[#260402] hover:underline"
+                      >
+                        {item.name}
+                      </Link>
+                      <p className="mt-2 text-sm text-stone-500">{meta}</p>
+                    </div>
+
+                    <div className="flex shrink-0 items-center gap-5">
+                      <p className="min-w-[5.5rem] text-sm font-medium text-stone-900">
+                        {formatPrice(item.price)}
+                      </p>
+                      <QuantityControl
+                        value={item.quantity}
+                        max={stockMax}
+                        onChange={onQtyChange}
+                      />
+                      <button
+                        type="button"
+                        onClick={() => removeItem(item.variantId)}
+                        aria-label="Удалить товар"
+                        className="flex h-10 w-10 cursor-pointer items-center justify-center rounded-full border border-stone-300 text-stone-400 transition-[color,border-color] duration-300 hover:border-brand hover:text-brand"
+                      >
+                        <TrashIcon className="h-4 w-4" />
+                      </button>
+                    </div>
+                  </article>
                 </div>
-
-                <div className="flex flex-wrap items-center gap-4 sm:gap-6">
-                  <p className="min-w-[80px] text-sm font-medium text-stone-900">
-                    {formatPrice(item.price)}
-                  </p>
-                  <QuantityControl
-                    value={item.quantity}
-                    max={stockByVariant[item.variantId] ?? undefined}
-                    onChange={(qty) =>
-                      updateQuantity(
-                        item.variantId,
-                        qty,
-                        stockByVariant[item.variantId] ?? undefined,
-                      )
-                    }
-                  />
-                  <button
-                    type="button"
-                    onClick={() => removeItem(item.variantId)}
-                    aria-label="Удалить товар"
-                    className="cursor-pointer text-stone-400 transition hover:text-[#260402]"
-                  >
-                    <RemoveIcon />
-                  </button>
-                </div>
-              </article>
-            ))}
-          </div>
-
-          <div className="mt-6 flex justify-end">
-            <button
-              type="button"
-              onClick={clearCart}
-              className="btn-site border border-brand px-4 py-2 text-sm text-brand transition-colors duration-300"
-            >
-              Очистить корзину
-            </button>
+              );
+            })}
           </div>
         </div>
 
-        <aside className="h-fit border border-stone-200 px-6 py-8">
+        <aside className="h-fit border border-stone-200 px-6 py-8 lg:sticky lg:top-28">
           <PointsTotal
             subtotal={totalPrice}
+            loyaltyDiscount={loyaltyDiscount}
+            loyaltyPercent={user?.loyaltyPercent ?? 0}
             availablePoints={user?.points ?? 0}
             usePoints={usePoints}
             onUsePointsChange={setUsePoints}

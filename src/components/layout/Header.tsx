@@ -8,6 +8,7 @@ import { LOGO_SRC, NAV_LINKS } from "@/lib/constants";
 import { CloseIcon, MenuIcon, SearchIcon, UserIcon, PhoneIcon } from "@/components/icons";
 import { useAuth } from "@/components/account/AuthModalProvider";
 import { useConsultationModal } from "@/components/consultation/ConsultationModalProvider";
+import { SizeCalculatorButton } from "@/components/size-calculator/SizeCalculatorButton";
 import { SiteContainer } from "./SiteContainer";
 import { CartButton } from "./CartButton";
 import { FavoritesButton } from "./FavoritesButton";
@@ -18,9 +19,12 @@ import {
 } from "./header-icon-styles";
 import { SearchBar } from "./SearchBar";
 
+const navLinkClass =
+  "cursor-pointer text-sm font-medium uppercase tracking-[0.12em] text-[#260402] transition hover:opacity-70";
+
 function NavLinks({
   onNavigate,
-  className,
+  className = navLinkClass,
 }: {
   onNavigate?: () => void;
   className?: string;
@@ -48,6 +52,17 @@ function NavLinks({
           </Link>
         ),
       )}
+      <SizeCalculatorButton
+        onClick={onNavigate}
+        className={className}
+      />
+      <Link
+        href="/gift-certificate"
+        onClick={onNavigate}
+        className={className}
+      >
+        Подарочный сертификат
+      </Link>
     </>
   );
 }
@@ -66,12 +81,22 @@ export function Header() {
     const node = headerRef.current;
     if (!node) return;
 
-    const updateHeight = () => setHeaderHeight(node.offsetHeight);
+    const updateHeight = () => {
+      const height = node.offsetHeight;
+      setHeaderHeight(height);
+      document.documentElement.style.setProperty(
+        "--site-header-height",
+        `${height}px`,
+      );
+    };
     updateHeight();
 
     const observer = new ResizeObserver(updateHeight);
     observer.observe(node);
-    return () => observer.disconnect();
+    return () => {
+      observer.disconnect();
+      document.documentElement.style.removeProperty("--site-header-height");
+    };
   }, [menuOpen, searchOpen]);
 
   useEffect(() => {
@@ -125,7 +150,7 @@ export function Header() {
                 <NavLinks className="text-sm font-medium uppercase tracking-[0.12em] text-[#260402] transition hover:opacity-70" />
               </nav>
 
-              <div className="flex shrink-0 items-center gap-1 sm:gap-2">
+              <div className="flex min-w-0 shrink items-center gap-0.5 sm:gap-2">
                 <button
                   ref={searchToggleRef}
                   type="button"
@@ -178,7 +203,7 @@ export function Header() {
                   onClick={() => setMenuOpen((open) => !open)}
                   aria-label={menuOpen ? "Закрыть меню" : "Открыть меню"}
                   aria-expanded={menuOpen}
-                  className="flex h-10 w-10 items-center justify-center text-[#260402] transition hover:bg-stone-100 lg:hidden"
+                  className="flex h-9 w-9 shrink-0 items-center justify-center text-[#260402] transition hover:bg-stone-100 sm:h-10 sm:w-10 lg:hidden"
                 >
                   {menuOpen ? <CloseIcon /> : <MenuIcon />}
                 </button>
@@ -209,6 +234,21 @@ export function Header() {
                       )}
                     </li>
                   ))}
+                  <li>
+                    <SizeCalculatorButton
+                      onClick={closeMenu}
+                      className="block w-full py-3 text-left text-sm font-medium uppercase tracking-[0.12em] text-[#260402] transition hover:opacity-70"
+                    />
+                  </li>
+                  <li>
+                    <Link
+                      href="/gift-certificate"
+                      onClick={closeMenu}
+                      className="block py-3 text-sm font-medium uppercase tracking-[0.12em] text-[#260402] transition hover:opacity-70"
+                    >
+                      Подарочный сертификат
+                    </Link>
+                  </li>
                 </ul>
               </nav>
             )}

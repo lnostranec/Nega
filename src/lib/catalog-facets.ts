@@ -62,6 +62,7 @@ export type CatalogFilterState = {
   country?: string;
   material?: string;
   pattern?: string;
+  size?: string;
 };
 
 export function countActiveCatalogFilters(filters: CatalogFilterState): number {
@@ -72,8 +73,8 @@ export function countActiveCatalogFilters(filters: CatalogFilterState): number {
   if (filters.minPrice !== undefined) count += 1;
   if (filters.maxPrice !== undefined) count += 1;
   if (filters.style) count += 1;
-  if (filters.country) count += 1;
   if (filters.material) count += 1;
   if (filters.pattern) count += 1;
+  if (filters.size) count += 1;
   return count;
 }

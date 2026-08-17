@@ -17,12 +17,29 @@ import {
   variantsToMatrix,
   type VariantMatrixState,
 } from "@/lib/admin-variant-matrix";
-import type { AdminProductInput } from "@/lib/admin-products";
+import {
+  defaultSetMatrix,
+  setMatrixToVariants,
+  variantsToSetMatrix,
+  type SetMatrixState,
+} from "@/lib/admin-set-matrix";
+import type {
+  AdminProductInput,
+  AdminProductOption,
+} from "@/lib/admin-products";
 import {
   CATALOG_COUNTRY_OPTIONS,
   CATALOG_MATERIAL_OPTIONS,
   CATALOG_STYLE_OPTIONS,
 } from "@/lib/catalog-facets";
+import {
+  DEFAULT_BOTTOM_MODELS,
+  SETS_COLLECTION_SLUG,
+} from "@/lib/product-sets";
+import {
+  AdminSetVariantsEditor,
+  type AdminSetAddonDraft,
+} from "@/components/admin/AdminSetVariantsEditor";
 
 type CollectionOption = { id: string; name: string; slug: string };
 
@@ -30,18 +47,45 @@ type ProductFormProps = {
   productId?: string;
   initial: AdminProductInput;
   collections: CollectionOption[];
+  productOptions?: AdminProductOption[];
 };
 
-export function ProductForm({ productId, initial, collections }: ProductFormProps) {
+export function ProductForm({
+  productId,
+  initial,
+  collections,
+  productOptions = [],
+}: ProductFormProps) {
   const router = useRouter();
+
+  const initialIsSet = useMemo(() => {
+    const setCollection = collections.find((c) => c.slug === SETS_COLLECTION_SLUG);
+    return Boolean(
+      setCollection && initial.collectionIds.includes(setCollection.id),
+    );
+  }, [collections, initial.collectionIds]);
 
   const initialMatrix = useMemo(
     () =>
-      initial.variants.length > 0
+      initial.variants.length > 0 && !initialIsSet
         ? variantsToMatrix(initial.variants)
         : defaultVariantMatrix(),
-    [initial.variants],
+    [initial.variants, initialIsSet],
   );
+
+  const initialSetMatrix = useMemo(() => {
+    const setVariants = initial.variants.filter(
+      (v) => v.part === "TOP" || v.part === "BOTTOM",
+    );
+    return setVariants.length > 0
+      ? variantsToSetMatrix(
+          setVariants.map((v) => ({
+            ...v,
+            part: (v.part as "TOP" | "BOTTOM") ?? "TOP",
+          })),
+        )
+      : defaultSetMatrix();
+  }, [initial.variants]);
 
   const initialOnSale = Boolean(
     initial.comparePrice && initial.comparePrice > initial.price,
@@ -67,11 +111,42 @@ export function ProductForm({ productId, initial, collections }: ProductFormProp
     initialOnSale ? initial.price : initial.price,
   );
   const [matrix, setMatrix] = useState<VariantMatrixState>(initialMatrix);
+  const [kitMatrix, setKitMatrix] = useState<SetMatrixState>(initialSetMatrix);
+  const [bottomModels, setBottomModels] = useState(
+    initial.bottomModels && initial.bottomModels.length > 0
+      ? initial.bottomModels.map((m) => ({
+          name: m.name,
+          isActive: m.isActive ?? true,
+        }))
+      : DEFAULT_BOTTOM_MODELS.map((name) => ({ name, isActive: true })),
+  );
+  const [setAddons, setSetAddons] = useState<AdminSetAddonDraft[]>(
+    (initial.setAddons ?? []).map((a) => ({
+      name: a.name,
+      price: a.price,
+      imageUrl: a.imageUrl ?? "",
+      note: a.note ?? "",
+      isActive: a.isActive ?? true,
+    })),
+  );
+  const [relatedProductIds, setRelatedProductIds] = useState<string[]>(
+    initial.relatedProductIds ?? [],
+  );
+  const [relatedSearch, setRelatedSearch] = useState("");
+  const [newBottomModel, setNewBottomModel] = useState("");
   const [newColor, setNewColor] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [uploadingAddon, setUploadingAddon] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const setCollectionId = collections.find(
+    (c) => c.slug === SETS_COLLECTION_SLUG,
+  )?.id;
+  const isSet = Boolean(
+    setCollectionId && collectionIds.includes(setCollectionId),
+  );
 
   function moveImage(index: number, direction: -1 | 1) {
     setImageUrls((prev) => {
@@ -110,6 +185,24 @@ export function ProductForm({ productId, initial, collections }: ProductFormProp
     }
   }
 
+  async function uploadAddonImage(file: File): Promise<string | null> {
+    setUploadingAddon(true);
+    setError("");
+    try {
+      const body = new FormData();
+      body.append("file", file);
+      const res = await fetch("/api/admin/upload", { method: "POST", body });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error ?? "Ошибка загрузки");
+      return data.url as string;
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Ошибка загрузки");
+      return null;
+    } finally {
+      setUploadingAddon(false);
+    }
+  }
+
   function buildPayload(): AdminProductInput {
     const price = onSale ? salePrice : regularPrice;
     const comparePrice =
@@ -130,7 +223,31 @@ export function ProductForm({ productId, initial, collections }: ProductFormProp
       isActive,
       collectionIds,
       imageUrls,
-      variants: matrixToVariants(matrix),
+      variants: isSet
+        ? setMatrixToVariants(kitMatrix)
+        : matrixToVariants(matrix).map((v) => ({ ...v, part: "STANDARD" as const })),
+      bottomModels: isSet
+        ? bottomModels
+            .filter((m) => m.name.trim())
+            .map((m, index) => ({
+              name: m.name.trim(),
+              isActive: m.isActive,
+              sortOrder: index,
+            }))
+        : [],
+      setAddons: isSet
+        ? setAddons
+            .filter((a) => a.name.trim())
+            .map((a, index) => ({
+              name: a.name.trim(),
+              price: a.price,
+              imageUrl: a.imageUrl.trim() || null,
+              note: a.note.trim() || null,
+              isActive: a.isActive,
+              sortOrder: index,
+            }))
+        : [],
+      relatedProductIds,
     };
   }
 
@@ -138,13 +255,32 @@ export function ProductForm({ productId, initial, collections }: ProductFormProp
     e.preventDefault();
     setError("");
 
-    if (matrix.colors.length === 0) {
-      setError("Добавьте хотя бы один цвет");
-      return;
-    }
-    if (matrix.sizes.length === 0) {
-      setError("Выберите хотя бы один размер");
-      return;
+    if (isSet) {
+      if (kitMatrix.colors.length === 0) {
+        setError("Добавьте хотя бы один цвет");
+        return;
+      }
+      if (kitMatrix.topSizes.length === 0) {
+        setError("Выберите хотя бы один размер верха");
+        return;
+      }
+      if (kitMatrix.bottomSizes.length === 0) {
+        setError("Выберите хотя бы один размер низа");
+        return;
+      }
+      if (bottomModels.filter((m) => m.name.trim() && m.isActive).length === 0) {
+        setError("Добавьте хотя бы одну активную модель низа");
+        return;
+      }
+    } else {
+      if (matrix.colors.length === 0) {
+        setError("Добавьте хотя бы один цвет");
+        return;
+      }
+      if (matrix.sizes.length === 0) {
+        setError("Выберите хотя бы один размер");
+        return;
+      }
     }
     if (onSale && salePrice >= regularPrice) {
       setError("Цена со скидкой должна быть ниже обычной");
@@ -419,6 +555,22 @@ export function ProductForm({ productId, initial, collections }: ProductFormProp
       </section>
 
       {/* Цвета и размеры */}
+      {isSet ? (
+        <AdminSetVariantsEditor
+          matrix={kitMatrix}
+          setMatrix={setKitMatrix}
+          newColor={newColor}
+          setNewColor={setNewColor}
+          bottomModels={bottomModels}
+          setBottomModels={setBottomModels}
+          newBottomModel={newBottomModel}
+          setNewBottomModel={setNewBottomModel}
+          setAddons={setAddons}
+          setSetAddons={setSetAddons}
+          onUploadAddonImage={uploadAddonImage}
+          uploadingAddon={uploadingAddon}
+        />
+      ) : (
       <section className="space-y-4">
         <h2 className="text-lg font-medium text-stone-900">Цвета и размеры</h2>
 
@@ -538,13 +690,14 @@ export function ProductForm({ productId, initial, collections }: ProductFormProp
           </div>
         )}
       </section>
+      )}
 
       {/* Характеристики */}
       <section className="space-y-4">
         <h2 className="text-lg font-medium text-stone-900">Характеристики</h2>
         <div className="grid gap-4 sm:grid-cols-3">
           <div>
-            <label className="text-sm text-stone-600">Стиль</label>
+            <label className="text-sm text-stone-600">Коллекция</label>
             <select
               value={style}
               onChange={(e) => setStyle(e.target.value)}
@@ -624,6 +777,165 @@ export function ProductForm({ productId, initial, collections }: ProductFormProp
               className="mt-1 w-full border border-stone-300 px-3 py-2 text-sm"
             />
           </div>
+        </div>
+      </section>
+
+      <section className="space-y-4">
+        <div>
+          <h2 className="text-lg font-medium text-stone-900">
+            Вам может понравиться
+          </h2>
+          <p className="mt-1 text-sm text-stone-500">
+            Товары для блока на карточке. Порядок = порядок на сайте (до 4
+            позиций). Если ничего не выбрано — подставятся товары из той же
+            коллекции.
+          </p>
+        </div>
+
+        {relatedProductIds.length > 0 && (
+          <ul className="space-y-2">
+            {relatedProductIds.map((id, index) => {
+              const option = productOptions.find((p) => p.id === id);
+              if (!option) return null;
+              return (
+                <li
+                  key={id}
+                  className="flex flex-wrap items-center gap-3 rounded border border-stone-200 px-3 py-2"
+                >
+                  <div className="relative h-12 w-12 shrink-0 overflow-hidden rounded bg-stone-100">
+                    {option.imageUrl ? (
+                      <Image
+                        src={option.imageUrl}
+                        alt={option.name}
+                        fill
+                        className="object-cover"
+                        sizes="48px"
+                      />
+                    ) : null}
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-sm font-medium text-stone-900">
+                      {option.name}
+                    </p>
+                    <p className="text-xs text-stone-400">{option.slug}</p>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <button
+                      type="button"
+                      disabled={index === 0}
+                      onClick={() =>
+                        setRelatedProductIds((prev) => {
+                          const next = [...prev];
+                          [next[index - 1], next[index]] = [
+                            next[index],
+                            next[index - 1],
+                          ];
+                          return next;
+                        })
+                      }
+                      className="px-2 py-1 text-sm text-stone-500 disabled:opacity-30"
+                      aria-label="Выше"
+                    >
+                      ↑
+                    </button>
+                    <button
+                      type="button"
+                      disabled={index === relatedProductIds.length - 1}
+                      onClick={() =>
+                        setRelatedProductIds((prev) => {
+                          const next = [...prev];
+                          [next[index], next[index + 1]] = [
+                            next[index + 1],
+                            next[index],
+                          ];
+                          return next;
+                        })
+                      }
+                      className="px-2 py-1 text-sm text-stone-500 disabled:opacity-30"
+                      aria-label="Ниже"
+                    >
+                      ↓
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setRelatedProductIds((prev) =>
+                          prev.filter((x) => x !== id),
+                        )
+                      }
+                      className="text-sm text-red-600 hover:underline"
+                    >
+                      Убрать
+                    </button>
+                  </div>
+                </li>
+              );
+            })}
+          </ul>
+        )}
+
+        <div>
+          <input
+            value={relatedSearch}
+            onChange={(e) => setRelatedSearch(e.target.value)}
+            placeholder="Поиск товара для добавления…"
+            className="w-full border border-stone-300 px-3 py-2 text-sm"
+          />
+          <ul className="mt-2 max-h-56 space-y-1 overflow-y-auto rounded border border-stone-200">
+            {productOptions
+              .filter((p) => !relatedProductIds.includes(p.id))
+              .filter((p) => {
+                const q = relatedSearch.trim().toLowerCase();
+                if (!q) return true;
+                return (
+                  p.name.toLowerCase().includes(q) ||
+                  p.slug.toLowerCase().includes(q)
+                );
+              })
+              .slice(0, 30)
+              .map((option) => (
+                <li key={option.id}>
+                  <button
+                    type="button"
+                    disabled={relatedProductIds.length >= 8}
+                    onClick={() =>
+                      setRelatedProductIds((prev) =>
+                        prev.includes(option.id)
+                          ? prev
+                          : [...prev, option.id],
+                      )
+                    }
+                    className="flex w-full items-center gap-3 px-3 py-2 text-left text-sm hover:bg-stone-50 disabled:opacity-40"
+                  >
+                    <div className="relative h-10 w-10 shrink-0 overflow-hidden rounded bg-stone-100">
+                      {option.imageUrl ? (
+                        <Image
+                          src={option.imageUrl}
+                          alt=""
+                          fill
+                          className="object-cover"
+                          sizes="40px"
+                        />
+                      ) : null}
+                    </div>
+                    <span className="min-w-0 flex-1 truncate">
+                      {option.name}
+                      {!option.isActive && (
+                        <span className="ml-2 text-xs text-stone-400">
+                          (скрыт)
+                        </span>
+                      )}
+                    </span>
+                    <span className="text-xs text-stone-400">Добавить</span>
+                  </button>
+                </li>
+              ))}
+            {productOptions.length === 0 && (
+              <li className="px-3 py-4 text-sm text-stone-500">
+                Других товаров пока нет
+              </li>
+            )}
+          </ul>
         </div>
       </section>
 

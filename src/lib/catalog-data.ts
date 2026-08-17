@@ -15,7 +15,7 @@ import {
 import { getDemoProducts, type DemoProduct } from "./demo-products";
 import { toCatalogItem } from "./product-display";
 import { getCatalogCategories } from "./data";
-import { getPrisma, isDbConfigured } from "./prisma";
+import { getPrisma, isDbAvailable } from "./prisma";
 
 type CatalogQuery = {
   collectionSlug?: string;
@@ -30,6 +30,7 @@ type CatalogQuery = {
   country?: string;
   material?: string;
   pattern?: string;
+  size?: string;
 };
 
 function productHasStock(product: DemoProduct): boolean {
@@ -57,6 +58,14 @@ function filterDemoProducts(
         p.name.toLowerCase().includes(q) ||
         p.description.toLowerCase().includes(q) ||
         p.collection.name.toLowerCase().includes(q),
+    );
+  }
+
+  if (query.size) {
+    items = items.filter((p) =>
+      p.variants.some(
+        (variant) => variant.size.toUpperCase() === query.size!.toUpperCase(),
+      ),
     );
   }
 
@@ -201,10 +210,14 @@ function prismaOrderBy(sort: CatalogSort) {
 function buildVariantFilter(query: CatalogQuery) {
   const filter: {
     color?: string;
+    size?: { equals: string; mode: "insensitive" };
     stock?: { gt: number };
   } = {};
 
   if (query.color) filter.color = query.color;
+  if (query.size) {
+    filter.size = { equals: query.size, mode: "insensitive" };
+  }
   if (query.inStock) filter.stock = { gt: 0 };
 
   return Object.keys(filter).length > 0 ? filter : null;
@@ -362,7 +375,7 @@ export async function getCatalogPageData(
   const page = Math.max(1, query.page ?? 1);
   const sort = query.sort ?? "default";
 
-  if (isDbConfigured()) {
+  if (await isDbAvailable()) {
     try {
       return await getDbCatalogPageData(query, page, sort);
     } catch {

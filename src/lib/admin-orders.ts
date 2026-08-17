@@ -1,13 +1,19 @@
-import type { OrderStatus } from "@prisma/client";
-import { ORDER_STATUS_LABELS } from "@/lib/orders";
+import type { OrderStatus, Prisma } from "@prisma/client";
+import { createOrderCdekShipment, ORDER_STATUS_LABELS } from "@/lib/orders";
 import {
   orderToEmailData,
   sendOrderCancelledEmail,
+  sendOrderDeliveredEmail,
+  sendOrderProcessingEmail,
   sendOrderShippedEmail,
 } from "@/lib/email/orders";
+import { writeAuditLog } from "@/lib/audit";
 import { getPrisma } from "@/lib/prisma";
 import { restoreOrderStock } from "@/lib/stock";
-import type { Prisma } from "@prisma/client";
+import {
+  createYooKassaRefund,
+  isYooKassaConfigured,
+} from "@/lib/yookassa";
 
 type OrderWithItems = Prisma.OrderGetPayload<{ include: { items: true } }>;
 
@@ -107,12 +113,16 @@ export type AdminOrderDetail = AdminOrderListItem & {
   pointsEarned: number;
   paymentMethod: string | null;
   paymentStatus: string;
+  externalPaymentId: string | null;
   deliveryMethod: string | null;
   cdekPvzCode: string | null;
   cdekPvzName: string | null;
   cdekCityCode: number | null;
   cdekCityName: string | null;
   deliveryAddress: string | null;
+  cdekUuid: string | null;
+  yandexClaimId: string | null;
+  trackingNumber: string | null;
   promoCode: string | null;
   comment: string | null;
   items: {
@@ -170,12 +180,16 @@ export async function getAdminOrder(id: string): Promise<AdminOrderDetail | null
     pointsEarned: order.pointsEarned,
     paymentMethod: order.paymentMethod,
     paymentStatus: order.paymentStatus,
+    externalPaymentId: order.externalPaymentId,
     deliveryMethod: order.deliveryMethod,
     cdekPvzCode: order.cdekPvzCode,
     cdekPvzName: order.cdekPvzName,
     cdekCityCode: order.cdekCityCode,
     cdekCityName: order.cdekCityName,
     deliveryAddress: order.deliveryAddress,
+    cdekUuid: order.cdekUuid,
+    yandexClaimId: order.yandexClaimId,
+    trackingNumber: order.trackingNumber,
     promoCode: order.promoCode?.code ?? null,
     comment: order.comment,
     itemsCount: order.items.reduce((sum, item) => sum + item.quantity, 0),
@@ -191,7 +205,11 @@ export async function getAdminOrder(id: string): Promise<AdminOrderDetail | null
   };
 }
 
-export async function updateAdminOrderStatus(id: string, status: OrderStatus) {
+export async function updateAdminOrderStatus(
+  id: string,
+  status: OrderStatus,
+  adminId?: string | null,
+) {
   const prisma = getPrisma();
 
   const updated = await prisma.$transaction(async (tx) => {
@@ -232,16 +250,38 @@ export async function updateAdminOrderStatus(id: string, status: OrderStatus) {
     });
   });
 
+  await writeAuditLog({
+    adminId,
+    action: "order_status",
+    entityType: "Order",
+    entityId: id,
+    meta: { status },
+  });
+
   if (updated.customerEmail) {
     const emailData = orderToEmailData(updated);
-    if (status === "SHIPPED" && updated.status === "SHIPPED") {
+    if (status === "PROCESSING") {
+      void sendOrderProcessingEmail(
+        updated.customerEmail,
+        updated.id,
+        emailData,
+      ).catch((error) => console.error("Order processing email error:", error));
+    }
+    if (status === "SHIPPED") {
       void sendOrderShippedEmail(
         updated.customerEmail,
         updated.id,
         emailData,
       ).catch((error) => console.error("Order shipped email error:", error));
     }
-    if (status === "CANCELLED" && updated.status === "CANCELLED") {
+    if (status === "DELIVERED") {
+      void sendOrderDeliveredEmail(
+        updated.customerEmail,
+        updated.id,
+        emailData,
+      ).catch((error) => console.error("Order delivered email error:", error));
+    }
+    if (status === "CANCELLED") {
       void sendOrderCancelledEmail(
         updated.customerEmail,
         updated.id,
@@ -251,4 +291,53 @@ export async function updateAdminOrderStatus(id: string, status: OrderStatus) {
   }
 
   return updated;
+}
+
+export async function updateAdminOrderTracking(
+  id: string,
+  trackingNumber: string,
+): Promise<AdminOrderDetail | null> {
+  const prisma = getPrisma();
+  const trimmed = trackingNumber.trim();
+  await prisma.order.update({
+    where: { id },
+    data: { trackingNumber: trimmed || null },
+  });
+  return getAdminOrder(id);
+}
+
+export async function retryAdminCdekShipment(
+  id: string,
+): Promise<AdminOrderDetail | null> {
+  await createOrderCdekShipment(id, { force: true });
+  return getAdminOrder(id);
+}
+
+/**
+ * Возврат через ЮKassa (если настроена) + отмена заказа.
+ * Без ключей — только отмена со статусом REFUNDED.
+ */
+export async function refundAdminOrder(
+  id: string,
+): Promise<AdminOrderDetail | null> {
+  const prisma = getPrisma();
+  const order = await prisma.order.findUnique({ where: { id } });
+  if (!order) throw new Error("NOT_FOUND");
+  if (order.paymentStatus === "REFUNDED") {
+    return getAdminOrder(id);
+  }
+  if (order.paymentStatus !== "PAID") {
+    throw new Error("NOT_PAID");
+  }
+
+  if (isYooKassaConfigured() && order.externalPaymentId) {
+    await createYooKassaRefund({
+      paymentId: order.externalPaymentId,
+      amountRub: Number(order.total),
+      orderId: order.id,
+    });
+  }
+
+  await updateAdminOrderStatus(id, "CANCELLED");
+  return getAdminOrder(id);
 }

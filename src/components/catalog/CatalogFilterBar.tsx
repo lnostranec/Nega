@@ -20,9 +20,9 @@ type CatalogFilterBarProps = {
   currentMaxPrice?: number;
   inStock?: boolean;
   currentStyle?: string;
-  currentCountry?: string;
   currentMaterial?: string;
   currentPattern?: string;
+  currentSize?: string;
 };
 
 type OpenPanel =
@@ -31,7 +31,6 @@ type OpenPanel =
   | "price"
   | "material"
   | "style"
-  | "country"
   | "pattern"
   | null;
 
@@ -43,9 +42,9 @@ export function CatalogFilterBar({
   currentMaxPrice,
   inStock,
   currentStyle,
-  currentCountry,
   currentMaterial,
   currentPattern,
+  currentSize,
 }: CatalogFilterBarProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -65,9 +64,9 @@ export function CatalogFilterBar({
         minPrice: currentMinPrice,
         maxPrice: currentMaxPrice,
         style: currentStyle,
-        country: currentCountry,
         material: currentMaterial,
         pattern: currentPattern,
+        size: currentSize,
       }),
     [
       currentSort,
@@ -76,9 +75,9 @@ export function CatalogFilterBar({
       currentMinPrice,
       currentMaxPrice,
       currentStyle,
-      currentCountry,
       currentMaterial,
       currentPattern,
+      currentSize,
     ],
   );
 
@@ -116,6 +115,7 @@ export function CatalogFilterBar({
       params.delete("country");
       params.delete("material");
       params.delete("pattern");
+      params.delete("size");
     });
     setOpenPanel(null);
   }
@@ -136,6 +136,16 @@ export function CatalogFilterBar({
   return (
     <div className="space-y-3">
       <div className="flex flex-wrap gap-2">
+        {currentSize ? (
+          <button
+            type="button"
+            onClick={() => setParam("size", null)}
+            className="inline-flex items-center rounded-md border border-[#260402] bg-[#260402] px-4 py-2.5 text-sm text-white"
+          >
+            Размер: {currentSize}
+            <span className="ml-2 text-white/70">×</span>
+          </button>
+        ) : null}
         <FilterChip
           label={
             currentSort !== "default"
@@ -281,7 +291,7 @@ export function CatalogFilterBar({
         </FilterChip>
 
         <FilterChip
-          label={currentStyle ? `Стиль: ${currentStyle}` : "Стиль"}
+          label={currentStyle ? `Коллекция: ${currentStyle}` : "Коллекция"}
           active={Boolean(currentStyle)}
           open={openPanel === "style"}
           onToggle={() =>
@@ -293,31 +303,12 @@ export function CatalogFilterBar({
             options={facets.styles}
             current={currentStyle}
             onSelect={(value) => setParam("style", value)}
-            allLabel="Все стили"
+            allLabel="Все коллекции"
           />
         </FilterChip>
 
         <FilterChip
-          label={
-            currentCountry ? `Страна: ${currentCountry}` : "Страна производства"
-          }
-          active={Boolean(currentCountry)}
-          open={openPanel === "country"}
-          onToggle={() =>
-            setOpenPanel((panel) => (panel === "country" ? null : "country"))
-          }
-          onClose={() => setOpenPanel(null)}
-        >
-          <OptionList
-            options={facets.countries}
-            current={currentCountry}
-            onSelect={(value) => setParam("country", value)}
-            allLabel="Все страны"
-          />
-        </FilterChip>
-
-        <FilterChip
-          label={currentPattern ? `Узор: ${currentPattern}` : "Узор"}
+          label={currentPattern ? `Принт: ${currentPattern}` : "Принт"}
           active={Boolean(currentPattern)}
           open={openPanel === "pattern"}
           onToggle={() =>
@@ -329,7 +320,7 @@ export function CatalogFilterBar({
             options={facets.patterns}
             current={currentPattern}
             onSelect={(value) => setParam("pattern", value)}
-            allLabel="Все узоры"
+            allLabel="Все принты"
           />
         </FilterChip>
       </div>

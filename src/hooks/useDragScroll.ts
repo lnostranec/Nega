@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 type DragScrollOptions = {
   onScrollEnd?: () => void;
@@ -15,7 +15,9 @@ export function useDragScroll<T extends HTMLElement>(options?: DragScrollOptions
   const suppressClickRef = useRef(false);
   const threshold = options?.threshold ?? 8;
   const onScrollEndRef = useRef(options?.onScrollEnd);
-  onScrollEndRef.current = options?.onScrollEnd;
+  useEffect(() => {
+    onScrollEndRef.current = options?.onScrollEnd;
+  });
 
   const onPointerDown = useCallback((e: React.PointerEvent<T>) => {
     const el = ref.current;

@@ -11,9 +11,14 @@ export type PublicUser = {
   phone: string | null;
   points: number;
   createdAt: string;
+  lifetimeSpend?: number;
+  loyaltyPercent?: number;
 };
 
-export function toPublicUser(user: User): PublicUser {
+export function toPublicUser(
+  user: User,
+  loyalty?: { lifetimeSpend: number; percent: number },
+): PublicUser {
   return {
     id: user.id,
     email: user.email,
@@ -22,6 +27,8 @@ export function toPublicUser(user: User): PublicUser {
     phone: user.phone,
     points: user.points,
     createdAt: user.createdAt.toISOString(),
+    lifetimeSpend: loyalty?.lifetimeSpend,
+    loyaltyPercent: loyalty?.percent,
   };
 }
 

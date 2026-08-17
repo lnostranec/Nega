@@ -1,5 +1,5 @@
+import { startOrderPayment } from "@/lib/payments";
 import {
-  confirmOrderPayment,
   createOrder,
   getUserOrders,
   orderErrorMessage,
@@ -11,6 +11,12 @@ import { isDbConfigured } from "@/lib/prisma";
 import type { PaymentMethod } from "@prisma/client";
 import { validateEmail, validateName, validatePhone } from "@/lib/validation";
 import { validateDeliverySelection, type DeliveryType } from "@/lib/cdek";
+import {
+  clientIpFromRequest,
+  rateLimit,
+  rateLimitResponse,
+} from "@/lib/rate-limit";
+import { captureException } from "@/lib/monitoring";
 
 type OrderItemBody = {
   productId?: string;
@@ -20,6 +26,10 @@ type OrderItemBody = {
   color?: string;
   price?: number;
   quantity?: number;
+  sizeTop?: string;
+  sizeBottom?: string;
+  bottomModel?: string;
+  bottomVariantId?: string;
 };
 
 type CreateOrderBody = {
@@ -55,6 +65,10 @@ export async function GET() {
 
 export async function POST(request: Request) {
   if (!isDbConfigured()) return dbUnavailableResponse();
+
+  const ip = clientIpFromRequest(request);
+  const limited = rateLimit(`orders:${ip}`, 30, 15 * 60 * 1000);
+  if (!limited.ok) return rateLimitResponse(limited.retryAfterSec);
 
   const user = await getSessionUser();
 
@@ -138,6 +152,10 @@ export async function POST(request: Request) {
       color: item.color,
       price: item.price!,
       quantity: item.quantity!,
+      sizeTop: item.sizeTop,
+      sizeBottom: item.sizeBottom,
+      bottomModel: item.bottomModel,
+      bottomVariantId: item.bottomVariantId,
     }));
 
     const pendingOrder = await createOrder({
@@ -158,9 +176,13 @@ export async function POST(request: Request) {
       items: orderItems,
     });
 
-    const order = await confirmOrderPayment(pendingOrder.id);
+    const { order, paymentUrl } = await startOrderPayment(pendingOrder, {
+      customerEmail,
+      customerPhone,
+      customerName,
+    });
 
-    return Response.json({ order });
+    return Response.json({ order, paymentUrl });
   } catch (error) {
     if (error instanceof Error) {
       const message = orderErrorMessage(error);
@@ -182,6 +204,7 @@ export async function POST(request: Request) {
     }
 
     console.error("Create order error:", error);
+    void captureException(error, { route: "POST /api/orders" });
     return Response.json(
       { error: "Не удалось создать заказ. Попробуйте ещё раз" },
       { status: 500 },

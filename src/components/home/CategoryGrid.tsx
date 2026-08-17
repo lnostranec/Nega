@@ -6,7 +6,8 @@ import { SiteContainer } from "@/components/layout/SiteContainer";
 export function CategoryGrid() {
   return (
     <section className="bg-white py-12 md:py-16 lg:px-0">
-      <SiteContainer className="grid grid-cols-2 gap-3 md:gap-4">        {CATEGORY_GRID.map((item) => (
+      <SiteContainer className="grid grid-cols-2 gap-3 md:gap-4">
+        {CATEGORY_GRID.map((item) => (
           <Link
             key={item.title}
             href={item.href}
@@ -20,11 +21,12 @@ export function CategoryGrid() {
               sizes="(max-width: 768px) 50vw, 700px"
             />
             <div className="absolute inset-0 bg-black/25 transition duration-300 group-hover:bg-black/35" />
-            <span className="absolute bottom-6 left-6 text-lg font-medium uppercase tracking-[0.15em] text-white md:text-xl">
+            <span className="absolute bottom-3 left-3 text-sm font-medium uppercase tracking-[0.15em] text-white sm:bottom-4 sm:left-4 sm:text-base md:bottom-6 md:left-6 md:text-xl">
               {item.title}
             </span>
           </Link>
         ))}
       </SiteContainer>
-    </section>  );
+    </section>
+  );
 }

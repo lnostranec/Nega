@@ -44,6 +44,7 @@ export default async function CollectionPage({ params }: Props) {
               product.comparePrice ? Number(product.comparePrice) : null
             }
             imageUrl={product.images[0]?.url}
+            fromCollection={slug}
           />
         ))}
       </div>

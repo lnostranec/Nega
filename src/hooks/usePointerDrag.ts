@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useRef } from "react";
+import { useCallback, useEffect, useRef } from "react";
 
 type PointerDragHandlers = {
   onDragStart?: () => void;
@@ -11,7 +11,9 @@ type PointerDragHandlers = {
 
 export function usePointerDrag(handlers: PointerDragHandlers) {
   const handlersRef = useRef(handlers);
-  handlersRef.current = handlers;
+  useEffect(() => {
+    handlersRef.current = handlers;
+  });
 
   const dragStart = useRef({ x: 0, y: 0, moved: false });
   const isActiveRef = useRef(false);

@@ -1,27 +1,26 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import { HeartIcon } from "@/components/icons";
 import { useFavoritesStore, type FavoriteItem } from "@/store/favorites";
+import { useIsClient } from "@/hooks/useIsClient";
 
 type FavoriteToggleProps = {
   item: FavoriteItem;
   className?: string;
   size?: "md" | "sm";
+  /** На мобилке без видимого круга (hit-area сохраняется) */
+  bareOnMobile?: boolean;
 };
 
 export function FavoriteToggle({
   item,
   className = "",
   size = "md",
+  bareOnMobile = false,
 }: FavoriteToggleProps) {
   const storedFavorite = useFavoritesStore((s) => s.isFavorite(item.productId));
   const toggleItem = useFavoritesStore((s) => s.toggleItem);
-  const [mounted, setMounted] = useState(false);
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
+  const mounted = useIsClient();
 
   const isFavorite = mounted && storedFavorite;
 
@@ -38,9 +37,17 @@ export function FavoriteToggle({
         e.stopPropagation();
         toggleItem(item);
       }}
-      className={`flex ${sizeClass} shrink-0 items-center justify-center rounded-full border border-stone-200 bg-white transition-colors duration-300 hover:border-brand hover:text-brand ${className} ${
-        isFavorite ? "border-brand text-brand" : "text-stone-400"
-      }`}
+      className={`flex ${sizeClass} shrink-0 items-center justify-center rounded-full transition-colors duration-300 hover:text-brand ${
+        bareOnMobile
+          ? "border-0 bg-transparent md:border md:border-stone-200 md:bg-white md:hover:border-brand"
+          : "border border-stone-200 bg-white hover:border-brand"
+      } ${
+        isFavorite
+          ? bareOnMobile
+            ? "text-brand md:border-brand"
+            : "border-brand text-brand"
+          : "text-stone-400"
+      } ${className}`}
     >
       <HeartIcon className={iconClass} filled={isFavorite} />
     </button>

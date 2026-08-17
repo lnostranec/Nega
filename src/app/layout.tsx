@@ -1,4 +1,6 @@
 import { Montserrat } from "next/font/google";
+import type { Metadata } from "next";
+import { Analytics } from "@/components/layout/Analytics";
 import "./globals.css";
 
 const montserrat = Montserrat({
@@ -7,12 +9,33 @@ const montserrat = Montserrat({
   weight: ["400", "500", "600", "700"],
 });
 
-export const metadata = {
+const SITE_URL =
+  process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, "") ||
+  "http://localhost:3000";
+
+export const metadata: Metadata = {
+  metadataBase: new URL(SITE_URL),
   title: {
     default: "Nega — женское бельё",
     template: "%s | Nega",
   },
-  description: "Интернет-магазин женского белья премиум-класса",
+  description:
+    "Интернет-магазин женского белья Nega: коллекции, доставка по России, примерка по меркам.",
+  openGraph: {
+    type: "website",
+    locale: "ru_RU",
+    siteName: "Nega",
+    title: "Nega — женское бельё",
+    description:
+      "Интернет-магазин женского белья Nega: коллекции, доставка по России.",
+    url: SITE_URL,
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Nega — женское бельё",
+    description:
+      "Интернет-магазин женского белья Nega: коллекции, доставка по России.",
+  },
   icons: {
     icon: [
       { url: "/favicon.ico" },
@@ -33,6 +56,7 @@ export default function RootLayout({
     <html lang="ru" className={`${montserrat.variable} h-full`}>
       <body className="min-h-full bg-white font-sans text-[#260402] antialiased">
         {children}
+        <Analytics />
       </body>
     </html>
   );

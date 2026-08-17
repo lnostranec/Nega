@@ -1,7 +1,10 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ProductForm } from "@/components/admin/ProductForm";
-import { getAdminProduct } from "@/lib/admin-products";
+import {
+  getAdminProduct,
+  listAdminProductOptions,
+} from "@/lib/admin-products";
 import { getCollections } from "@/lib/data";
 
 export const dynamic = "force-dynamic";
@@ -10,9 +13,10 @@ type Props = { params: Promise<{ id: string }> };
 
 export default async function AdminEditProductPage({ params }: Props) {
   const { id } = await params;
-  const [product, collections] = await Promise.all([
+  const [product, collections, productOptions] = await Promise.all([
     getAdminProduct(id),
     getCollections(),
+    listAdminProductOptions(id),
   ]);
 
   if (!product) notFound();
@@ -31,6 +35,7 @@ export default async function AdminEditProductPage({ params }: Props) {
             name: c.name,
             slug: c.slug,
           }))}
+          productOptions={productOptions}
           initial={{
             name: product.name,
             slug: product.slug,
@@ -51,7 +56,24 @@ export default async function AdminEditProductPage({ params }: Props) {
               color: v.color,
               stock: v.stock,
               sku: v.sku,
+              part: v.part,
             })),
+            bottomModels: product.bottomModels.map((m) => ({
+              name: m.name,
+              isActive: m.isActive,
+              sortOrder: m.sortOrder,
+            })),
+            setAddons: product.setAddons.map((a) => ({
+              name: a.name,
+              price: Number(a.price),
+              imageUrl: a.imageUrl,
+              note: a.note,
+              isActive: a.isActive,
+              sortOrder: a.sortOrder,
+            })),
+            relatedProductIds: product.relatedProducts.map(
+              (r) => r.relatedProductId,
+            ),
           }}
         />
       </div>

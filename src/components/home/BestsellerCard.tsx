@@ -29,26 +29,27 @@ export function BestsellerCard({ product }: BestsellerCardProps) {
           price: product.price,
           imageUrl: product.imageUrl ?? undefined,
         }}
+        bareOnMobile
         className="absolute right-0 top-0 z-10"
       />
 
       <Link
         href={`/product/${product.slug}`}
-        className="group/image relative mx-auto block w-full max-w-[220px]"
+        className="group relative mx-auto block w-full max-w-[280px]"
       >
-        <div className="relative aspect-[3/4] overflow-hidden border border-transparent bg-stone-50 transition-[border-color] duration-300 group-hover/image:border-brand">
+        <div className="relative aspect-[3/4] overflow-hidden bg-stone-50 card-hover-border">
           <Image
             src={product.imageUrl || PLACEHOLDER_PRODUCT}
             alt={product.name}
             fill
             draggable={false}
-            className="object-contain p-2 transition duration-300 group-hover/image:scale-105"
-            sizes="220px"
+            className="object-contain p-2 transition duration-300 group-hover:scale-105"
+            sizes="280px"
           />
         </div>
       </Link>
 
-      <h3 className="mx-auto mt-4 max-w-full px-1 text-xs font-medium uppercase tracking-wide">
+      <h3 className="mx-auto mt-4 max-w-full px-1 text-sm font-medium uppercase tracking-wide">
         <Link
           href={`/product/${product.slug}`}
           title={product.name}

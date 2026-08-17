@@ -16,6 +16,11 @@ import {
   validatePasswordConfirm,
   validatePhone,
 } from "@/lib/validation";
+import {
+  clientIpFromRequest,
+  rateLimit,
+  rateLimitResponse,
+} from "@/lib/rate-limit";
 
 type RegisterBody = {
   firstName?: string;
@@ -27,6 +32,10 @@ type RegisterBody = {
 
 export async function POST(request: Request) {
   if (!isDbConfigured()) return dbUnavailableResponse();
+
+  const ip = clientIpFromRequest(request);
+  const limited = rateLimit(`register:${ip}`, 10, 60 * 60 * 1000);
+  if (!limited.ok) return rateLimitResponse(limited.retryAfterSec);
 
   let body: RegisterBody;
   try {

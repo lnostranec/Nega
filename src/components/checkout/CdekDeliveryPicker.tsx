@@ -63,7 +63,12 @@ export function CdekDeliveryPicker({ subtotal, value, onChange }: Props) {
         const response = await fetch("/api/cdek/tariff", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ type, subtotal }),
+          body: JSON.stringify({
+            type,
+            subtotal,
+            cityCode: city?.code,
+            address: address.trim() || undefined,
+          }),
         });
         const data = await response.json();
         if (!cancelled) setDeliveryCost(data.cost ?? 0);
@@ -75,7 +80,7 @@ export function CdekDeliveryPicker({ subtotal, value, onChange }: Props) {
     return () => {
       cancelled = true;
     };
-  }, [type, subtotal]);
+  }, [type, subtotal, city?.code, address]);
 
   useEffect(() => {
     if (!city) {
@@ -99,18 +104,20 @@ export function CdekDeliveryPicker({ subtotal, value, onChange }: Props) {
       return;
     }
 
-    if (!address.trim()) {
-      onChange(null);
-      return;
-    }
+    if (type === "cdek_courier" || type === "yandex_courier") {
+      if (!address.trim()) {
+        onChange(null);
+        return;
+      }
 
-    onChange({
-      type,
-      cityCode: city.code,
-      cityName: city.name,
-      address: address.trim(),
-      cost: deliveryCost,
-    });
+      onChange({
+        type,
+        cityCode: city.code,
+        cityName: city.name,
+        address: address.trim(),
+        cost: deliveryCost,
+      });
+    }
   }, [type, city, selectedPvz, address, deliveryCost, onChange]);
 
   function selectCity(next: CdekCity) {
@@ -120,13 +127,19 @@ export function CdekDeliveryPicker({ subtotal, value, onChange }: Props) {
     setSelectedPvz(null);
   }
 
+  const DELIVERY_OPTIONS: DeliveryType[] = [
+    "cdek_pvz",
+    "cdek_courier",
+    "yandex_courier",
+  ];
+
   return (
     <div className="mt-4 space-y-4">
-      <div className="flex flex-col gap-2 sm:flex-row">
-        {(Object.keys(DELIVERY_TYPE_LABELS) as DeliveryType[]).map((option) => (
+      <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap">
+        {DELIVERY_OPTIONS.map((option) => (
           <label
             key={option}
-            className={`flex flex-1 cursor-pointer items-center gap-3 border px-4 py-3 transition-colors duration-300 ${
+            className={`flex min-w-[12rem] flex-1 cursor-pointer items-center gap-3 border px-4 py-3 transition-colors duration-300 ${
               type === option
                 ? "border-brand bg-brand/5"
                 : "border-stone-300"
@@ -212,7 +225,7 @@ export function CdekDeliveryPicker({ subtotal, value, onChange }: Props) {
         </div>
       )}
 
-      {type === "cdek_courier" && city && (
+      {(type === "cdek_courier" || type === "yandex_courier") && city && (
         <textarea
           value={address}
           onChange={(e) => setAddress(e.target.value)}
@@ -233,7 +246,8 @@ export function CdekDeliveryPicker({ subtotal, value, onChange }: Props) {
         )}
       </p>
       <p className="text-xs text-stone-400">
-        Тариф предварительный. После подключения API СДЭК расчёт будет точным.
+        Тариф предварительный. Стоимость и порог бесплатной доставки задаются в
+        настройках магазина.
       </p>
     </div>
   );

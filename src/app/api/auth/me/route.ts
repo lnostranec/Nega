@@ -1,5 +1,6 @@
 import { isDbConfigured } from "@/lib/prisma";
-import { dbUnavailableResponse, getSessionUser, toPublicUser } from "@/lib/auth";
+import { getSessionUser, toPublicUser } from "@/lib/auth";
+import { getUserLoyalty } from "@/lib/loyalty";
 
 export async function GET() {
   if (!isDbConfigured()) {
@@ -7,8 +8,16 @@ export async function GET() {
   }
 
   const user = await getSessionUser();
+  if (!user) {
+    return Response.json({ user: null, dbConfigured: true });
+  }
+
+  const loyalty = await getUserLoyalty(user.id);
   return Response.json({
-    user: user ? toPublicUser(user) : null,
+    user: toPublicUser(user, {
+      lifetimeSpend: loyalty.lifetimeSpend,
+      percent: loyalty.percent,
+    }),
     dbConfigured: true,
   });
 }

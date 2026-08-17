@@ -97,6 +97,13 @@ export function TrackOrderContent() {
               </p>
             </div>
 
+            {order.trackingNumber && (
+              <p className="mt-3 text-sm text-stone-700">
+                Трек-номер:{" "}
+                <span className="font-mono font-medium">{order.trackingNumber}</span>
+              </p>
+            )}
+
             {(order.deliveryMethod || order.cdekCityName) && (
               <div className="mt-4 border-t border-stone-100 pt-4 text-sm text-stone-600">
                 <p className="font-medium text-stone-800">Доставка</p>

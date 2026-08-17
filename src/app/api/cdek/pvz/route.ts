@@ -6,5 +6,6 @@ export async function GET(request: Request) {
   if (!cityCode) {
     return Response.json({ error: "Укажите cityCode" }, { status: 400 });
   }
-  return Response.json({ pvz: getPvzByCity(cityCode) });
+  const pvz = await getPvzByCity(cityCode);
+  return Response.json({ pvz });
 }

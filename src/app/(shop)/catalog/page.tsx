@@ -5,7 +5,7 @@ import { CatalogSidebar } from "@/components/catalog/CatalogSidebar";
 import { ProductCard } from "@/components/catalog/ProductCard";
 import { Breadcrumbs } from "@/components/ui/Breadcrumbs";
 import { SiteContainer } from "@/components/layout/SiteContainer";
-import { CATALOG_SORT_OPTIONS, type CatalogSort } from "@/lib/catalog";
+import { CATALOG_SORT_OPTIONS, parseCatalogSize, type CatalogSort } from "@/lib/catalog";
 import { getCatalogPageData } from "@/lib/catalog-data";
 
 export const dynamic = "force-dynamic";
@@ -24,6 +24,7 @@ type Props = {
     country?: string;
     material?: string;
     pattern?: string;
+    size?: string;
   }>;
 };
 
@@ -54,6 +55,7 @@ export default async function CatalogPage({ searchParams }: Props) {
   const country = params.country;
   const material = params.material;
   const pattern = params.pattern;
+  const size = parseCatalogSize(params.size);
 
   const data = await getCatalogPageData({
     collectionSlug: collection,
@@ -68,6 +70,7 @@ export default async function CatalogPage({ searchParams }: Props) {
     country,
     material,
     pattern,
+    size,
   });
 
   const start =
@@ -83,6 +86,7 @@ export default async function CatalogPage({ searchParams }: Props) {
     country,
     material,
     pattern,
+    size,
   };
 
   return (
@@ -115,9 +119,9 @@ export default async function CatalogPage({ searchParams }: Props) {
               currentMaxPrice={maxPrice}
               inStock={inStock}
               currentStyle={style}
-              currentCountry={country}
               currentMaterial={material}
               currentPattern={pattern}
+              currentSize={size}
             />
           </Suspense>
 
@@ -133,7 +137,7 @@ export default async function CatalogPage({ searchParams }: Props) {
 
           {data.products.length > 0 ? (
             <>
-              <div className="mt-8 grid grid-cols-2 gap-x-3 gap-y-8 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
+                <div className="mt-8 grid grid-cols-2 gap-x-3 gap-y-8 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
                 {data.products.map((product) => (
                   <ProductCard
                     key={product.id}
@@ -144,6 +148,7 @@ export default async function CatalogPage({ searchParams }: Props) {
                     price={product.price}
                     comparePrice={product.comparePrice}
                     imageUrl={product.imageUrl}
+                    fromCollection={collection || undefined}
                   />
                 ))}
               </div>
@@ -161,7 +166,9 @@ export default async function CatalogPage({ searchParams }: Props) {
             <p className="mt-16 text-center text-stone-500">
               {q
                 ? "По вашему запросу ничего не найдено. Попробуйте изменить фильтры."
-                : "В этой категории пока нет товаров."}
+                : size
+                  ? `Нет товаров в размере ${size}.`
+                  : "В этой категории пока нет товаров."}
             </p>
           )}
         </div>

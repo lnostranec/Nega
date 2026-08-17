@@ -1,5 +1,22 @@
 @import "tailwindcss";
 
+/* Ховеры только на устройствах с мышью/тачпадом — без «липкого» :hover на таче */
+@custom-variant hover {
+  @media (hover: hover) and (pointer: fine) {
+    &:hover {
+      @slot;
+    }
+  }
+}
+
+@custom-variant group-hover {
+  @media (hover: hover) and (pointer: fine) {
+    &:is(:where(.group):hover *) {
+      @slot;
+    }
+  }
+}
+
 :root {
   --background: #ffffff;
   --foreground: #260402;
@@ -14,6 +31,9 @@
   --font-sans: var(--font-montserrat);
   --default-transition-duration: 300ms;
   --default-transition-timing-function: ease;
+  /* Мелкие подписи контрастнее (ярче на белом) */
+  --color-stone-400: #78716c;
+  --color-stone-500: #57534e;
 }
 
 html {
@@ -34,22 +54,27 @@ input[type="checkbox"] {
   accent-color: var(--brand);
 }
 
+.size-calc-input {
+  -moz-appearance: textfield;
+  appearance: textfield;
+  background-color: var(--brand);
+  color-scheme: dark;
+}
+
+.size-calc-input::-webkit-outer-spin-button,
+.size-calc-input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
 .card-hover-border {
   border: 1px solid transparent;
   transition: border-color 0.3s ease;
 }
 
-.group:hover .card-hover-border {
-  border-color: var(--brand);
-}
-
 .site-card {
   border: 1px solid transparent;
   transition: border-color 0.3s ease;
-}
-
-.site-card:hover {
-  border-color: var(--brand);
 }
 
 .btn-site {
@@ -60,14 +85,24 @@ input[type="checkbox"] {
     opacity 0.3s ease;
 }
 
-.btn-site:hover:not(:disabled):not(.btn-site-filled) {
-  background-color: var(--brand);
-  color: #ffffff;
-  border-color: var(--brand);
-}
+@media (hover: hover) and (pointer: fine) {
+  .group:hover .card-hover-border {
+    border-color: var(--brand);
+  }
 
-.btn-site-filled:hover:not(:disabled) {
-  opacity: 0.88;
+  .site-card:hover {
+    border-color: var(--brand);
+  }
+
+  .btn-site:hover:not(:disabled):not(.btn-site-filled) {
+    background-color: var(--brand);
+    color: #ffffff;
+    border-color: var(--brand);
+  }
+
+  .btn-site-filled:hover:not(:disabled) {
+    opacity: 0.88;
+  }
 }
 
 .snap-carousel {

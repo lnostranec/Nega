@@ -1,9 +1,9 @@
 import { CATALOG_CATEGORIES } from "./catalog";
 import { demoToPageProduct, getDemoProductBySlug } from "./demo-products";
-import { getPrisma, isDbConfigured } from "./prisma";
+import { getPrisma, isDbAvailable } from "./prisma";
 
 export async function getCollections() {
-  if (!isDbConfigured()) return [];
+  if (!(await isDbAvailable())) return [];
   return getPrisma().collection.findMany({
     where: { isActive: true },
     orderBy: { sortOrder: "asc" },
@@ -11,7 +11,7 @@ export async function getCollections() {
 }
 
 export async function getCatalogCategories() {
-  if (!isDbConfigured()) {
+  if (!(await isDbAvailable())) {
     return CATALOG_CATEGORIES.map((c) => ({ name: c.name, slug: c.slug }));
   }
 
@@ -23,7 +23,7 @@ export async function getCatalogCategories() {
 }
 
 export async function getCollectionBySlug(slug: string) {
-  if (!isDbConfigured()) return null;
+  if (!(await isDbAvailable())) return null;
   return getPrisma().collection.findUnique({
     where: { slug, isActive: true },
     include: {
@@ -46,7 +46,7 @@ export async function getProducts(options?: {
   limit?: number;
   excludeSlug?: string;
 }) {
-  if (!isDbConfigured()) return [];
+  if (!(await isDbAvailable())) return [];
 
   const where = {
     isActive: true,
@@ -79,12 +79,26 @@ export async function getProducts(options?: {
 }
 
 export async function getProductBySlug(slug: string) {
-  if (isDbConfigured()) {
+  if (await isDbAvailable()) {
     const product = await getPrisma().product.findUnique({
       where: { slug, isActive: true },
       include: {
         images: { orderBy: { sortOrder: "asc" } },
-        variants: { orderBy: [{ color: "asc" }, { size: "asc" }] },
+        variants: {
+          orderBy: [
+            { part: "asc" },
+            { color: "asc" },
+            { size: "asc" },
+          ],
+        },
+        bottomModels: {
+          where: { isActive: true },
+          orderBy: { sortOrder: "asc" },
+        },
+        setAddons: {
+          where: { isActive: true },
+          orderBy: { sortOrder: "asc" },
+        },
         collections: { include: { collection: true } },
       },
     });
@@ -95,23 +109,131 @@ export async function getProductBySlug(slug: string) {
   return demo ? demoToPageProduct(demo) : null;
 }
 
+export async function getRelatedProductsForProduct(
+  productId: string,
+  options?: { excludeSlug?: string; limit?: number; fallbackCollectionSlug?: string },
+) {
+  const limit = options?.limit ?? 4;
+
+  if (!(await isDbAvailable())) return [];
+
+  const prisma = getPrisma();
+  const configured = await prisma.productRelated.findMany({
+    where: {
+      productId,
+      relatedProduct: {
+        isActive: true,
+        ...(options?.excludeSlug
+          ? { slug: { not: options.excludeSlug } }
+          : {}),
+      },
+    },
+    orderBy: { sortOrder: "asc" },
+    take: limit,
+    include: {
+      relatedProduct: {
+        include: {
+          images: { orderBy: { sortOrder: "asc" }, take: 1 },
+        },
+      },
+    },
+  });
+
+  if (configured.length > 0) {
+    return configured.map((row) => row.relatedProduct);
+  }
+
+  const fromCollection = await getProducts({
+    collectionSlug: options?.fallbackCollectionSlug,
+    excludeSlug: options?.excludeSlug,
+    limit,
+  });
+
+  if (fromCollection.length > 0) return fromCollection;
+
+  return getProducts({
+    excludeSlug: options?.excludeSlug,
+    limit,
+  });
+}
+
 export async function getSiteSettings() {
-  if (!isDbConfigured()) return null;
+  if (!(await isDbAvailable())) return null;
   return getPrisma().siteSettings.findUnique({ where: { id: "default" } });
 }
 
 export async function getAdminStats() {
-  if (!isDbConfigured()) {
-    return { productsCount: 0, ordersCount: 0, usersCount: 0, pendingOrders: 0 };
+  if (!(await isDbAvailable())) {
+    return {
+      productsCount: 0,
+      ordersCount: 0,
+      usersCount: 0,
+      pendingOrders: 0,
+      awaitingPayment: 0,
+      paidToday: 0,
+      withoutTracking: 0,
+      lowStockVariants: 0,
+      revenue7d: 0,
+    };
   }
 
-  const [productsCount, ordersCount, usersCount, pendingOrders] =
-    await Promise.all([
-      getPrisma().product.count(),
-      getPrisma().order.count(),
-      getPrisma().user.count(),
-      getPrisma().order.count({ where: { status: "PENDING" } }),
-    ]);
+  const prisma = getPrisma();
+  const startOfDay = new Date();
+  startOfDay.setHours(0, 0, 0, 0);
+  const weekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
 
-  return { productsCount, ordersCount, usersCount, pendingOrders };
+  const [
+    productsCount,
+    ordersCount,
+    usersCount,
+    pendingOrders,
+    awaitingPayment,
+    paidToday,
+    withoutTracking,
+    lowStockVariants,
+    revenueAgg,
+  ] = await Promise.all([
+    prisma.product.count({ where: { isActive: true } }),
+    prisma.order.count(),
+    prisma.user.count(),
+    prisma.order.count({
+      where: { status: { in: ["PAID", "PROCESSING"] } },
+    }),
+    prisma.order.count({
+      where: { paymentStatus: "PENDING", status: "PENDING" },
+    }),
+    prisma.order.count({
+      where: {
+        paymentStatus: "PAID",
+        createdAt: { gte: startOfDay },
+      },
+    }),
+    prisma.order.count({
+      where: {
+        paymentStatus: "PAID",
+        status: { in: ["PAID", "PROCESSING", "SHIPPED"] },
+        OR: [{ trackingNumber: null }, { trackingNumber: "" }],
+      },
+    }),
+    prisma.productVariant.count({ where: { stock: { lte: 2 } } }),
+    prisma.order.aggregate({
+      where: {
+        paymentStatus: "PAID",
+        createdAt: { gte: weekAgo },
+      },
+      _sum: { total: true },
+    }),
+  ]);
+
+  return {
+    productsCount,
+    ordersCount,
+    usersCount,
+    pendingOrders,
+    awaitingPayment,
+    paidToday,
+    withoutTracking,
+    lowStockVariants,
+    revenue7d: Number(revenueAgg._sum.total ?? 0),
+  };
 }

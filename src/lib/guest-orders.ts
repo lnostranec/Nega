@@ -23,6 +23,7 @@ export type TrackedOrderView = {
   deliveryAddress: string | null;
   cdekPvzName: string | null;
   cdekCityName: string | null;
+  trackingNumber: string | null;
   createdAt: string;
   items: OrderItemView[];
 };
@@ -97,6 +98,7 @@ function toTrackedOrderView(order: {
   deliveryAddress: string | null;
   cdekPvzName: string | null;
   cdekCityName: string | null;
+  trackingNumber?: string | null;
   createdAt: Date;
   items: {
     id: string;
@@ -124,6 +126,7 @@ function toTrackedOrderView(order: {
     deliveryAddress: order.deliveryAddress,
     cdekPvzName: order.cdekPvzName,
     cdekCityName: order.cdekCityName,
+    trackingNumber: order.trackingNumber ?? null,
     createdAt: order.createdAt.toISOString(),
     items: order.items.map((item) => ({
       id: item.id,

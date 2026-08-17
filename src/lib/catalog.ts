@@ -15,8 +15,8 @@ export const CATALOG_SORT_OPTIONS = [
   { value: "default", label: "Рекомендуем" },
   { value: "popular", label: "Популярные" },
   { value: "new", label: "Новинки" },
-  { value: "price-asc", label: "Дешевле" },
-  { value: "price-desc", label: "Дороже" },
+  { value: "price-asc", label: "По возрастанию" },
+  { value: "price-desc", label: "По убыванию" },
 ] as const;
 
 export const CATALOG_FOR_YOU_LABEL = "Фильтры для вас";
@@ -50,6 +50,7 @@ export type CatalogFilters = {
   sort?: string;
   page?: number;
   color?: string;
+  size?: string;
   minPrice?: number;
   maxPrice?: number;
   inStock?: boolean;
@@ -59,6 +60,13 @@ export type CatalogFilters = {
   pattern?: string;
 };
 
+export function parseCatalogSize(value?: string): string | undefined {
+  if (!value) return undefined;
+  const trimmed = value.trim().toUpperCase();
+  if (!/^[0-9A-Z]{1,8}$/.test(trimmed)) return undefined;
+  return trimmed;
+}
+
 export function buildCatalogUrl(params: CatalogFilters) {
   const search = new URLSearchParams();
   if (params.collection) search.set("collection", params.collection);
@@ -66,6 +74,7 @@ export function buildCatalogUrl(params: CatalogFilters) {
   if (params.sort && params.sort !== "default") search.set("sort", params.sort);
   if (params.page && params.page > 1) search.set("page", String(params.page));
   if (params.color) search.set("color", params.color);
+  if (params.size) search.set("size", params.size);
   if (params.minPrice !== undefined && params.minPrice > 0) {
     search.set("minPrice", String(params.minPrice));
   }

@@ -3,6 +3,7 @@ import { Footer } from "@/components/layout/Footer";
 import { CookieConsent } from "@/components/layout/CookieConsent";
 import { AuthModalProvider } from "@/components/account/AuthModalProvider";
 import { ConsultationModalProvider } from "@/components/consultation/ConsultationModalProvider";
+import { SizeCalculatorModalProvider } from "@/components/size-calculator/SizeCalculatorModalProvider";
 
 export default function ShopLayout({
   children,
@@ -12,12 +13,14 @@ export default function ShopLayout({
   return (
     <AuthModalProvider>
       <ConsultationModalProvider>
-        <div className="flex min-h-full flex-col">
-          <Header />
-          <main className="flex-1">{children}</main>
-          <Footer />
-          <CookieConsent />
-        </div>
+        <SizeCalculatorModalProvider>
+          <div className="flex min-h-full flex-col">
+            <Header />
+            <main className="flex-1">{children}</main>
+            <Footer />
+            <CookieConsent />
+          </div>
+        </SizeCalculatorModalProvider>
       </ConsultationModalProvider>
     </AuthModalProvider>
   );

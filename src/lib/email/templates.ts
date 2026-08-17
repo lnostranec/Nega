@@ -19,6 +19,7 @@ export type OrderEmailData = {
   deliveryAddress: string | null;
   cdekPvzName: string | null;
   cdekCityName: string | null;
+  trackingNumber?: string | null;
 };
 
 const SHOP_NAME = process.env.SHOP_NAME ?? "Nega";
@@ -106,6 +107,18 @@ export function orderPaidEmail(data: OrderEmailData) {
   return { subject, html };
 }
 
+export function orderProcessingEmail(data: OrderEmailData) {
+  const subject = `Заказ ${data.orderNumber} собирается — ${SHOP_NAME}`;
+  const html = layout(
+    subject,
+    `<h1 style="font-size:20px;font-weight:600;margin:16px 0">Заказ собирается</h1>
+    <p>Заказ <strong>${data.orderNumber}</strong> передан в сборку на складе.</p>
+    ${deliveryBlock(data)}
+    <p style="margin-top:24px"><a href="${siteUrl()}/order/track" style="color:#260402">Отследить заказ</a></p>`,
+  );
+  return { subject, html };
+}
+
 export function orderCreatedEmail(data: OrderEmailData) {
   const subject = `Заказ ${data.orderNumber} оформлен — ${SHOP_NAME}`;
   const html = layout(
@@ -122,12 +135,28 @@ export function orderCreatedEmail(data: OrderEmailData) {
 
 export function orderShippedEmail(data: OrderEmailData) {
   const subject = `Заказ ${data.orderNumber} отправлен — ${SHOP_NAME}`;
+  const tracking = data.trackingNumber
+    ? `<p>Трек-номер: <strong>${data.trackingNumber}</strong></p>`
+    : "";
   const html = layout(
     subject,
     `<h1 style="font-size:20px;font-weight:600;margin:16px 0">Заказ отправлен</h1>
     <p>Заказ <strong>${data.orderNumber}</strong> передан в службу доставки.</p>
+    ${tracking}
     ${deliveryBlock(data)}
     <p style="margin-top:24px"><a href="${siteUrl()}/order/track" style="color:#260402">Отследить заказ</a></p>`,
+  );
+  return { subject, html };
+}
+
+export function orderDeliveredEmail(data: OrderEmailData) {
+  const subject = `Заказ ${data.orderNumber} доставлен — ${SHOP_NAME}`;
+  const html = layout(
+    subject,
+    `<h1 style="font-size:20px;font-weight:600;margin:16px 0">Заказ доставлен</h1>
+    <p>Заказ <strong>${data.orderNumber}</strong> отмечен как доставленный.</p>
+    <p>Спасибо, что выбрали ${SHOP_NAME}! Будем рады вашему отзыву.</p>
+    <p style="margin-top:24px"><a href="${siteUrl()}/reviews" style="color:#260402">Оставить отзыв</a> · <a href="${siteUrl()}/catalog" style="color:#260402">В каталог</a></p>`,
   );
   return { subject, html };
 }
