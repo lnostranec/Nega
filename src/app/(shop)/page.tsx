@@ -2,8 +2,7 @@ import { HeroSlider } from "@/components/home/HeroSlider";
 import { BestsellersCarousel } from "@/components/home/BestsellersCarousel";
 import { CategoryGrid } from "@/components/home/CategoryGrid";
 import { getDemoProducts } from "@/lib/demo-products";
-import { getProducts } from "@/lib/data";
-import { toCatalogItem } from "@/lib/product-display";
+import { getHeroSlides, getHomepageBestsellers } from "@/lib/data";
 import { isDbAvailable } from "@/lib/prisma";
 import type { BestsellerProduct } from "@/components/home/BestsellerCard";
 
@@ -11,19 +10,10 @@ export const dynamic = "force-dynamic";
 
 export default async function HomePage() {
   let bestsellers: BestsellerProduct[] = [];
+  const heroSlides = await getHeroSlides();
 
   if (await isDbAvailable()) {
-    const products = await getProducts({ limit: 8 });
-    bestsellers = products.map((product) => {
-      const item = toCatalogItem(product);
-      return {
-        productId: item.id,
-        slug: item.slug,
-        name: item.name,
-        price: item.price,
-        imageUrl: item.imageUrl,
-      };
-    });
+    bestsellers = await getHomepageBestsellers();
   } else {
     bestsellers = getDemoProducts(8).map((demo) => ({
       productId: demo.id,
@@ -36,7 +26,7 @@ export default async function HomePage() {
 
   return (
     <>
-      <HeroSlider />
+      <HeroSlider slides={heroSlides} />
       <BestsellersCarousel products={bestsellers} />
       <CategoryGrid />
     </>

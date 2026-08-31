@@ -75,7 +75,7 @@ export function FavoritesContent() {
                     src={item.imageUrl || PLACEHOLDER_PRODUCT}
                     alt={item.name}
                     fill
-                    className="object-contain p-2 transition duration-300 group-hover:scale-105"
+                    className="object-cover transition duration-300 group-hover:scale-105"
                     sizes="220px"
                   />
                 </div>

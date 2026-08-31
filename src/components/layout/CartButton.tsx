@@ -219,7 +219,7 @@ function CartPreviewContent({
                   alt={item.name}
                   width={44}
                   height={56}
-                  className="h-full w-full object-contain p-1"
+                  className="h-full w-full object-cover"
                   sizes="44px"
                 />
               </div>

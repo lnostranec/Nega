@@ -1,8 +1,8 @@
-import { getPrisma, isDbConfigured } from "@/lib/prisma";
+import { getPrisma } from "@/lib/prisma";
 import {
   createSession,
-  dbUnavailableResponse,
   findUserByEmail,
+  requireDb,
   setSessionCookie,
   toPublicUser,
   verifyPassword,
@@ -21,7 +21,8 @@ type LoginBody = {
 };
 
 export async function POST(request: Request) {
-  if (!isDbConfigured()) return dbUnavailableResponse();
+  const dbError = await requireDb();
+  if (dbError) return dbError;
 
   const ip = clientIpFromRequest(request);
   const limited = rateLimit(`login:${ip}`, 20, 15 * 60 * 1000);

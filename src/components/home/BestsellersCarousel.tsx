@@ -49,7 +49,7 @@ export function BestsellersCarousel({ products }: BestsellersCarouselProps) {
           onClick={() => goTo(index - 1)}
           disabled={index === 0}
           aria-label="Назад"
-          className="absolute -left-1 top-[40%] z-10 hidden -translate-y-1/2 text-stone-400 transition hover:text-[#260402] disabled:opacity-30 sm:block lg:left-0"
+          className="absolute -left-1 top-[40%] z-10 hidden -translate-y-1/2 cursor-pointer text-stone-400 transition hover:text-[#260402] disabled:cursor-not-allowed disabled:opacity-30 sm:block lg:left-0"
         >
           <ChevronLeftIcon className="h-8 w-8" />
         </button>
@@ -79,7 +79,7 @@ export function BestsellersCarousel({ products }: BestsellersCarouselProps) {
           onClick={() => goTo(index + 1)}
           disabled={index >= maxIndex}
           aria-label="Вперёд"
-          className="absolute -right-1 top-[40%] z-10 hidden -translate-y-1/2 text-stone-400 transition hover:text-[#260402] disabled:opacity-30 sm:block lg:right-0"
+          className="absolute -right-1 top-[40%] z-10 hidden -translate-y-1/2 cursor-pointer text-stone-400 transition hover:text-[#260402] disabled:cursor-not-allowed disabled:opacity-30 sm:block lg:right-0"
         >
           <ChevronRightIcon className="h-8 w-8" />
         </button>
@@ -93,7 +93,7 @@ export function BestsellersCarousel({ products }: BestsellersCarouselProps) {
               type="button"
               aria-label={`Страница ${dotIndex + 1}`}
               onClick={() => goTo(dotIndex)}
-              className={`h-2 w-2 rounded-full transition ${
+              className={`h-2 w-2 cursor-pointer rounded-full transition ${
                 dotIndex === index ? "bg-[#260402]" : "bg-stone-300"
               }`}
             />

@@ -21,16 +21,16 @@ type AddToCartProps = {
   variants: Variant[];
 };
 
-const selectedClass = "border border-brand bg-brand text-white";
+const selectedClass = "cursor-pointer border border-brand bg-brand text-white";
 const defaultClass =
-  "border border-stone-300 bg-white text-stone-700 transition-colors duration-300 hover:border-brand";
+  "cursor-pointer border border-stone-300 bg-white text-stone-700 transition-colors duration-300 hover:border-brand";
 
 /** Адаптивная сетка размеров — кнопки не сжимаются меньше читаемой ширины */
 const SIZE_ROW_CLASS = "w-full max-w-[48rem]";
 const SIZE_GRID_CLASS =
   "grid gap-2 [grid-template-columns:repeat(auto-fill,minmax(3.5rem,1fr))] sm:[grid-template-columns:repeat(auto-fill,minmax(4rem,1fr))]";
 const SIZE_BTN_CLASS =
-  "flex h-11 min-h-11 w-full items-center justify-center overflow-hidden px-1 text-xs leading-none sm:h-12 sm:min-h-12 sm:px-1.5 sm:text-sm disabled:cursor-not-allowed disabled:opacity-30";
+  "flex h-11 min-h-11 w-full cursor-pointer items-center justify-center overflow-hidden px-1 text-xs leading-none sm:h-12 sm:min-h-12 sm:px-1.5 sm:text-sm disabled:cursor-not-allowed disabled:opacity-30";
 
 export function AddToCart({
   productId,

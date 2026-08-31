@@ -37,7 +37,7 @@ export function FavoriteToggle({
         e.stopPropagation();
         toggleItem(item);
       }}
-      className={`flex ${sizeClass} shrink-0 items-center justify-center rounded-full transition-colors duration-300 hover:text-brand ${
+      className={`flex ${sizeClass} shrink-0 cursor-pointer items-center justify-center rounded-full transition-colors duration-300 hover:text-brand ${
         bareOnMobile
           ? "border-0 bg-transparent md:border md:border-stone-200 md:bg-white md:hover:border-brand"
           : "border border-stone-200 bg-white hover:border-brand"

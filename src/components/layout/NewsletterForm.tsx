@@ -34,7 +34,7 @@ export function NewsletterForm() {
         <button
           type="submit"
           disabled={!agreed}
-          className="btn-site btn-site-filled w-full bg-brand py-2.5 text-sm font-medium text-white disabled:opacity-50"
+          className="btn-site btn-site-filled w-full cursor-pointer bg-brand py-2.5 text-sm font-medium text-white disabled:cursor-not-allowed disabled:opacity-50"
         >
           Получить промокод
         </button>

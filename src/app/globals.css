@@ -78,6 +78,7 @@ input[type="checkbox"] {
 }
 
 .btn-site {
+  @apply cursor-pointer disabled:cursor-not-allowed;
   transition:
     background-color 0.3s ease,
     color 0.3s ease,

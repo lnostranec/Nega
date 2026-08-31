@@ -90,6 +90,7 @@ model Product {
   collections  ProductCollection[]
   relatedProducts ProductRelated[] @relation("ProductRelatedSource")
   relatedOf       ProductRelated[] @relation("ProductRelatedTarget")
+  homepageBestsellers HomepageBestseller[]
   createdAt    DateTime            @default(now())
   updatedAt    DateTime            @updatedAt
 }
@@ -161,6 +162,16 @@ model ProductRelated {
 
   @@unique([productId, relatedProductId])
   @@index([productId])
+}
+
+model HomepageBestseller {
+  id        String   @id @default(cuid())
+  productId String   @unique
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  sortOrder Int      @default(0)
+  createdAt DateTime @default(now())
+
+  @@index([sortOrder])
 }
 
 model Order {
@@ -256,6 +267,20 @@ enum PointType {
   EARNED
   SPENT
   ADJUSTMENT
+}
+
+model HeroSlide {
+  id        String   @id @default(cuid())
+  title     String
+  subtitle  String   @default("")
+  href      String   @default("/catalog")
+  imageUrl  String
+  sortOrder Int      @default(0)
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([isActive, sortOrder])
 }
 
 model SiteSettings {

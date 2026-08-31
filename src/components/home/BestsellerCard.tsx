@@ -43,7 +43,7 @@ export function BestsellerCard({ product }: BestsellerCardProps) {
             alt={product.name}
             fill
             draggable={false}
-            className="object-contain p-2 transition duration-300 group-hover:scale-105"
+            className="object-cover transition duration-300 group-hover:scale-105"
             sizes="280px"
           />
         </div>

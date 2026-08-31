@@ -9,7 +9,7 @@ import {
   toPublicUser,
   type PublicUser,
 } from "@/lib/auth-types";
-import { getPrisma, isDbConfigured } from "@/lib/prisma";
+import { getPrisma, isDbAvailable, isDbConfigured } from "@/lib/prisma";
 
 export { SESSION_COOKIE, SESSION_MAX_AGE_DAYS, toPublicUser, type PublicUser };
 
@@ -70,27 +70,35 @@ export async function getSessionUser(): Promise<User | null> {
   const token = await getSessionToken();
   if (!token) return null;
 
-  const prisma = getPrisma();
-  const session = await prisma.session.findUnique({
-    where: { token },
-    include: { user: true },
-  });
+  try {
+    const prisma = getPrisma();
+    const session = await prisma.session.findUnique({
+      where: { token },
+      include: { user: true },
+    });
 
-  if (!session) return null;
+    if (!session) return null;
 
-  if (session.expiresAt < new Date()) {
-    await prisma.session.delete({ where: { id: session.id } }).catch(() => {});
+    if (session.expiresAt < new Date()) {
+      await prisma.session.delete({ where: { id: session.id } }).catch(() => {});
+      return null;
+    }
+
+    return session.user;
+  } catch {
     return null;
   }
-
-  return session.user;
 }
 
 export async function findUserByEmail(email: string): Promise<User | null> {
-  const prisma = getPrisma();
-  return prisma.user.findUnique({
-    where: { email: normalizeEmail(email) },
-  });
+  try {
+    const prisma = getPrisma();
+    return prisma.user.findUnique({
+      where: { email: normalizeEmail(email) },
+    });
+  } catch {
+    return null;
+  }
 }
 
 export function dbUnavailableResponse() {
@@ -101,4 +109,20 @@ export function dbUnavailableResponse() {
     },
     { status: 503 },
   );
+}
+
+export function dbUnreachableResponse() {
+  return Response.json(
+    {
+      error:
+        "База данных временно недоступна. Запустите кластер PostgreSQL в Yandex Cloud и попробуйте снова.",
+    },
+    { status: 503 },
+  );
+}
+
+export async function requireDb(): Promise<Response | null> {
+  if (!isDbConfigured()) return dbUnavailableResponse();
+  if (!(await isDbAvailable())) return dbUnreachableResponse();
+  return null;
 }

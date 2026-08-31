@@ -2,7 +2,15 @@ import { NEGRA_PHOTOS } from "./photos";
 
 export const PLACEHOLDER_PRODUCT = "/placeholders/product.svg";
 
-export const HERO_SLIDES = [
+export type HeroSlideView = {
+  id: string;
+  title: string;
+  subtitle: string;
+  href: string;
+  image: string;
+};
+
+export const HERO_SLIDES: readonly HeroSlideView[] = [
   {
     id: "hero-1",
     title: "Новая коллекция",

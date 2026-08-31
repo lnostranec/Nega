@@ -61,11 +61,7 @@ export function ProductCard({
             src={imageUrl || PLACEHOLDER_PRODUCT}
             alt={name}
             fill
-            className={
-              isCompact
-                ? "object-contain p-0 transition duration-300 scale-[1.05] group-hover:scale-110"
-                : "object-contain p-2 transition duration-300 group-hover:scale-105"
-            }
+            className="object-cover transition duration-300 group-hover:scale-105"
             sizes={
               isCompact
                 ? "(max-width: 640px) 45vw, (max-width: 1280px) 20vw, 16vw"

@@ -5,11 +5,15 @@ import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { ChevronLeftIcon, ChevronRightIcon } from "@/components/icons";
 import { usePointerDrag } from "@/hooks/usePointerDrag";
-import { HERO_SLIDES } from "@/lib/constants";
 import { SiteContainer } from "@/components/layout/SiteContainer";
+import type { HeroSlideView } from "@/lib/placeholders";
 
-export function HeroSlider() {
-  const total = HERO_SLIDES.length;
+type HeroSliderProps = {
+  slides: HeroSlideView[];
+};
+
+export function HeroSlider({ slides }: HeroSliderProps) {
+  const total = slides.length;
   const [current, setCurrent] = useState(0);
   const [isDragging, setIsDragging] = useState(false);
   const [viewportWidth, setViewportWidth] = useState(0);
@@ -24,6 +28,7 @@ export function HeroSlider() {
 
   const goTo = useCallback(
     (index: number) => {
+      if (total === 0) return;
       setCurrent(Math.max(0, Math.min(index, total - 1)));
     },
     [total],
@@ -57,9 +62,14 @@ export function HeroSlider() {
   }, []);
 
   useEffect(() => {
+    if (current >= total) setCurrent(0);
+  }, [current, total]);
+
+  useEffect(() => {
+    if (total <= 1) return;
     const timer = setInterval(next, 6000);
     return () => clearInterval(timer);
-  }, [next]);
+  }, [next, total]);
 
   const applyTrackTransform = useCallback(
     (translate: number, animate: boolean) => {
@@ -125,6 +135,8 @@ export function HeroSlider() {
     }
   }, []);
 
+  if (total === 0) return null;
+
   return (
     <section className="relative bg-white">
       <SiteContainer>
@@ -144,7 +156,7 @@ export function HeroSlider() {
               width: viewportWidth > 0 ? viewportWidth * total : "100%",
             }}
           >
-            {HERO_SLIDES.map((s) => (
+            {slides.map((s) => (
               <div
                 key={s.id}
                 className="relative h-full shrink-0"
@@ -155,7 +167,7 @@ export function HeroSlider() {
                   alt={s.title}
                   fill
                   className="pointer-events-none object-cover"
-                  priority={s.id === HERO_SLIDES[0].id}
+                  priority={s.id === slides[0]?.id}
                   sizes="(max-width: 1800px) 100vw, 1800px"
                   draggable={false}
                 />
@@ -190,7 +202,7 @@ export function HeroSlider() {
               <ChevronLeftIcon className="h-8 w-8" />
             </button>
             <Link
-              href={HERO_SLIDES[current]?.href ?? HERO_SLIDES[0].href}
+              href={slides[current]?.href ?? slides[0].href}
               className="border border-white px-8 py-3 text-xs font-medium uppercase tracking-[0.2em] text-white transition duration-300 hover:border-brand hover:bg-brand hover:text-white"
             >
               Смотреть
@@ -225,7 +237,7 @@ export function HeroSlider() {
         </div>
 
         <div className="flex justify-center gap-2 py-4">
-          {HERO_SLIDES.map((s, index) => (
+          {slides.map((s, index) => (
             <button
               key={s.id}
               type="button"

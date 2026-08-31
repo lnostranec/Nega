@@ -16,7 +16,7 @@ export function Button({
   return (
     <button
       className={clsx(
-        "inline-flex items-center justify-center font-medium transition duration-300 disabled:cursor-not-allowed disabled:opacity-50",
+        "inline-flex cursor-pointer items-center justify-center font-medium transition duration-300 disabled:cursor-not-allowed disabled:opacity-50",
         {
           "bg-brand text-white btn-site btn-site-filled": variant === "primary",
           "border border-stone-300 bg-stone-100 text-stone-900 btn-site": variant === "secondary",

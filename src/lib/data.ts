@@ -1,5 +1,7 @@
+import { toBestsellerCard } from "./admin-bestsellers";
 import { CATALOG_CATEGORIES } from "./catalog";
 import { demoToPageProduct, getDemoProductBySlug } from "./demo-products";
+import { HERO_SLIDES, type HeroSlideView } from "./placeholders";
 import { getPrisma, isDbAvailable } from "./prisma";
 
 export async function getCollections() {
@@ -160,6 +162,70 @@ export async function getRelatedProductsForProduct(
 export async function getSiteSettings() {
   if (!(await isDbAvailable())) return null;
   return getPrisma().siteSettings.findUnique({ where: { id: "default" } });
+}
+
+export type { HeroSlideView };
+
+export async function getHeroSlides(): Promise<HeroSlideView[]> {
+  if (!(await isDbAvailable())) {
+    return HERO_SLIDES.map((slide) => ({
+      id: slide.id,
+      title: slide.title,
+      subtitle: slide.subtitle,
+      href: slide.href,
+      image: slide.image,
+    }));
+  }
+
+  try {
+    const slides = await getPrisma().heroSlide.findMany({
+      where: { isActive: true },
+      orderBy: { sortOrder: "asc" },
+    });
+
+    if (slides.length === 0) {
+      return [];
+    }
+
+    return slides.map((slide) => ({
+      id: slide.id,
+      title: slide.title,
+      subtitle: slide.subtitle,
+      href: slide.href,
+      image: slide.imageUrl,
+    }));
+  } catch {
+    return HERO_SLIDES.map((slide) => ({
+      id: slide.id,
+      title: slide.title,
+      subtitle: slide.subtitle,
+      href: slide.href,
+      image: slide.image,
+    }));
+  }
+}
+
+export async function getHomepageBestsellers() {
+  if (!(await isDbAvailable())) return [];
+
+  try {
+    const rows = await getPrisma().homepageBestseller.findMany({
+      where: { product: { isActive: true } },
+      orderBy: { sortOrder: "asc" },
+      include: {
+        product: {
+          include: {
+            images: { orderBy: { sortOrder: "asc" }, take: 1 },
+          },
+        },
+      },
+    });
+
+    return rows.map((row) => toBestsellerCard(row.product));
+  } catch {
+    const products = await getProducts({ limit: 8 });
+    return products.map((product) => toBestsellerCard(product));
+  }
 }
 
 export async function getAdminStats() {

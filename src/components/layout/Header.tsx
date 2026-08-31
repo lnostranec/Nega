@@ -12,6 +12,7 @@ import { SizeCalculatorButton } from "@/components/size-calculator/SizeCalculato
 import { SiteContainer } from "./SiteContainer";
 import { CartButton } from "./CartButton";
 import { FavoritesButton } from "./FavoritesButton";
+import { SizeCalculatorHeaderButton } from "./SizeCalculatorHeaderButton";
 import {
   HEADER_ICON_BUTTON_CLASS,
   HEADER_ICON_CLASS,
@@ -163,6 +164,7 @@ export function Header() {
                 >
                   <SearchIcon className={HEADER_ICON_CLASS} />
                 </button>
+                <SizeCalculatorHeaderButton />
                 <FavoritesButton />
                 <button
                   type="button"

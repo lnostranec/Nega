@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/Button";
 import { Breadcrumbs } from "@/components/ui/Breadcrumbs";
+import { ImagePreviewModal } from "@/components/ui/ImagePreviewModal";
 import { SiteContainer } from "@/components/layout/SiteContainer";
 import { formatPrice } from "@/lib/format";
 import {
@@ -20,9 +21,9 @@ import {
 } from "@/lib/gift-certificate";
 import { useCartStore } from "@/store/cart";
 
-const selectedClass = "border border-brand bg-brand text-white";
+const selectedClass = "cursor-pointer border border-brand bg-brand text-white";
 const defaultClass =
-  "border border-stone-300 bg-white text-stone-700 transition-colors duration-300 hover:border-brand";
+  "cursor-pointer border border-stone-300 bg-white text-stone-700 transition-colors duration-300 hover:border-brand";
 
 type AccordionSection = "description" | "delivery" | null;
 
@@ -39,6 +40,7 @@ export function GiftCertificateContent() {
   );
   const [openSection, setOpenSection] = useState<AccordionSection>(null);
   const [viewers, setViewers] = useState(12);
+  const [previewOpen, setPreviewOpen] = useState(false);
 
   useEffect(() => {
     setViewers(Math.floor(Math.random() * 12) + 8);
@@ -91,8 +93,11 @@ export function GiftCertificateContent() {
 
       <div className="mt-8 grid gap-10 lg:grid-cols-[minmax(0,518px)_1fr] lg:items-start lg:gap-12 xl:grid-cols-[minmax(0,576px)_1fr]">
         <div className="mx-auto w-full max-w-[461px] space-y-4 sm:max-w-[518px] lg:mx-0">
-          <div
-            className={`relative aspect-[3/4] overflow-hidden border border-stone-200 ${activeDesign.previewClass}`}
+          <button
+            type="button"
+            onClick={() => setPreviewOpen(true)}
+            aria-label="Открыть изображение сертификата"
+            className={`relative aspect-[3/4] w-full cursor-pointer overflow-hidden border border-stone-200 transition duration-300 hover:opacity-95 ${activeDesign.previewClass}`}
           >
             <Image
               src={GIFT_CERTIFICATE_IMAGE}
@@ -102,7 +107,7 @@ export function GiftCertificateContent() {
               priority
               sizes="(max-width: 1024px) 100vw, 576px"
             />
-          </div>
+          </button>
 
           <div className="grid grid-cols-4 gap-2">
             {GIFT_CERTIFICATE_DESIGNS.map((item) => (
@@ -111,7 +116,8 @@ export function GiftCertificateContent() {
                 type="button"
                 onClick={() => setDesign(item.id)}
                 aria-label={`Дизайн ${item.label}`}
-                className={`relative aspect-square overflow-hidden border transition duration-300 ${
+                aria-pressed={design === item.id}
+                className={`relative aspect-square cursor-pointer overflow-hidden border transition duration-300 ${
                   design === item.id
                     ? "border-brand ring-2 ring-brand ring-offset-2"
                     : "border-stone-200 opacity-80 hover:opacity-100"
@@ -212,7 +218,7 @@ export function GiftCertificateContent() {
             <button
               type="button"
               onClick={handleHint}
-              className="w-full border border-stone-300 bg-white py-3 text-sm font-medium uppercase tracking-widest text-[#260402] transition-colors duration-300 hover:border-brand"
+              className="w-full cursor-pointer border border-stone-300 bg-white py-3 text-sm font-medium uppercase tracking-widest text-[#260402] transition-colors duration-300 hover:border-brand"
             >
               Намекнуть на подарок
             </button>
@@ -232,7 +238,7 @@ export function GiftCertificateContent() {
                         current === section.id ? null : section.id,
                       )
                     }
-                    className="flex w-full items-center justify-between py-4 text-left text-sm font-medium uppercase tracking-widest text-[#260402]"
+                    className="flex w-full cursor-pointer items-center justify-between py-4 text-left text-sm font-medium uppercase tracking-widest text-[#260402]"
                   >
                     {section.label}
                     <span
@@ -261,6 +267,16 @@ export function GiftCertificateContent() {
           </div>
         </div>
       </div>
+
+      <ImagePreviewModal
+        open={previewOpen}
+        onClose={() => setPreviewOpen(false)}
+        src={GIFT_CERTIFICATE_IMAGE}
+        alt="Подарочный сертификат Nega"
+        ariaLabel="Подарочный сертификат"
+        frameClassName={`bg-white ${activeDesign.previewClass}`}
+        imageClassName="object-contain p-6 mix-blend-multiply"
+      />
     </SiteContainer>
   );
 }

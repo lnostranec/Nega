@@ -1,10 +1,10 @@
-import { getPrisma, isDbConfigured } from "@/lib/prisma";
+import { getPrisma } from "@/lib/prisma";
 import { normalizeEmail, normalizePhone } from "@/lib/auth-types";
 import {
   createSession,
-  dbUnavailableResponse,
   findUserByEmail,
   hashPassword,
+  requireDb,
   setSessionCookie,
   toPublicUser,
 } from "@/lib/auth";
@@ -31,7 +31,8 @@ type RegisterBody = {
 };
 
 export async function POST(request: Request) {
-  if (!isDbConfigured()) return dbUnavailableResponse();
+  const dbError = await requireDb();
+  if (dbError) return dbError;
 
   const ip = clientIpFromRequest(request);
   const limited = rateLimit(`register:${ip}`, 10, 60 * 60 * 1000);

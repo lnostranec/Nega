@@ -112,7 +112,7 @@ export function CartContent() {
                         alt={item.name}
                         width={260}
                         height={280}
-                        className="h-[280px] w-[260px] max-w-[calc(100vw-2rem)] object-contain bg-stone-50 p-2"
+                        className="h-[280px] w-[260px] max-w-[calc(100vw-2rem)] object-cover bg-stone-50"
                       />
                     </Link>
 
@@ -147,7 +147,7 @@ export function CartContent() {
                         alt={item.name}
                         width={112}
                         height={144}
-                        className="h-36 w-28 object-contain bg-stone-50 p-1"
+                        className="h-36 w-28 object-cover bg-stone-50"
                       />
                     </Link>
 

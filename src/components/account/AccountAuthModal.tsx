@@ -168,7 +168,7 @@ export function AccountAuthModal({
           type="button"
           onClick={onClose}
           aria-label="Закрыть"
-          className="absolute right-4 top-4 text-stone-400 transition hover:text-[#260402]"
+          className="absolute right-4 top-4 cursor-pointer text-stone-400 transition hover:text-[#260402]"
         >
           <svg
             xmlns="http://www.w3.org/2000/svg"
@@ -341,7 +341,7 @@ export function AccountAuthModal({
                   setError(null);
                   onModeChange("register");
                 }}
-                className="text-[#260402] underline"
+                className="cursor-pointer text-[#260402] underline"
               >
                 Зарегистрироваться
               </button>
@@ -355,7 +355,7 @@ export function AccountAuthModal({
                   setError(null);
                   onModeChange("login");
                 }}
-                className="text-[#260402] underline"
+                className="cursor-pointer text-[#260402] underline"
               >
                 Войти
               </button>

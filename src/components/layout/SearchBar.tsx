@@ -189,7 +189,7 @@ export function SearchBar({
                               src={product.imageUrl || PLACEHOLDER_PRODUCT}
                               alt={product.name}
                               fill
-                              className="object-contain p-1"
+                              className="object-cover"
                               sizes="44px"
                             />
                           </div>

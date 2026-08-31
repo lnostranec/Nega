@@ -166,7 +166,7 @@ export function ProductInfo({
                   current === section.id ? null : section.id,
                 )
               }
-              className="flex w-full items-center justify-between py-4 text-left text-sm font-medium uppercase tracking-widest text-[#260402]"
+              className="flex w-full cursor-pointer items-center justify-between py-4 text-left text-sm font-medium uppercase tracking-widest text-[#260402]"
             >
               {section.label}
               <span

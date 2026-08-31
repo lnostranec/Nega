@@ -2,6 +2,7 @@ import { PrismaClient } from "@prisma/client";
 import bcrypt from "bcryptjs";
 import { getDemoProducts } from "../src/lib/demo-products";
 import { NEGRA_PHOTOS } from "../src/lib/photos";
+import { HERO_SLIDES } from "../src/lib/placeholders";
 import { normalizeEmail } from "../src/lib/auth-types";
 
 const prisma = new PrismaClient();
@@ -209,6 +210,48 @@ async function main() {
     console.log(`Admin user: ${normalizeEmail(adminEmail)}`);
   } else {
     console.log("ADMIN_EMAIL / ADMIN_PASSWORD not set — admin user skipped.");
+  }
+
+  try {
+    const heroCount = await prisma.heroSlide.count();
+    if (heroCount === 0) {
+      await prisma.heroSlide.createMany({
+        data: HERO_SLIDES.map((slide, index) => ({
+          title: slide.title,
+          subtitle: slide.subtitle,
+          href: slide.href,
+          imageUrl: slide.image,
+          sortOrder: index,
+          isActive: true,
+        })),
+      });
+      console.log(`Hero slides: seeded ${HERO_SLIDES.length}`);
+    }
+  } catch (error) {
+    console.warn("Hero slides seed skipped:", error);
+  }
+
+  try {
+    const bestsellerCount = await prisma.homepageBestseller.count();
+    if (bestsellerCount === 0) {
+      const latest = await prisma.product.findMany({
+        where: { isActive: true },
+        orderBy: { createdAt: "desc" },
+        take: 8,
+        select: { id: true },
+      });
+      if (latest.length > 0) {
+        await prisma.homepageBestseller.createMany({
+          data: latest.map((product, index) => ({
+            productId: product.id,
+            sortOrder: index,
+          })),
+        });
+        console.log(`Homepage bestsellers: seeded ${latest.length}`);
+      }
+    }
+  } catch (error) {
+    console.warn("Homepage bestsellers seed skipped:", error);
   }
 }
 

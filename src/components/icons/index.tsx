@@ -284,6 +284,34 @@ export function ChevronDownIcon({
   );
 }
 
+export function CalculatorIcon({
+  className = "h-[22px] w-[22px]",
+  strokeWidth = iconDefaults.strokeWidth,
+}: IconProps) {
+  return (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={strokeWidth}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className={className}
+      aria-hidden
+    >
+      <rect x="5" y="3" width="14" height="18" rx="2" />
+      <rect x="7.5" y="5.5" width="9" height="3.5" rx="0.75" />
+      <circle cx="9" cy="12.5" r="1" fill="currentColor" stroke="none" />
+      <circle cx="12" cy="12.5" r="1" fill="currentColor" stroke="none" />
+      <circle cx="15" cy="12.5" r="1" fill="currentColor" stroke="none" />
+      <circle cx="9" cy="16" r="1" fill="currentColor" stroke="none" />
+      <circle cx="12" cy="16" r="1" fill="currentColor" stroke="none" />
+      <circle cx="15" cy="16" r="1" fill="currentColor" stroke="none" />
+    </svg>
+  );
+}
+
 export function TrashIcon({
   className = "h-[22px] w-[22px]",
   strokeWidth = iconDefaults.strokeWidth,
