@@ -2,9 +2,9 @@ import { startOrderPayment } from "@/lib/payments";
 import {
   createOrder,
   getUserOrders,
+  markOrderPaymentFailed,
   orderErrorMessage,
   parsePaymentMethod,
-  releaseExpiredOrders,
 } from "@/lib/orders";
 import { getSessionUser, dbUnavailableResponse } from "@/lib/auth";
 import { isDbConfigured } from "@/lib/prisma";
@@ -17,6 +17,8 @@ import {
   rateLimitResponse,
 } from "@/lib/rate-limit";
 import { captureException } from "@/lib/monitoring";
+
+export const maxDuration = 60;
 
 type OrderItemBody = {
   productId?: string;
@@ -142,8 +144,6 @@ export async function POST(request: Request) {
   }
 
   try {
-    await releaseExpiredOrders();
-
     const orderItems = items.map((item) => ({
       productId: item.productId!,
       variantId: item.variantId!,
@@ -176,13 +176,20 @@ export async function POST(request: Request) {
       items: orderItems,
     });
 
-    const { order, paymentUrl } = await startOrderPayment(pendingOrder, {
-      customerEmail,
-      customerPhone,
-      customerName,
-    });
+    try {
+      const { order, paymentUrl } = await startOrderPayment(pendingOrder, {
+        customerEmail,
+        customerPhone,
+        customerName,
+      });
 
-    return Response.json({ order, paymentUrl });
+      return Response.json({ order, paymentUrl });
+    } catch (paymentError) {
+      await markOrderPaymentFailed(pendingOrder.id).catch((cancelError) =>
+        console.error("Cancel pending order after payment error:", cancelError),
+      );
+      throw paymentError;
+    }
   } catch (error) {
     if (error instanceof Error) {
       const message = orderErrorMessage(error);
@@ -194,7 +201,8 @@ export async function POST(request: Request) {
         error.message === "VARIANT_NOT_FOUND" ||
         error.message === "PRODUCT_INACTIVE" ||
         error.message === "ORDER_EXPIRED" ||
-        error.message === "ORDER_ALREADY_PAID"
+        error.message === "ORDER_ALREADY_PAID" ||
+        error.message.startsWith("YooKassa:")
           ? 400
           : 500;
 

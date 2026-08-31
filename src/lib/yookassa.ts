@@ -37,6 +37,8 @@ function authHeader(): string {
   return `Basic ${Buffer.from(`${shopId}:${secret}`).toString("base64")}`;
 }
 
+const YOOKASSA_FETCH_TIMEOUT_MS = 25_000;
+
 async function yooFetch<T>(
   path: string,
   init?: RequestInit & { idempotenceKey?: string },
@@ -53,6 +55,7 @@ async function yooFetch<T>(
   const response = await fetch(`${YOOKASSA_API}${path}`, {
     ...init,
     headers,
+    signal: AbortSignal.timeout(YOOKASSA_FETCH_TIMEOUT_MS),
   });
 
   const data = (await response.json()) as T & {
@@ -70,8 +73,20 @@ async function yooFetch<T>(
   return data;
 }
 
-export async function createYooKassaPayment(
+function shouldRetryYooKassaWithoutReceipt(error: unknown): boolean {
+  if (!(error instanceof Error)) return false;
+  const msg = error.message.toLowerCase();
+  return (
+    msg.includes("receipt") ||
+    msg.includes("чек") ||
+    msg.includes("54-fz") ||
+    msg.includes("fiscal")
+  );
+}
+
+async function createYooKassaPaymentRequest(
   input: CreateYooKassaPaymentInput,
+  withReceipt: boolean,
 ): Promise<{ paymentId: string; confirmationUrl: string }> {
   const amount = input.amountRub.toFixed(2);
   const payload: Record<string, unknown> = {
@@ -88,7 +103,11 @@ export async function createYooKassaPayment(
     },
   };
 
-  if (input.customerEmail && process.env.YOOKASSA_SEND_RECEIPT === "1") {
+  if (
+    withReceipt &&
+    input.customerEmail &&
+    process.env.YOOKASSA_SEND_RECEIPT === "1"
+  ) {
     payload.receipt = {
       customer: { email: input.customerEmail },
       items: [
@@ -116,6 +135,29 @@ export async function createYooKassaPayment(
   }
 
   return { paymentId: payment.id, confirmationUrl };
+}
+
+export async function createYooKassaPayment(
+  input: CreateYooKassaPaymentInput,
+): Promise<{ paymentId: string; confirmationUrl: string }> {
+  const wantsReceipt =
+    Boolean(input.customerEmail) && process.env.YOOKASSA_SEND_RECEIPT === "1";
+
+  try {
+    return await createYooKassaPaymentRequest(input, wantsReceipt);
+  } catch (error) {
+    if (wantsReceipt && shouldRetryYooKassaWithoutReceipt(error)) {
+      console.warn(
+        "[yookassa] receipt rejected, retrying payment without receipt",
+        error,
+      );
+      return await createYooKassaPaymentRequest(input, false);
+    }
+    if (error instanceof Error) {
+      throw new Error(`YooKassa: ${error.message}`);
+    }
+    throw error;
+  }
 }
 
 export async function getYooKassaPayment(

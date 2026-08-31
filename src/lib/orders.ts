@@ -301,8 +301,16 @@ export function orderErrorMessage(error: Error): string {
   if (error.message === "ORDER_ALREADY_PAID") {
     return "Заказ уже оплачен";
   }
+  if (error.message.startsWith("YooKassa:")) {
+    return `Не удалось перейти к оплате (${error.message.replace(/^YooKassa:\s*/, "")}). Попробуйте ещё раз или выберите другой способ оплаты.`;
+  }
+  if (error.name === "TimeoutError" || error.message.includes("timeout")) {
+    return "Сервер не успел ответить. Попробуйте ещё раз через минуту.";
+  }
   return "Не удалось создать заказ. Попробуйте ещё раз";
 }
+
+const ORDER_TX_OPTIONS = { maxWait: 15_000, timeout: 60_000 };
 
 export async function releaseExpiredOrders(): Promise<number> {
   const prisma = getPrisma();
@@ -522,7 +530,7 @@ export async function createOrder(input: CreateOrderInput) {
     });
 
     return { order: created };
-  });
+  }, ORDER_TX_OPTIONS);
 
   if (normalizedEmail) {
     void sendOrderCreatedEmail(
@@ -642,7 +650,7 @@ export async function confirmOrderPayment(orderId: string): Promise<OrderView> {
     });
 
     return { order: paid, giftCertificateCodes };
-  });
+  }, ORDER_TX_OPTIONS);
 
   if (result.order.customerEmail) {
     void sendOrderPaidEmail(
