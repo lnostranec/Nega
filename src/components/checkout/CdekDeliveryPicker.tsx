@@ -40,10 +40,22 @@ export function CdekDeliveryPicker({ subtotal, value, onChange }: Props) {
         `/api/cdek/cities?q=${encodeURIComponent(cityQuery)}`,
       );
       const data = await response.json();
-      setCities(data.cities ?? []);
+      const list: CdekCity[] = data.cities ?? [];
+      setCities(list);
+
+      const query = cityQuery.trim().toLowerCase();
+      if (!city && query.length >= 2 && list.length === 1) {
+        const match = list[0];
+        if (match.name.toLowerCase() === query) {
+          setCity(match);
+          setCityQuery(match.name);
+          setCities([]);
+          setSelectedPvz(null);
+        }
+      }
     }, 200);
     return () => clearTimeout(timer);
-  }, [cityQuery]);
+  }, [cityQuery, city]);
 
   useEffect(() => {
     if (!city) {
@@ -172,6 +184,11 @@ export function CdekDeliveryPicker({ subtotal, value, onChange }: Props) {
           className={inputClass}
           autoComplete="address-level2"
         />
+        {cityQuery.trim() && !city && (
+          <p className="mt-1 text-xs text-amber-700">
+            Выберите город из списка подсказок
+          </p>
+        )}
         {cities.length > 0 && !city && cityQuery.trim() && (
           <ul className="absolute z-10 mt-1 max-h-48 w-full overflow-auto border border-stone-200 bg-white shadow-lg">
             {cities.map((item) => (

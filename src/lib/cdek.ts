@@ -70,10 +70,10 @@ function searchCitiesMock(query: string): CdekCity[] {
 export async function searchCities(query: string): Promise<CdekCity[]> {
   if (isCdekConfigured()) {
     try {
-      const live = await searchCitiesLive(query);
-      if (live.length > 0) return live;
+      return await searchCitiesLive(query);
     } catch (error) {
-      console.error("CDEK cities error, using mock:", error);
+      console.error("CDEK cities error:", error);
+      return [];
     }
   }
   return searchCitiesMock(query);
@@ -82,10 +82,10 @@ export async function searchCities(query: string): Promise<CdekCity[]> {
 export async function getPvzByCity(cityCode: number): Promise<CdekPvz[]> {
   if (isCdekConfigured()) {
     try {
-      const live = await getPvzByCityLive(cityCode);
-      if (live.length > 0) return live;
+      return await getPvzByCityLive(cityCode);
     } catch (error) {
-      console.error("CDEK PVZ error, using mock:", error);
+      console.error("CDEK PVZ error:", error);
+      return [];
     }
   }
   return CDEK_PVZ.filter((pvz) => pvz.cityCode === cityCode);
