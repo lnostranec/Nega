@@ -8,6 +8,7 @@ import { formatPrice } from "@/lib/format";
 import { useAuth } from "./AuthModalProvider";
 import { AccountLoginTrigger } from "./AccountLoginTrigger";
 import { AccountProfileForm } from "./AccountProfileForm";
+import { AccountPasswordForm } from "./AccountPasswordForm";
 
 export function AccountGuest() {
   return (
@@ -117,6 +118,16 @@ export function AccountDashboard({
           </div>
         </dl>
         <AccountProfileForm user={user} />
+      </section>
+
+      <section className="mt-10 border border-stone-200 p-8">
+        <h2 className="text-sm font-semibold uppercase tracking-[0.2em] text-[#260402]">
+          Смена пароля
+        </h2>
+        <p className="mt-2 text-sm text-stone-500">
+          Введите новый пароль дважды. Письмо на email не требуется.
+        </p>
+        <AccountPasswordForm />
       </section>
 
       <section className="mt-10 border border-stone-200 p-8">

@@ -1,4 +1,5 @@
 import { InfoPage } from "@/components/info/InfoPage";
+import { formatSellerPhone, SELLER } from "@/lib/seller";
 
 export const metadata = { title: "Отмена заказа" };
 
@@ -21,10 +22,10 @@ export default function ReturnsPage() {
       <InfoPage.Section title="Как оформить отмену">
         <p>
           Свяжитесь с клиентским сервисом по email{" "}
-          <a href="mailto:support@nega.ru" className="text-[#260402] underline">
-            support@nega.ru
+          <a href={`mailto:${SELLER.email}`} className="text-[#260402] underline">
+            {SELLER.email}
           </a>{" "}
-          или по телефону [ТЕЛЕФОН]. Укажите номер заказа и причину
+          или по телефону {formatSellerPhone()}. Укажите номер заказа и причину
           отмены.
         </p>
       </InfoPage.Section>

@@ -1,4 +1,5 @@
 import { InfoPage } from "@/components/info/InfoPage";
+import { formatShipFromAddress, SELLER } from "@/lib/seller";
 
 export const metadata = { title: "Доставка" };
 
@@ -7,8 +8,7 @@ export default function DeliveryPage() {
     <InfoPage title="Доставка">
       <p>
         Доставка заказов Nega по России — через СДЭК (пункт выдачи или курьер).
-        Точная стоимость и сроки рассчитываются при оформлении заказа. Текст
-        черновой; финальные условия и реквизиты склада уточняются перед запуском.
+        Точная стоимость и сроки рассчитываются при оформлении заказа.
       </p>
 
       <InfoPage.Section title="Способы доставки">
@@ -37,9 +37,9 @@ export default function DeliveryPage() {
 
       <InfoPage.Section title="Склад отгрузки">
         <p>
-          Город отгрузки: [ГОРОД ОТГРУЗКИ]
+          Город отгрузки: {SELLER.shipFromCity}
           <br />
-          Адрес склада: [АДРЕС СКЛАДА]
+          Адрес склада: {formatShipFromAddress()}
         </p>
       </InfoPage.Section>
 

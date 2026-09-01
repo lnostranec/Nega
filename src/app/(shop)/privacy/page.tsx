@@ -1,5 +1,6 @@
 import { InfoPage } from "@/components/info/InfoPage";
 import { SHOP_NAME } from "@/lib/constants";
+import { formatSellerPhone, SELLER } from "@/lib/seller";
 
 export const metadata = { title: "Политика конфиденциальности" };
 
@@ -9,7 +10,7 @@ export default function PrivacyPage() {
       <p>
         Настоящая Политика конфиденциальности описывает, как интернет-магазин{" "}
         {SHOP_NAME} собирает, использует и защищает персональные данные
-        пользователей. Документ является предварительной версией.
+        пользователей.
       </p>
 
       <InfoPage.Section title="Какие данные мы собираем">
@@ -49,17 +50,17 @@ export default function PrivacyPage() {
         <p>
           Вы вправе запросить информацию об обработке ваших данных, потребовать
           их уточнения, блокирования или удаления, отозвать согласие на
-          обработку. Для этого напишите на support@nega.ru.
+          обработку. Для этого напишите на {SELLER.email}.
         </p>
       </InfoPage.Section>
 
       <InfoPage.Section title="Оператор персональных данных">
         <p>
-          Оператор: [НАИМЕНОВАНИЕ ЮРЛИЦА / ИП]
+          Оператор: {SELLER.legalName}
           <br />
-          ИНН: [ИНН] · Адрес: [АДРЕС]
+          ИНН: {SELLER.inn} · Адрес: {SELLER.address}
           <br />
-          Контакт по вопросам ПДн: support@nega.ru · [ТЕЛЕФОН]
+          Контакт по вопросам ПДн: {SELLER.email} · {formatSellerPhone()}
         </p>
       </InfoPage.Section>
 

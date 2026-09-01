@@ -1,5 +1,11 @@
 import { InfoPage } from "@/components/info/InfoPage";
 import { SHOP_NAME } from "@/lib/constants";
+import {
+  formatBankDetails,
+  formatSellerOgrnip,
+  formatSellerPhone,
+  SELLER,
+} from "@/lib/seller";
 
 export const metadata = { title: "Публичная оферта" };
 
@@ -9,8 +15,7 @@ export default function OfferPage() {
       <p>
         Настоящий документ является публичной офертой интернет-магазина{" "}
         {SHOP_NAME} (далее — Продавец) и определяет условия продажи товаров
-        дистанционным способом. Текст подготовлен в черновом виде и подлежит
-        юридической доработке.
+        дистанционным способом.
       </p>
 
       <InfoPage.Section title="1. Общие положения">
@@ -54,15 +59,15 @@ export default function OfferPage() {
 
       <InfoPage.Section title="6. Реквизиты продавца">
         <p>
-          Продавец: [НАИМЕНОВАНИЕ ЮРЛИЦА / ИП]
+          Продавец: {SELLER.legalName}
           <br />
-          ИНН: [ИНН] · ОГРН/ОГРНИП: [ОГРН]
+          ИНН: {SELLER.inn} · {formatSellerOgrnip()}
           <br />
-          Юридический адрес: [АДРЕС]
+          Юридический адрес: {SELLER.address}
           <br />
-          Расчётный счёт: [Р/С] в [БАНК], БИК [БИК]
+          {formatBankDetails()}
           <br />
-          Email: support@nega.ru · Телефон: [ТЕЛЕФОН]
+          Email: {SELLER.email} · Телефон: {formatSellerPhone()}
         </p>
       </InfoPage.Section>
     </InfoPage>
