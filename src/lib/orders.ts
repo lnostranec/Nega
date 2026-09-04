@@ -707,17 +707,38 @@ export async function getOrderPaymentStatus(orderId: string): Promise<{
   total: number;
 } | null> {
   const prisma = getPrisma();
-  const order = await prisma.order.findUnique({
+  let order = await prisma.order.findUnique({
     where: { id: orderId },
     select: {
       id: true,
       orderNumber: true,
       status: true,
       paymentStatus: true,
+      paymentMethod: true,
+      externalPaymentId: true,
       total: true,
     },
   });
   if (!order) return null;
+
+  if (order.paymentStatus === "PENDING" && order.paymentMethod === "YANDEX_SPLIT") {
+    const { syncYandexPayOrderStatus } = await import("@/lib/yandex-pay-webhook");
+    await syncYandexPayOrderStatus(order);
+    order = await prisma.order.findUnique({
+      where: { id: orderId },
+      select: {
+        id: true,
+        orderNumber: true,
+        status: true,
+        paymentStatus: true,
+        paymentMethod: true,
+        externalPaymentId: true,
+        total: true,
+      },
+    });
+    if (!order) return null;
+  }
+
   return {
     id: order.id,
     orderNumber: order.orderNumber,
