@@ -1,4 +1,5 @@
 import { getOrderPaymentStatus } from "@/lib/orders";
+import { syncYandexPayOrderStatus } from "@/lib/yandex-pay-webhook";
 import { dbUnavailableResponse } from "@/lib/auth";
 import { isDbConfigured } from "@/lib/prisma";
 
@@ -12,10 +13,35 @@ export async function GET(_request: Request, { params }: Params) {
     return Response.json({ error: "Не указан заказ" }, { status: 400 });
   }
 
-  const order = await getOrderPaymentStatus(orderId);
+  let order = await getOrderPaymentStatus(orderId);
   if (!order) {
     return Response.json({ error: "Заказ не найден" }, { status: 404 });
   }
 
-  return Response.json({ order });
+  if (
+    order.paymentStatus === "PENDING" &&
+    order.paymentMethod === "YANDEX_SPLIT"
+  ) {
+    await syncYandexPayOrderStatus({
+      id: order.id,
+      paymentMethod: order.paymentMethod ?? null,
+      paymentStatus: order.paymentStatus,
+      externalPaymentId: order.externalPaymentId ?? null,
+    });
+    order = await getOrderPaymentStatus(orderId);
+    if (!order) {
+      return Response.json({ error: "Заказ не найден" }, { status: 404 });
+    }
+  }
+
+  return Response.json({
+    order: {
+      id: order.id,
+      orderNumber: order.orderNumber,
+      status: order.status,
+      statusLabel: order.statusLabel,
+      paymentStatus: order.paymentStatus,
+      total: order.total,
+    },
+  });
 }

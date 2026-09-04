@@ -4,7 +4,6 @@ import {
   handleExternalPaymentSucceeded,
 } from "@/lib/payments";
 import { isDbConfigured } from "@/lib/prisma";
-import { dbUnavailableResponse } from "@/lib/auth";
 import { captureException } from "@/lib/monitoring";
 
 type Body = {
@@ -29,7 +28,12 @@ const SUCCESS = new Set([
 const FAIL = new Set(["FAILED", "CANCELLED", "CANCELED", "EXPIRED", "VOIDED"]);
 
 export async function handleYandexPayWebhook(request: Request) {
-  if (!isDbConfigured()) return dbUnavailableResponse();
+  if (!isDbConfigured()) {
+    return Response.json(
+      { error: "База данных не настроена" },
+      { status: 503 },
+    );
+  }
   if (!isYandexPayConfigured()) {
     return Response.json({ error: "Yandex Pay not configured" }, { status: 503 });
   }
@@ -76,7 +80,7 @@ export async function handleYandexPayWebhook(request: Request) {
 
 /**
  * Если заказ ещё PENDING — спросить статус у Яндекс Пэй и обновить у себя.
- * Нужно, когда webhook не дошёл, а покупатель уже вернулся на сайт.
+ * Вызывать только из API routes, не из клиентских компонентов.
  */
 export async function syncYandexPayOrderStatus(order: {
   id: string;
