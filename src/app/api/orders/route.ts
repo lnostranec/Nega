@@ -188,7 +188,21 @@ export async function POST(request: Request) {
       await markOrderPaymentFailed(pendingOrder.id).catch((cancelError) =>
         console.error("Cancel pending order after payment error:", cancelError),
       );
-      throw paymentError;
+      const detail =
+        paymentError instanceof Error
+          ? paymentError.message
+          : "PAYMENT_FAILED";
+      console.error("[payments] start failed:", detail);
+      return Response.json(
+        {
+          error: orderErrorMessage(
+            paymentError instanceof Error
+              ? paymentError
+              : new Error(String(paymentError)),
+          ),
+        },
+        { status: 400 },
+      );
     }
   } catch (error) {
     if (error instanceof Error) {

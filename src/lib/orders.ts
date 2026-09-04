@@ -307,6 +307,15 @@ export function orderErrorMessage(error: Error): string {
   if (error.message.startsWith("YandexPay:")) {
     return `Не удалось перейти к оплате Яндекс Сплит (${error.message.replace(/^YandexPay:\s*/, "")}). Попробуйте ещё раз или оплатите картой.`;
   }
+  // Любая другая ошибка оплаты / провайдера
+  if (
+    error.message.includes("payment") ||
+    error.message.includes("Pay") ||
+    error.message.includes("API key") ||
+    error.message.includes("sandbox")
+  ) {
+    return `Не удалось перейти к оплате (${error.message}). Попробуйте ещё раз или оплатите картой.`;
+  }
   if (error.name === "TimeoutError" || error.message.includes("timeout")) {
     return "Сервер не успел ответить. Попробуйте ещё раз через минуту.";
   }

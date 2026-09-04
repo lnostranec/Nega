@@ -1,9 +1,17 @@
 import { isDbConfigured, getPrisma } from "@/lib/prisma";
 
 export async function GET() {
-  const checks: Record<string, "ok" | "fail" | "skip"> = {
+  const yandexPayUrl = process.env.YANDEX_PAY_API_URL?.trim() || "";
+
+  const checks: Record<string, string> = {
     db: "skip",
     yookassa: process.env.YOOKASSA_SHOP_ID ? "ok" : "skip",
+    yandexPay: process.env.YANDEX_PAY_API_KEY ? "ok" : "skip",
+    yandexPayUrl: !yandexPayUrl
+      ? "skip"
+      : yandexPayUrl.includes("sandbox")
+        ? "sandbox"
+        : "production",
     cdek: process.env.CDEK_CLIENT_ID ? "ok" : "skip",
     resend: process.env.RESEND_API_KEY ? "ok" : "skip",
   };
