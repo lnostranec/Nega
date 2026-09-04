@@ -49,7 +49,9 @@ async function loadOrderItems(orderId: string) {
 
 function providerReady(method: PaymentMethod | null): boolean {
   if (method === "DOLYAMI") return isDolyamiConfigured();
-  if (method === "YANDEX_SPLIT") return isYandexPayConfigured();
+  if (method === "YANDEX_SPLIT" || method === "YANDEX_PAY") {
+    return isYandexPayConfigured();
+  }
   return isYooKassaConfigured();
 }
 
@@ -107,7 +109,7 @@ export async function startOrderPayment(
     return { order, paymentUrl: confirmationUrl };
   }
 
-  if (method === "YANDEX_SPLIT") {
+  if (method === "YANDEX_SPLIT" || method === "YANDEX_PAY") {
     const { paymentId, confirmationUrl } = await createYandexPayOrder({
       orderId: order.id,
       orderNumber: order.orderNumber,
@@ -117,7 +119,7 @@ export async function startOrderPayment(
       customerPhone: phone,
       successUrl: returnUrl,
       errorUrl: failUrl,
-      methods: ["SPLIT"],
+      methods: method === "YANDEX_SPLIT" ? ["SPLIT"] : ["CARD"],
       items,
     });
     await setOrderExternalPaymentId(order.id, paymentId);

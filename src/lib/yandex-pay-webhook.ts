@@ -89,7 +89,12 @@ export async function syncYandexPayOrderStatus(order: {
   externalPaymentId: string | null;
 }): Promise<void> {
   if (order.paymentStatus !== "PENDING") return;
-  if (order.paymentMethod !== "YANDEX_SPLIT") return;
+  if (
+    order.paymentMethod !== "YANDEX_SPLIT" &&
+    order.paymentMethod !== "YANDEX_PAY"
+  ) {
+    return;
+  }
   if (!isYandexPayConfigured()) return;
 
   const remoteId = order.externalPaymentId || order.id;

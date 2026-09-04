@@ -108,9 +108,7 @@ export async function createYandexPayOrder(
     currencyCode: "RUB",
     availablePaymentMethods: input.methods,
     preferredPaymentMethod:
-      input.methods.length === 1 && input.methods[0] === "SPLIT"
-        ? "SPLIT"
-        : undefined,
+      input.methods.length === 1 ? input.methods[0] : undefined,
     cart: {
       items: cartItems,
       total: { amount },

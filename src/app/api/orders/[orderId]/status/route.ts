@@ -20,7 +20,8 @@ export async function GET(_request: Request, { params }: Params) {
 
   if (
     order.paymentStatus === "PENDING" &&
-    order.paymentMethod === "YANDEX_SPLIT"
+    (order.paymentMethod === "YANDEX_SPLIT" ||
+      order.paymentMethod === "YANDEX_PAY")
   ) {
     await syncYandexPayOrderStatus({
       id: order.id,

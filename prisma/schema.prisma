@@ -243,6 +243,7 @@ enum PaymentMethod {
   CARD
   DOLYAMI
   YANDEX_SPLIT
+  YANDEX_PAY
 }
 
 enum PaymentStatus {

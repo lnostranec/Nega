@@ -48,6 +48,7 @@ export const PAYMENT_METHOD_LABELS: Record<PaymentMethod, string> = {
   CARD: "Банковская карта",
   DOLYAMI: "Долями",
   YANDEX_SPLIT: "Яндекс Сплит",
+  YANDEX_PAY: "Яндекс Пэй",
 };
 
 export type OrderItemView = {
@@ -918,6 +919,8 @@ export function parsePaymentMethod(value: string): PaymentMethod | null {
       return "DOLYAMI";
     case "split":
       return "YANDEX_SPLIT";
+    case "yandex_pay":
+      return "YANDEX_PAY";
     default:
       return null;
   }
