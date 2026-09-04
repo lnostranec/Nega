@@ -304,6 +304,9 @@ export function orderErrorMessage(error: Error): string {
   if (error.message.startsWith("YooKassa:")) {
     return `Не удалось перейти к оплате (${error.message.replace(/^YooKassa:\s*/, "")}). Попробуйте ещё раз или выберите другой способ оплаты.`;
   }
+  if (error.message.startsWith("YandexPay:")) {
+    return `Не удалось перейти к оплате Яндекс Сплит (${error.message.replace(/^YandexPay:\s*/, "")}). Попробуйте ещё раз или оплатите картой.`;
+  }
   if (error.name === "TimeoutError" || error.message.includes("timeout")) {
     return "Сервер не успел ответить. Попробуйте ещё раз через минуту.";
   }

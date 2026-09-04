@@ -202,7 +202,8 @@ export async function POST(request: Request) {
         error.message === "PRODUCT_INACTIVE" ||
         error.message === "ORDER_EXPIRED" ||
         error.message === "ORDER_ALREADY_PAID" ||
-        error.message.startsWith("YooKassa:")
+        error.message.startsWith("YooKassa:") ||
+        error.message.startsWith("YandexPay:")
           ? 400
           : 500;
 

@@ -112,6 +112,7 @@ export async function startOrderPayment(
       orderId: order.id,
       orderNumber: order.orderNumber,
       amountRub: order.total,
+      deliveryCost: Number(dbOrder.deliveryCost ?? 0),
       customerEmail: email ?? undefined,
       customerPhone: phone,
       successUrl: returnUrl,

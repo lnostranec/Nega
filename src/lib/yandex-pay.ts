@@ -9,6 +9,7 @@ export type YandexPayCreateInput = {
   orderId: string;
   orderNumber: string;
   amountRub: number;
+  deliveryCost?: number;
   customerEmail?: string;
   customerPhone?: string;
   successUrl: string;
@@ -37,70 +38,93 @@ async function yandexPayFetch<T>(
     Authorization: `Api-Key ${process.env.YANDEX_PAY_API_KEY!.trim()}`,
     "Content-Type": "application/json",
     Accept: "application/json",
+    "X-Request-Id": crypto.randomUUID(),
     ...(init?.headers as Record<string, string> | undefined),
   };
-
-  const merchantId = process.env.YANDEX_PAY_MERCHANT_ID?.trim();
-  if (merchantId) {
-    headers["X-Request-Id"] = crypto.randomUUID();
-  }
 
   const response = await fetch(`${apiBase()}${path}`, {
     ...init,
     headers,
   });
 
-  const data = (await response.json().catch(() => ({}))) as T & {
+  const raw = await response.text();
+  let data: T & {
     reasonCode?: string;
     reason?: string;
     message?: string;
-  };
-
-  if (!response.ok) {
-    throw new Error(
-      data.message ||
-        data.reason ||
-        data.reasonCode ||
-        `Yandex Pay HTTP ${response.status}`,
-    );
+    statusCode?: number;
+    code?: number | string;
+  } = {} as T & Record<string, unknown>;
+  try {
+    data = raw ? (JSON.parse(raw) as typeof data) : data;
+  } catch {
+    /* non-json */
   }
 
-  return data;
+  if (!response.ok) {
+    const detail =
+      data.message ||
+      data.reason ||
+      data.reasonCode ||
+      (typeof data.code === "string" ? data.code : null) ||
+      raw.slice(0, 300) ||
+      `HTTP ${response.status}`;
+    throw new Error(`YandexPay: ${detail}`);
+  }
+
+  return data as T;
 }
 
 export async function createYandexPayOrder(
   input: YandexPayCreateInput,
 ): Promise<{ paymentId: string; confirmationUrl: string }> {
-  const amount = input.amountRub.toFixed(2);
+  const amount = Number(input.amountRub).toFixed(2);
+  const deliveryCost = Math.max(0, Number(input.deliveryCost ?? 0));
+
+  const cartItems = input.items.map((item) => {
+    const lineTotal = Number((item.price * item.quantity).toFixed(2));
+    return {
+      productId: item.productId,
+      title: item.name.slice(0, 128),
+      quantity: { count: String(item.quantity) },
+      total: lineTotal.toFixed(2),
+      unitPrice: Number(item.price).toFixed(2),
+    };
+  });
+
+  // Доставка — отдельной позицией (требование API Яндекс Пэй)
+  if (deliveryCost > 0) {
+    cartItems.push({
+      productId: "delivery",
+      title: "Доставка",
+      quantity: { count: "1" },
+      total: deliveryCost.toFixed(2),
+      unitPrice: deliveryCost.toFixed(2),
+    });
+  }
 
   const payload: Record<string, unknown> = {
     orderId: input.orderId,
     currencyCode: "RUB",
     availablePaymentMethods: input.methods,
+    preferredPaymentMethod:
+      input.methods.length === 1 && input.methods[0] === "SPLIT"
+        ? "SPLIT"
+        : undefined,
     cart: {
-      items: input.items.map((item) => ({
-        productId: item.productId,
-        title: item.name.slice(0, 128),
-        quantity: { count: String(item.quantity) },
-        total: (item.price * item.quantity).toFixed(2),
-        unitPrice: item.price.toFixed(2),
-      })),
+      items: cartItems,
       total: { amount },
     },
     redirectUrls: {
       onSuccess: input.successUrl,
       onError: input.errorUrl,
     },
-    metadata: {
-      order_number: input.orderNumber,
-    },
+    // API принимает metadata только как string
+    metadata: input.orderNumber.slice(0, 2048),
   };
 
-  if (input.customerEmail || input.customerPhone) {
-    payload.billingContact = {
-      email: input.customerEmail,
-      phone: input.customerPhone,
-    };
+  if (input.customerPhone) {
+    payload.billingPhone = input.customerPhone;
   }
 
   const data = await yandexPayFetch<{
@@ -113,7 +137,7 @@ export async function createYandexPayOrder(
 
   const confirmationUrl = data.data?.paymentUrl || data.paymentUrl;
   if (!confirmationUrl) {
-    throw new Error("Yandex Pay did not return paymentUrl");
+    throw new Error("YandexPay: не вернул ссылку на оплату (paymentUrl)");
   }
 
   return {
