@@ -193,16 +193,17 @@ export async function POST(request: Request) {
           ? paymentError.message
           : "PAYMENT_FAILED";
       console.error("[payments] start failed:", detail);
-      return Response.json(
-        {
-          error: orderErrorMessage(
-            paymentError instanceof Error
-              ? paymentError
-              : new Error(String(paymentError)),
-          ),
-        },
-        { status: 400 },
+      const friendly = orderErrorMessage(
+        paymentError instanceof Error
+          ? paymentError
+          : new Error(String(paymentError)),
       );
+      // Не прячем текст провайдера за общей фразой
+      const error =
+        friendly === "Не удалось создать заказ. Попробуйте ещё раз"
+          ? `Не удалось перейти к оплате (${detail}). Попробуйте ещё раз или оплатите картой.`
+          : friendly;
+      return Response.json({ error }, { status: 400 });
     }
   } catch (error) {
     if (error instanceof Error) {
@@ -228,8 +229,12 @@ export async function POST(request: Request) {
 
     console.error("Create order error:", error);
     void captureException(error, { route: "POST /api/orders" });
+    const detail =
+      error instanceof Error ? error.message.slice(0, 240) : "unknown";
     return Response.json(
-      { error: "Не удалось создать заказ. Попробуйте ещё раз" },
+      {
+        error: `Не удалось создать заказ (${detail}). Попробуйте ещё раз`,
+      },
       { status: 500 },
     );
   }
