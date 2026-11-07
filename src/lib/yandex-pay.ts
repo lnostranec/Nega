@@ -154,12 +154,22 @@ export async function getYandexPayOrder(orderId: string): Promise<{
       orderId?: string;
       paymentStatus?: string;
       orderStatus?: string;
+      /** API вкладывает статус в объект order */
+      order?: {
+        orderId?: string;
+        paymentStatus?: string;
+        orderStatus?: string;
+      };
     };
   }>(`/orders/${encodeURIComponent(orderId)}`, { method: "GET" });
 
+  // Яндекс Пэй возвращает { data: { order: { paymentStatus } } },
+  // но в части ответов статус лежит прямо в data — поддерживаем оба варианта.
+  const order = data.data?.order ?? data.data;
+
   return {
-    orderId: data.data?.orderId || orderId,
-    paymentStatus: data.data?.paymentStatus,
-    orderStatus: data.data?.orderStatus,
+    orderId: order?.orderId || orderId,
+    paymentStatus: order?.paymentStatus,
+    orderStatus: order?.orderStatus,
   };
 }
