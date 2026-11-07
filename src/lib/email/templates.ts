@@ -13,6 +13,8 @@ export type OrderEmailData = {
   subtotal: number;
   deliveryCost: number;
   promoDiscount: number;
+  /** Скидка по программе лояльности */
+  loyaltyDiscount?: number;
   total: number;
   pointsUsed: number;
   pointsEarned: number;
@@ -43,13 +45,13 @@ function itemsTable(items: OrderItemView[]): string {
     .map(
       (item) =>
         `<tr>
-          <td style="padding:8px 0;border-bottom:1px solid #e7e5e4">${item.name}${item.size || item.color ? `<br><span style="color:#78716c;font-size:13px">${[item.color, item.size].filter(Boolean).join(" · ")}</span>` : ""}</td>
-          <td style="padding:8px 0;border-bottom:1px solid #e7e5e4;text-align:right;white-space:nowrap">${item.quantity} × ${formatPrice(item.price)}</td>
+          <td align="left" valign="top" style="padding:8px 0;border-bottom:1px solid #e7e5e4">${item.name}${item.size || item.color ? `<br><span style="color:#78716c;font-size:13px">${[item.color, item.size].filter(Boolean).join(" · ")}</span>` : ""}</td>
+          <td align="right" valign="top" style="padding:8px 0;border-bottom:1px solid #e7e5e4;text-align:right;white-space:nowrap">${item.quantity} × ${formatPrice(item.price)}</td>
         </tr>`,
     )
     .join("");
 
-  return `<table style="width:100%;border-collapse:collapse;margin:16px 0">${rows}</table>`;
+  return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="width:100%;border-collapse:collapse;margin:16px 0">${rows}</table>`;
 }
 
 function deliveryBlock(data: OrderEmailData): string {
@@ -68,29 +70,58 @@ function deliveryBlock(data: OrderEmailData): string {
   return `<p style="margin:16px 0;padding:12px;background:#fafaf9;font-size:14px">${details}</p>`;
 }
 
+/**
+ * Итоги заказа. Только таблицы: почтовые клиенты (Gmail, Яндекс, Outlook)
+ * не поддерживают display:flex и склеивают подписи с суммами.
+ */
 function totalsBlock(data: OrderEmailData): string {
-  const lines = [
-    `<div style="display:flex;justify-content:space-between"><span>Товары</span><span>${formatPrice(data.subtotal)}</span></div>`,
-  ];
+  type Row = { label: string; value: string; muted?: boolean };
+
+  const rows: Row[] = [{ label: "Товары", value: formatPrice(data.subtotal) }];
+
   if (data.promoDiscount > 0) {
-    lines.push(
-      `<div style="display:flex;justify-content:space-between;color:#78716c"><span>Промокод</span><span>−${formatPrice(data.promoDiscount)}</span></div>`,
-    );
+    rows.push({
+      label: "Промокод",
+      value: `−${formatPrice(data.promoDiscount)}`,
+      muted: true,
+    });
+  }
+  if (data.loyaltyDiscount && data.loyaltyDiscount > 0) {
+    rows.push({
+      label: "Скидка клиента",
+      value: `−${formatPrice(data.loyaltyDiscount)}`,
+      muted: true,
+    });
   }
   if (data.pointsUsed > 0) {
-    lines.push(
-      `<div style="display:flex;justify-content:space-between;color:#78716c"><span>Баллы</span><span>−${formatPrice(data.pointsUsed)}</span></div>`,
-    );
+    rows.push({
+      label: "Баллы",
+      value: `−${formatPrice(data.pointsUsed)}`,
+      muted: true,
+    });
   }
   if (data.deliveryCost > 0) {
-    lines.push(
-      `<div style="display:flex;justify-content:space-between"><span>Доставка</span><span>${formatPrice(data.deliveryCost)}</span></div>`,
-    );
+    rows.push({ label: "Доставка", value: formatPrice(data.deliveryCost) });
   }
-  lines.push(
-    `<div style="display:flex;justify-content:space-between;font-weight:600;margin-top:8px;font-size:16px"><span>Итого</span><span>${formatPrice(data.total)}</span></div>`,
-  );
-  return `<div style="margin-top:16px;font-size:14px">${lines.join("")}</div>`;
+
+  const color = (muted?: boolean) => (muted ? "#78716c" : "#260402");
+
+  const rowsHtml = rows
+    .map(
+      (row) => `<tr>
+        <td align="left" style="padding:4px 0;font-size:14px;color:${color(row.muted)}">${row.label}</td>
+        <td align="right" style="padding:4px 0;font-size:14px;color:${color(row.muted)};white-space:nowrap">${row.value}</td>
+      </tr>`,
+    )
+    .join("");
+
+  return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="width:100%;border-collapse:collapse;margin-top:16px">
+    ${rowsHtml}
+    <tr>
+      <td align="left" style="padding:12px 0 0;border-top:1px solid #e7e5e4;font-size:16px;font-weight:600;color:#260402">Итого</td>
+      <td align="right" style="padding:12px 0 0;border-top:1px solid #e7e5e4;font-size:16px;font-weight:600;color:#260402;white-space:nowrap">${formatPrice(data.total)}</td>
+    </tr>
+  </table>`;
 }
 
 function formatEmailDate(iso: string | null): string {

@@ -83,6 +83,7 @@ export function orderToEmailData(order: {
   subtotal: { toString(): string };
   deliveryCost: { toString(): string };
   promoDiscount: { toString(): string };
+  loyaltyDiscount?: { toString(): string };
   total: { toString(): string };
   pointsUsed: number;
   pointsEarned: number;
@@ -106,6 +107,9 @@ export function orderToEmailData(order: {
     subtotal: Number(order.subtotal),
     deliveryCost: Number(order.deliveryCost),
     promoDiscount: Number(order.promoDiscount),
+    loyaltyDiscount: order.loyaltyDiscount
+      ? Number(order.loyaltyDiscount)
+      : 0,
     total: Number(order.total),
     pointsUsed: order.pointsUsed,
     pointsEarned: order.pointsEarned,
