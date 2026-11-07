@@ -265,34 +265,22 @@ export async function updateAdminOrderStatus(
   });
 
   if (updated.customerEmail) {
+    const email = updated.customerEmail;
     const emailData = orderToEmailData(updated);
-    if (status === "PROCESSING") {
-      void sendOrderProcessingEmail(
-        updated.customerEmail,
-        updated.id,
-        emailData,
-      ).catch((error) => console.error("Order processing email error:", error));
-    }
-    if (status === "SHIPPED") {
-      void sendOrderShippedEmail(
-        updated.customerEmail,
-        updated.id,
-        emailData,
-      ).catch((error) => console.error("Order shipped email error:", error));
-    }
-    if (status === "DELIVERED") {
-      void sendOrderDeliveredEmail(
-        updated.customerEmail,
-        updated.id,
-        emailData,
-      ).catch((error) => console.error("Order delivered email error:", error));
-    }
-    if (status === "CANCELLED") {
-      void sendOrderCancelledEmail(
-        updated.customerEmail,
-        updated.id,
-        emailData,
-      ).catch((error) => console.error("Order cancelled email error:", error));
+    const senders: Partial<Record<OrderStatus, () => Promise<void>>> = {
+      PROCESSING: () => sendOrderProcessingEmail(email, updated.id, emailData),
+      SHIPPED: () => sendOrderShippedEmail(email, updated.id, emailData),
+      DELIVERED: () => sendOrderDeliveredEmail(email, updated.id, emailData),
+      CANCELLED: () => sendOrderCancelledEmail(email, updated.id, emailData),
+    };
+
+    const send = senders[status];
+    if (send) {
+      try {
+        await send();
+      } catch (error) {
+        console.error(`Order ${status.toLowerCase()} email error:`, error);
+      }
     }
   }
 

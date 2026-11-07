@@ -25,7 +25,9 @@ export async function enqueueEmail(input: EnqueueEmailInput): Promise<string> {
     },
   });
 
-  void processEmailById(record.id);
+  // Отправляем сразу и дожидаемся результата: в serverless-окружении фоновая
+  // задача не доживает до конца запроса, и письмо оставалось бы в очереди.
+  await processEmailById(record.id);
   return record.id;
 }
 

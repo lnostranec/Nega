@@ -16,7 +16,8 @@ import {
   sendOrderPaidEmail,
 } from "@/lib/email/orders";
 import { getPrisma } from "@/lib/prisma";
-import { restoreOrderStock } from "@/lib/stock";
+import { reserveOrderStock, restoreOrderStock } from "@/lib/stock";
+import { writeAuditLog } from "@/lib/audit";
 import {
   isGiftCertificateVariant,
   isGiftCertificateVariantAvailable,
@@ -564,19 +565,21 @@ export async function createOrder(input: CreateOrderInput) {
   }, ORDER_TX_OPTIONS);
 
   if (normalizedEmail) {
-    void sendOrderCreatedEmail(
-      normalizedEmail,
-      result.order.id,
-      orderToEmailData(result.order),
-    ).catch((error) => console.error("Order created email error:", error));
+    try {
+      await sendOrderCreatedEmail(
+        normalizedEmail,
+        result.order.id,
+        orderToEmailData(result.order),
+      );
+    } catch (error) {
+      console.error("Order created email error:", error);
+    }
   }
 
   return toOrderView(result.order);
 }
 
 export async function confirmOrderPayment(orderId: string): Promise<OrderView> {
-  await releaseExpiredOrders();
-
   const prisma = getPrisma();
 
   const result = await prisma.$transaction(async (tx) => {
@@ -593,13 +596,19 @@ export async function confirmOrderPayment(orderId: string): Promise<OrderView> {
       throw new Error("ORDER_ALREADY_PAID");
     }
 
-    if (order.paymentStatus !== "PENDING") {
-      throw new Error("ORDER_NOT_FOUND");
+    if (order.paymentStatus === "REFUNDED") {
+      throw new Error("ORDER_REFUNDED");
     }
 
-    if (order.paymentExpiresAt && order.paymentExpiresAt < new Date()) {
-      throw new Error("ORDER_EXPIRED");
-    }
+    // Платёж может прийти уже после истечения 15-минутного резерва: заказ
+    // к этому моменту отменён, а остатки возвращены на склад. Оживляем заказ,
+    // иначе деньги списаны, а заказ остаётся отменённым.
+    const wasCancelled =
+      order.paymentStatus === "FAILED" || order.status === "CANCELLED";
+
+    const missingVariants = wasCancelled
+      ? await reserveOrderStock(tx, order.items)
+      : [];
 
     if (order.promoCodeId) {
       const promo = await tx.promoCode.findUnique({
@@ -678,18 +687,37 @@ export async function confirmOrderPayment(orderId: string): Promise<OrderView> {
       data: {
         status: "PAID",
         paymentStatus: "PAID",
+        ...(wasCancelled ? { stockReleased: missingVariants.length > 0 } : {}),
       },
       include: { items: true },
     });
 
-    return { order: paid, giftCertificateCodes };
+    return { order: paid, giftCertificateCodes, missingVariants };
   }, ORDER_TX_OPTIONS);
 
+  if (result.missingVariants.length > 0) {
+    console.error(
+      "[payments] оплата пришла после отмены, остатков не хватило:",
+      orderId,
+      result.missingVariants,
+    );
+    await writeAuditLog({
+      action: "late_payment_stock_conflict",
+      entityType: "Order",
+      entityId: orderId,
+      meta: { missingVariants: result.missingVariants },
+    });
+  }
+
   if (result.order.customerEmail) {
-    void sendOrderPaidEmail(result.order.customerEmail, result.order.id, {
-      ...orderToEmailData(result.order),
-      giftCertificates: result.giftCertificateCodes,
-    }).catch((error) => console.error("Order paid email error:", error));
+    try {
+      await sendOrderPaidEmail(result.order.customerEmail, result.order.id, {
+        ...orderToEmailData(result.order),
+        giftCertificates: result.giftCertificateCodes,
+      });
+    } catch (error) {
+      console.error("Order paid email error:", error);
+    }
   }
 
   void tryCreateCdekShipment(result.order.id).catch((error) =>
