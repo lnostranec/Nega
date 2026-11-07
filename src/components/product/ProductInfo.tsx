@@ -73,7 +73,7 @@ export function ProductInfo({
 
   const hasDiscount = comparePrice && comparePrice > price;
   const specs = [
-    style ? { label: "Коллекция", value: style } : null,
+    style ? { label: "Стиль", value: style } : null,
     country ? { label: "Страна производства", value: country } : null,
     material ? { label: "Материал", value: material } : null,
   ].filter(Boolean) as { label: string; value: string }[];
