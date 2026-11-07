@@ -1,3 +1,4 @@
+import type { Prisma } from "@prisma/client";
 import { getPrisma } from "@/lib/prisma";
 import { getDiscountableSubtotal } from "@/lib/promo-codes";
 import {
@@ -16,9 +17,18 @@ export {
 
 const PAID_STATUSES = ["PAID", "PROCESSING", "SHIPPED", "DELIVERED"] as const;
 
-export async function getLoyaltySettings(): Promise<LoyaltySettings> {
+/**
+ * Клиент БД: обычный или транзакционный.
+ * Внутри транзакции обязательно передавать tx — иначе запрос уходит через
+ * отдельное соединение, которого при малом пуле может не оказаться.
+ */
+type Db = Prisma.TransactionClient | ReturnType<typeof getPrisma>;
+
+export async function getLoyaltySettings(
+  db: Db = getPrisma(),
+): Promise<LoyaltySettings> {
   try {
-    const settings = await getPrisma().siteSettings.findUnique({
+    const settings = await db.siteSettings.findUnique({
       where: { id: "default" },
     });
     if (!settings) return DEFAULT_LOYALTY_SETTINGS;
@@ -35,8 +45,11 @@ export async function getLoyaltySettings(): Promise<LoyaltySettings> {
   }
 }
 
-export async function getUserLifetimeSpend(userId: string): Promise<number> {
-  const result = await getPrisma().order.aggregate({
+export async function getUserLifetimeSpend(
+  userId: string,
+  db: Db = getPrisma(),
+): Promise<number> {
+  const result = await db.order.aggregate({
     where: {
       userId,
       status: { in: [...PAID_STATUSES] },
@@ -46,14 +59,17 @@ export async function getUserLifetimeSpend(userId: string): Promise<number> {
   return Number(result._sum.total ?? 0);
 }
 
-export async function getUserLoyalty(userId: string): Promise<{
+export async function getUserLoyalty(
+  userId: string,
+  db: Db = getPrisma(),
+): Promise<{
   lifetimeSpend: number;
   percent: number;
   settings: LoyaltySettings;
 }> {
   const [lifetimeSpend, settings] = await Promise.all([
-    getUserLifetimeSpend(userId),
-    getLoyaltySettings(),
+    getUserLifetimeSpend(userId, db),
+    getLoyaltySettings(db),
   ]);
   return {
     lifetimeSpend,

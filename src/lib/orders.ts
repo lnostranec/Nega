@@ -457,7 +457,7 @@ async function createOrderInner(input: CreateOrderInput) {
     }
 
     if (input.userId) {
-      const loyalty = await getUserLoyalty(input.userId);
+      const loyalty = await getUserLoyalty(input.userId, tx);
       loyaltyDiscount = loyaltyDiscountFromItems(input.items, loyalty.percent);
     }
 

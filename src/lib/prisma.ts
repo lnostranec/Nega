@@ -19,8 +19,13 @@ function databaseUrl(): string {
     }
     // Подключение идёт через пулер Yandex (порт 6432): ограничиваем число
     // соединений и просим Prisma не использовать prepared statements.
+    // Лимит 1 слишком мал: транзакции и параллельные запросы (Promise.all)
+    // борются за единственное соединение и падают с P2024.
     if (!parsed.searchParams.has("connection_limit")) {
-      parsed.searchParams.set("connection_limit", "1");
+      parsed.searchParams.set("connection_limit", "3");
+    }
+    if (!parsed.searchParams.has("pool_timeout")) {
+      parsed.searchParams.set("pool_timeout", "15");
     }
     if (!parsed.searchParams.has("pgbouncer")) {
       parsed.searchParams.set("pgbouncer", "true");
