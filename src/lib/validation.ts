@@ -1,5 +1,7 @@
 const NAME_PATTERN = /^[a-zA-Zа-яА-ЯёЁ]+(?:[ '-][a-zA-Zа-яА-ЯёЁ]+)*$/;
 
+export const CONSULTATION_COMMENT_MAX = 2000;
+
 export function validateName(value: string): string | null {
   const trimmed = value.trim();
   if (!trimmed) return "Введите имя";

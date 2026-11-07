@@ -1,7 +1,9 @@
 "use client";
 
+import Link from "next/link";
 import { FormEvent, useState } from "react";
 import type { AdminPromoCodeView } from "@/lib/admin-promo-codes";
+import { GiftCertificateStatus } from "@/components/admin/GiftCertificateStatus";
 import { formatPrice } from "@/lib/format";
 
 type AdminPromoCodesPanelProps = {
@@ -168,6 +170,44 @@ export function AdminPromoCodesPanel({ initialPromos }: AdminPromoCodesPanelProp
     }
   }
 
+  async function toggleGiftCertificate(promo: AdminPromoCodeView) {
+    const next = !promo.isActive;
+    if (
+      !next &&
+      !confirm(
+        `Отключить сертификат ${promo.code}? Покупатель не сможет применить код, пока вы его снова не включите.`,
+      )
+    ) {
+      return;
+    }
+
+    setRowError(null);
+    setRowLoading(true);
+
+    try {
+      const response = await fetch(`/api/admin/promo-codes/${promo.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ isActive: next }),
+      });
+
+      const data = await response.json();
+      if (!response.ok) {
+        setRowError(data.error ?? "Не удалось сохранить");
+        return;
+      }
+
+      setPromos((prev) =>
+        prev.map((item) => (item.id === promo.id ? data.promo : item)),
+      );
+    } catch {
+      setRowError("Ошибка сети");
+    } finally {
+      setRowLoading(false);
+    }
+  }
+
   async function handleDelete(promo: AdminPromoCodeView) {
     if (promo.isGiftCert) return;
     if (!confirm(`Удалить промокод ${promo.code}?`)) return;
@@ -298,7 +338,17 @@ export function AdminPromoCodesPanel({ initialPromos }: AdminPromoCodesPanelProp
                         className={`${inputClass} font-mono text-xs`}
                       />
                     ) : (
-                      <span className="font-mono text-xs">{promo.code}</span>
+                      <>
+                        <span className="font-mono text-xs">{promo.code}</span>
+                        {promo.sourceOrder && (
+                          <Link
+                            href={`/admin/orders/${promo.sourceOrder.id}`}
+                            className="mt-1 block text-xs text-stone-500 underline"
+                          >
+                            Заказ {promo.sourceOrder.orderNumber}
+                          </Link>
+                        )}
+                      </>
                     )}
                   </td>
                   <td className="px-4 py-3">
@@ -384,9 +434,14 @@ export function AdminPromoCodesPanel({ initialPromos }: AdminPromoCodesPanelProp
                   <td className="px-4 py-3">{promo.usedCount}</td>
                   <td className="px-4 py-3">
                     {promo.isGiftCert ? (
-                      <span className="rounded bg-stone-100 px-2 py-1 text-xs text-stone-600">
-                        Сертификат
-                      </span>
+                      <div className="flex flex-col items-start gap-1">
+                        <span className="text-xs text-stone-500">Сертификат</span>
+                        <GiftCertificateStatus
+                          isActive={promo.isActive}
+                          isUsed={promo.maxUses !== null && promo.usedCount >= promo.maxUses}
+                          expiresAt={promo.expiresAt}
+                        />
+                      </div>
                     ) : isEditing ? (
                       <label className="flex items-center gap-2 text-xs">
                         <input
@@ -416,7 +471,14 @@ export function AdminPromoCodesPanel({ initialPromos }: AdminPromoCodesPanelProp
                   </td>
                   <td className="px-4 py-3">
                     {promo.isGiftCert ? (
-                      <span className="text-xs text-stone-400">Авто</span>
+                      <button
+                        type="button"
+                        disabled={rowLoading}
+                        onClick={() => void toggleGiftCertificate(promo)}
+                        className="rounded border border-stone-300 px-2.5 py-1.5 text-xs hover:bg-stone-50 disabled:opacity-50"
+                      >
+                        {promo.isActive ? "Отключить" : "Включить"}
+                      </button>
                     ) : isEditing ? (
                       <div className="flex items-center gap-2">
                         <button

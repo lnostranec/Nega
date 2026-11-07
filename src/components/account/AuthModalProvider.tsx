@@ -105,9 +105,3 @@ export function useAuth() {
   }
   return context;
 }
-
-/** @deprecated Используйте useAuth */
-export function useAuthModal() {
-  const { openLogin, closeAuth } = useAuth();
-  return { openLogin, closeLogin: closeAuth };
-}

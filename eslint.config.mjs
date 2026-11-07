@@ -13,6 +13,13 @@ const eslintConfig = defineConfig([
       "react-hooks/preserve-manual-memoization": "off",
     },
   },
+  {
+    // Утилиты и скрипты сборки — CommonJS в .cjs, require() там уместен.
+    files: ["**/*.cjs"],
+    rules: {
+      "@typescript-eslint/no-require-imports": "off",
+    },
+  },
   globalIgnores([
     ".next/**",
     "out/**",

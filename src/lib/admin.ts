@@ -13,10 +13,6 @@ export function unauthorizedResponse(message = "Требуется вход ад
   return Response.json({ error: message }, { status: 401 });
 }
 
-export function forbiddenResponse(message = "Недостаточно прав") {
-  return Response.json({ error: message }, { status: 403 });
-}
-
 export async function requireAdminUser(): Promise<User | Response> {
   const user = await getAdminUser();
   if (!user) return unauthorizedResponse();

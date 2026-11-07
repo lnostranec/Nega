@@ -48,6 +48,11 @@ export function TrackOrderContent() {
     <SiteContainer className="py-10">
       <div className="mx-auto max-w-2xl">
         <h1 className="font-serif text-4xl text-stone-900">Отслеживание заказа</h1>
+        <p className="mt-3 text-sm leading-relaxed text-stone-600">
+          После передачи посылки в службу доставки мы отправим трек-номер на
+          ваш email и в Telegram. Вы также сможете следить за статусом
+          отправления в личном кабинете, в разделе «Мои заказы».
+        </p>
         <p className="mt-3 text-sm text-stone-600">
           Введите номер заказа и телефон, указанный при оформлении.
         </p>

@@ -1,10 +1,14 @@
 import { NextRequest } from "next/server";
-import { mkdir, writeFile } from "fs/promises";
-import path from "path";
-import { randomUUID } from "crypto";
 import { requireAdminUser } from "@/lib/admin";
 import { isDbConfigured } from "@/lib/prisma";
 import { dbUnavailableResponse } from "@/lib/auth";
+import { captureException } from "@/lib/monitoring";
+import {
+  isStorageConfigured,
+  MediaStorageError,
+  saveToLocalUploads,
+  uploadToStorage,
+} from "@/lib/storage";
 
 const MAX_SIZE = 5 * 1024 * 1024;
 const ALLOWED_TYPES = new Set([
@@ -34,13 +38,47 @@ export async function POST(request: NextRequest) {
     return Response.json({ error: "Файл больше 5 МБ" }, { status: 400 });
   }
 
-  const ext = file.type.split("/")[1]?.replace("jpeg", "jpg") ?? "jpg";
-  const filename = `${randomUUID()}.${ext}`;
-  const uploadDir = path.join(process.cwd(), "public", "uploads", "products");
-  await mkdir(uploadDir, { recursive: true });
+  const body = Buffer.from(await file.arrayBuffer());
 
-  const buffer = Buffer.from(await file.arrayBuffer());
-  await writeFile(path.join(uploadDir, filename), buffer);
+  // Прод: объектное хранилище. Без него на Vercel файл некуда положить.
+  if (isStorageConfigured()) {
+    try {
+      const uploaded = await uploadToStorage({ body, contentType: file.type });
+      return Response.json({ url: uploaded.url, key: uploaded.key });
+    } catch (error) {
+      console.error("[upload] storage error:", error);
+      void captureException(error, { route: "POST /api/admin/upload" });
+      return Response.json(
+        {
+          error:
+            error instanceof MediaStorageError
+              ? error.message
+              : "Не удалось загрузить фото в хранилище",
+        },
+        { status: 502 },
+      );
+    }
+  }
 
-  return Response.json({ url: `/uploads/products/${filename}` });
+  // Локальная разработка без облака: пишем в public/uploads.
+  if (process.env.NODE_ENV !== "production") {
+    try {
+      const uploaded = await saveToLocalUploads({ body, contentType: file.type });
+      return Response.json({ url: uploaded.url, key: uploaded.key });
+    } catch (error) {
+      console.error("[upload] local write error:", error);
+      return Response.json(
+        { error: "Не удалось сохранить файл" },
+        { status: 500 },
+      );
+    }
+  }
+
+  return Response.json(
+    {
+      error:
+        "Хранилище фото не настроено. Добавьте S3_BUCKET, S3_ACCESS_KEY_ID и S3_SECRET_ACCESS_KEY в переменные окружения.",
+    },
+    { status: 503 },
+  );
 }

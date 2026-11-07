@@ -10,6 +10,8 @@ import {
 import { writeAuditLog } from "@/lib/audit";
 import { getPrisma } from "@/lib/prisma";
 import { restoreOrderStock } from "@/lib/stock";
+import type { GiftCertificateView } from "@/lib/gift-certificate";
+import { getOrderGiftCertificates } from "@/lib/promo-codes";
 import {
   createYooKassaRefund,
   isYooKassaConfigured,
@@ -133,6 +135,7 @@ export type AdminOrderDetail = AdminOrderListItem & {
     price: number;
     quantity: number;
   }[];
+  giftCertificates: GiftCertificateView[];
 };
 
 export async function listAdminOrders(): Promise<AdminOrderListItem[]> {
@@ -163,6 +166,8 @@ export async function getAdminOrder(id: string): Promise<AdminOrderDetail | null
     },
   });
   if (!order) return null;
+
+  const giftCertificates = await getOrderGiftCertificates(order.id);
 
   return {
     id: order.id,
@@ -202,6 +207,7 @@ export async function getAdminOrder(id: string): Promise<AdminOrderDetail | null
       price: Number(item.price),
       quantity: item.quantity,
     })),
+    giftCertificates,
   };
 }
 

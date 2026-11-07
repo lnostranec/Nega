@@ -8,6 +8,7 @@ import { ORDER_STATUS_LABELS } from "@/lib/orders";
 import type { AdminOrderDetail } from "@/lib/admin-orders";
 import { DELIVERY_TYPE_LABELS, type DeliveryType } from "@/lib/cdek";
 import { formatPrice } from "@/lib/format";
+import { GiftCertificateStatus } from "@/components/admin/GiftCertificateStatus";
 
 const STATUSES = Object.keys(ORDER_STATUS_LABELS) as OrderStatus[];
 
@@ -209,6 +210,54 @@ export function AdminOrderDetailPanel({ order: initial }: Props) {
           </div>
         </section>
       </div>
+
+      {order.giftCertificates.length > 0 && (
+        <section className="rounded-lg border border-stone-200 bg-white p-6">
+          <h2 className="text-sm font-medium uppercase tracking-widest text-stone-500">
+            Подарочные сертификаты
+          </h2>
+          <p className="mt-1 text-xs text-stone-400">
+            Тип и дизайн — в составе заказа ниже. Для бумажного сертификата
+            напечатайте этот код на карточке.
+          </p>
+          <table className="mt-4 w-full text-left text-sm">
+            <thead className="border-b border-stone-200 text-stone-500">
+              <tr>
+                <th className="pb-2 font-medium">Код</th>
+                <th className="pb-2 font-medium">Номинал</th>
+                <th className="pb-2 font-medium">Действует до</th>
+                <th className="pb-2 font-medium">Статус</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-stone-100">
+              {order.giftCertificates.map((certificate) => (
+                <tr key={certificate.code}>
+                  <td className="py-3 font-mono font-medium">{certificate.code}</td>
+                  <td className="py-3">{formatPrice(certificate.nominal)}</td>
+                  <td className="py-3">
+                    {certificate.expiresAt
+                      ? new Date(certificate.expiresAt).toLocaleDateString("ru-RU")
+                      : "—"}
+                  </td>
+                  <td className="py-3">
+                    <GiftCertificateStatus
+                      isActive={certificate.isActive}
+                      isUsed={certificate.isUsed}
+                      expiresAt={certificate.expiresAt}
+                    />
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+          <Link
+            href="/admin/promo-codes"
+            className="mt-3 inline-block text-xs text-stone-500 underline"
+          >
+            Все промокоды и сертификаты
+          </Link>
+        </section>
+      )}
 
       <section className="rounded-lg border border-stone-200 bg-white p-6">
         <h2 className="text-sm font-medium uppercase tracking-widest text-stone-500">

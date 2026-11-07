@@ -17,7 +17,10 @@ function mapUpdateError(error: unknown): { message: string; status: number } {
     case "NOT_FOUND":
       return { message: "Промокод не найден", status: 404 };
     case "GIFT_CERT_READONLY":
-      return { message: "Подарочные сертификаты нельзя редактировать", status: 400 };
+      return {
+        message: "У подарочного сертификата можно только включить или отключить код",
+        status: 400,
+      };
     case "INVALID_CODE":
       return { message: "Некорректный код", status: 400 };
     case "INVALID_PERCENT":

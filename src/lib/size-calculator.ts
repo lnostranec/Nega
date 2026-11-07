@@ -1,6 +1,6 @@
 /** EU-style bra size from underbust + bust, matching ROOMARÉ calculator. */
 
-const BAND_RANGES: Array<{ min: number; max: number; band: number }> = [
+export const BAND_RANGES: Array<{ min: number; max: number; band: number }> = [
   { min: 63, max: 67, band: 65 },
   { min: 68, max: 72, band: 70 },
   { min: 73, max: 77, band: 75 },
@@ -10,7 +10,7 @@ const BAND_RANGES: Array<{ min: number; max: number; band: number }> = [
   { min: 93, max: 97, band: 95 },
 ];
 
-const CUP_RANGES: Array<{ min: number; max: number; cup: string }> = [
+export const CUP_RANGES: Array<{ min: number; max: number; cup: string }> = [
   { min: 6, max: 8, cup: "AA" },
   { min: 9, max: 11, cup: "A" },
   { min: 12, max: 14, cup: "B" },
@@ -21,7 +21,7 @@ const CUP_RANGES: Array<{ min: number; max: number; cup: string }> = [
   { min: 25, max: 27, cup: "G" },
 ];
 
-const CUPS_BY_BAND: Record<number, readonly string[]> = {
+export const CUPS_BY_BAND: Record<number, readonly string[]> = {
   65: ["AA", "A", "B", "C", "D", "E", "F", "G"],
   70: ["AA", "A", "B", "C", "D", "E", "F", "G"],
   75: ["AA", "A", "B", "C", "D", "E", "F", "G"],
@@ -47,9 +47,9 @@ export type PantySizeResult = {
   fromHips: string;
 };
 
-const PANTY_ORDER = ["XXS", "XS", "S", "M", "L", "XL", "XXL", "XXXL"] as const;
+export const PANTY_ORDER = ["XXS", "XS", "S", "M", "L", "XL", "XXL", "XXXL"] as const;
 
-const WAIST_RANGES: Array<{ min: number; max: number; size: (typeof PANTY_ORDER)[number] }> = [
+export const WAIST_RANGES: Array<{ min: number; max: number; size: (typeof PANTY_ORDER)[number] }> = [
   { min: 48, max: 54, size: "XXS" },
   { min: 55, max: 61, size: "XS" },
   { min: 62, max: 68, size: "S" },
@@ -60,7 +60,7 @@ const WAIST_RANGES: Array<{ min: number; max: number; size: (typeof PANTY_ORDER)
   { min: 97, max: 103, size: "XXXL" },
 ];
 
-const HIP_RANGES: Array<{ min: number; max: number; size: (typeof PANTY_ORDER)[number] }> = [
+export const HIP_RANGES: Array<{ min: number; max: number; size: (typeof PANTY_ORDER)[number] }> = [
   { min: 75, max: 81, size: "XXS" },
   { min: 82, max: 88, size: "XS" },
   { min: 89, max: 95, size: "S" },

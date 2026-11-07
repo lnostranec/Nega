@@ -183,8 +183,3 @@ export async function handleExternalPaymentCanceled(
 
   await markOrderPaymentFailed(order.id);
 }
-
-/** @deprecated alias */
-export const handleYooKassaPaymentSucceeded = handleExternalPaymentSucceeded;
-/** @deprecated alias */
-export const handleYooKassaPaymentCanceled = handleExternalPaymentCanceled;

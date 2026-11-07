@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>1 сентября — День знаний</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,500&family=Manrope:wght@400;500;600&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --cream: #f6efe4;
+      --ink: #2a1c18;
+      --burgundy: #7a2e3e;
+      --gold: #c4a35a;
+      --wine: #4a1c28;
+      --muted: #6b5348;
+      --card: #fffaf3;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html, body {
+      height: 100%;
+      background: #1a1210;
+      color: var(--ink);
+      font-family: Manrope, "Segoe UI", sans-serif;
+      overflow: hidden;
+    }
+
+    .viewer {
+      height: 100%;
+      display: grid;
+      place-items: center;
+    }
+
+    .stage {
+      width: min(100vw, calc(100vh * 16 / 9));
+      height: min(100vh, calc(100vw * 9 / 16));
+      position: relative;
+      background: var(--cream);
+      overflow: hidden;
+      box-shadow: 0 24px 80px rgba(0, 0, 0, 0.45);
+    }
+
+    .slide {
+      position: absolute;
+      inset: 0;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.45s ease;
+      padding: 6.5% 7%;
+    }
+
+    .slide.active {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .photo {
+      position: absolute;
+      inset: 0;
+      background-size: cover;
+      background-position: center;
+    }
+
+    .veil {
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(90deg, rgba(26, 14, 16, 0.78) 0%, rgba(26, 14, 16, 0.45) 48%, rgba(26, 14, 16, 0.18) 100%);
+    }
+
+    .veil-center {
+      background: linear-gradient(180deg, rgba(26, 14, 16, 0.55) 0%, rgba(26, 14, 16, 0.42) 100%);
+    }
+
+    .kicker {
+      font-size: clamp(11px, 1.15vw, 15px);
+      letter-spacing: 0.38em;
+      text-transform: uppercase;
+      color: var(--gold);
+      font-weight: 500;
+      margin-bottom: 1.1em;
+    }
+
+    h1, h2 {
+      font-family: "Cormorant Garamond", Georgia, serif;
+      font-weight: 600;
+      line-height: 1.08;
+    }
+
+    h1 { font-size: clamp(48px, 7.4vw, 92px); }
+    h2 { font-size: clamp(36px, 4.8vw, 64px); }
+
+    .lead {
+      font-size: clamp(16px, 1.7vw, 22px);
+      line-height: 1.55;
+      max-width: 36em;
+      color: var(--muted);
+    }
+
+    .gold-line {
+      width: 72px;
+      height: 2px;
+      background: var(--gold);
+      margin: 1.4em 0 1.5em;
+    }
+
+    .content { position: relative; z-index: 1; height: 100%; }
+
+    .light { color: #f6efe4; }
+    .light .lead { color: rgba(246, 239, 228, 0.86); }
+    .light .kicker { color: #e4c57a; }
+
+    .split {
+      display: grid;
+      grid-template-columns: 1.05fr 0.95fr;
+      height: 100%;
+      gap: 4%;
+      align-items: center;
+    }
+
+    .photo-panel {
+      height: 100%;
+      background-size: cover;
+      background-position: center;
+      border-radius: 4px;
+    }
+
+    ul.points {
+      list-style: none;
+      margin-top: 1.6em;
+      display: grid;
+      gap: 0.85em;
+    }
+
+    ul.points li {
+      font-size: clamp(16px, 1.65vw, 21px);
+      padding-left: 1.15em;
+      position: relative;
+      color: var(--ink);
+    }
+
+    ul.points li::before {
+      content: "";
+      position: absolute;
+      left: 0;
+      top: 0.55em;
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--gold);
+    }
+
+    .cards {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.1vw;
+      margin-top: 1.8em;
+    }
+
+    .card {
+      background: var(--card);
+      border: 1px solid rgba(196, 163, 90, 0.28);
+      padding: 1.35em 1.3em 1.2em;
+    }
+
+    .card b {
+      display: block;
+      font-family: "Cormorant Garamond", Georgia, serif;
+      font-size: clamp(22px, 2.2vw, 30px);
+      font-weight: 600;
+      color: var(--burgundy);
+      margin-bottom: 0.25em;
+    }
+
+    .card span {
+      font-size: clamp(14px, 1.25vw, 16px);
+      color: var(--muted);
+      line-height: 1.45;
+    }
+
+    .quote {
+      font-family: "Cormorant Garamond", Georgia, serif;
+      font-style: italic;
+      font-size: clamp(22px, 2.4vw, 32px);
+      line-height: 1.35;
+      max-width: 18em;
+    }
+
+    .footer-note {
+      position: absolute;
+      left: 7%;
+      bottom: 6.5%;
+      font-size: 13px;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: rgba(246, 239, 228, 0.7);
+    }
+
+    .nav {
+      position: fixed;
+      left: 0;
+      right: 0;
+      bottom: 18px;
+      display: flex;
+      justify-content: center;
+      gap: 18px;
+      align-items: center;
+      z-index: 20;
+      color: #eadcc8;
+      font-size: 13px;
+      letter-spacing: 0.08em;
+      user-select: none;
+    }
+
+    .dots { display: flex; gap: 8px; }
+
+    .dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: rgba(234, 220, 200, 0.35);
+      cursor: pointer;
+    }
+
+    .dot.on { background: #e4c57a; }
+
+    button.ctrl {
+      background: transparent;
+      border: 1px solid rgba(234, 220, 200, 0.35);
+      color: #eadcc8;
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      cursor: pointer;
+      font-size: 16px;
+    }
+
+    button.ctrl:hover { border-color: #e4c57a; color: #e4c57a; }
+
+    .hint {
+      position: fixed;
+      top: 16px;
+      right: 20px;
+      color: rgba(234, 220, 200, 0.55);
+      font-size: 12px;
+      z-index: 20;
+    }
+  </style>
+</head>
+<body>
+  <p class="hint">← → или пробел</p>
+  <div class="viewer">
+    <div class="stage" id="stage">
+
+      <section class="slide active" data-slide="0">
+        <div class="photo" style="background-image: url('assets/title-bg.png')"></div>
+        <div class="veil"></div>
+        <div class="content light">
+          <p class="kicker">Школьная линейка</p>
+          <h1>1 сентября</h1>
+          <div class="gold-line"></div>
+          <p class="lead">День знаний. Тестовая презентация,<br />чтобы посмотреть оформление и ритм слайдов.</p>
+        </div>
+        <p class="footer-note">Учебный год 2026 / 2027</p>
+      </section>
+
+      <section class="slide" data-slide="1">
+        <div class="content">
+          <p class="kicker">Поздравление</p>
+          <h2>С новым учебным годом!</h2>
+          <div class="gold-line"></div>
+          <p class="lead">Пусть этот год будет щедрым на открытия, добрых друзей и тихие победы. Сегодня звонок звучит не как конец лета — а как начало большой и красивой дороги.</p>
+          <p class="quote" style="margin-top: 1.6em; color: var(--burgundy);">«Ученье — свет, а неученье — тьма.»</p>
+        </div>
+      </section>
+
+      <section class="slide" data-slide="2">
+        <div class="split">
+          <div>
+            <p class="kicker">Традиция</p>
+            <h2>Первый звонок</h2>
+            <div class="gold-line"></div>
+            <ul class="points">
+              <li>Линейка во дворе школы</li>
+              <li>Букеты учителям и первый класс впереди</li>
+              <li>Гимн знаний — короткий, торжественный, общий</li>
+              <li>После праздника — первый урок</li>
+            </ul>
+          </div>
+          <div class="photo-panel" style="background-image: url('assets/still-life.png')"></div>
+        </div>
+      </section>
+
+      <section class="slide" data-slide="3">
+        <div class="content">
+          <p class="kicker">Ученикам</p>
+          <h2>Дорогие ребята</h2>
+          <div class="gold-line"></div>
+          <ul class="points">
+            <li>Не бойтесь спрашивать — вопрос уже половина ответа</li>
+            <li>Помогайте одноклассникам: вместе учиться легче</li>
+            <li>Берегите любопытство — оно важнее идеальных оценок</li>
+            <li>Этот год принадлежит вам. Сделайте его своим</li>
+          </ul>
+        </div>
+      </section>
+
+      <section class="slide" data-slide="4">
+        <div class="content">
+          <p class="kicker">Учителям</p>
+          <h2>Спасибо тем,<br />кто открывает двери</h2>
+          <div class="gold-line"></div>
+          <p class="lead">За терпение, за строгий взгляд и тёплое слово. За то, что каждый сентябрь снова верите: в этом классе обязательно случится что-то настоящее.</p>
+        </div>
+      </section>
+
+      <section class="slide" data-slide="5">
+        <div class="content">
+          <p class="kicker">Родителям</p>
+          <h2>Рядом — и этого достаточно</h2>
+          <div class="gold-line"></div>
+          <ul class="points">
+            <li>Соберите портфель без суеты: дети чувствуют спокойствие</li>
+            <li>Спросите вечером не «какая оценка», а «что было интересного»</li>
+            <li>Школа — общий путь. Учителя, дети и вы — одна команда</li>
+          </ul>
+        </div>
+      </section>
+
+      <section class="slide" data-slide="6">
+        <div class="content">
+          <p class="kicker">Год впереди</p>
+          <h2>Что нас ждёт</h2>
+          <div class="cards">
+            <div class="card"><b>Знания</b><span>Новые предметы, проекты и первые самостоятельные открытия.</span></div>
+            <div class="card"><b>Дружба</b><span>Класс, в котором можно быть собой и рассчитывать на поддержку.</span></div>
+            <div class="card"><b>Праздники</b><span>Концерты, олимпиады, поездки и дни, которые запоминаются.</span></div>
+            <div class="card"><b>Рост</b><span>Чуть больше ответственности — и гораздо больше уверенности.</span></div>
+          </div>
+        </div>
+      </section>
+
+      <section class="slide" data-slide="7">
+        <div class="photo" style="background-image: url('assets/finale.png')"></div>
+        <div class="veil veil-center"></div>
+        <div class="content light" style="display: grid; place-items: center; text-align: center;">
+          <div>
+            <p class="kicker">В добрый путь</p>
+            <h1 style="font-size: clamp(40px, 5.6vw, 72px);">Пусть звенит<br />первый звонок</h1>
+            <div class="gold-line" style="margin-left: auto; margin-right: auto;"></div>
+            <p class="lead" style="margin: 0 auto;">Удачи в новом учебном году. До встречи на уроках.</p>
+          </div>
+        </div>
+      </section>
+
+    </div>
+  </div>
+
+  <div class="nav">
+    <button class="ctrl" id="prev" aria-label="Назад">←</button>
+    <div class="dots" id="dots"></div>
+    <button class="ctrl" id="next" aria-label="Вперёд">→</button>
+    <span id="counter">1 / 8</span>
+  </div>
+
+  <script>
+    const slides = [...document.querySelectorAll(".slide")];
+    const dotsBox = document.getElementById("dots");
+    const counter = document.getElementById("counter");
+    let i = 0;
+
+    slides.forEach((_, n) => {
+      const d = document.createElement("button");
+      d.className = "dot" + (n === 0 ? " on" : "");
+      d.style.border = "0";
+      d.addEventListener("click", () => go(n));
+      dotsBox.appendChild(d);
+    });
+
+    function go(n) {
+      i = (n + slides.length) % slides.length;
+      slides.forEach((s, k) => s.classList.toggle("active", k === i));
+      [...dotsBox.children].forEach((d, k) => d.classList.toggle("on", k === i));
+      counter.textContent = `${i + 1} / ${slides.length}`;
+    }
+
+    document.getElementById("prev").onclick = () => go(i - 1);
+    document.getElementById("next").onclick = () => go(i + 1);
+    document.getElementById("stage").addEventListener("click", (e) => {
+      if (e.target.closest("button")) return;
+      go(i + 1);
+    });
+
+    window.addEventListener("keydown", (e) => {
+      if (["ArrowRight", "PageDown", " ", "Enter"].includes(e.key)) {
+        e.preventDefault();
+        go(i + 1);
+      }
+      if (["ArrowLeft", "PageUp"].includes(e.key)) {
+        e.preventDefault();
+        go(i - 1);
+      }
+      if (e.key === "Home") go(0);
+      if (e.key === "End") go(slides.length - 1);
+    });
+  </script>
+</body>
+</html>

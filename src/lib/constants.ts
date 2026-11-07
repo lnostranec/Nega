@@ -1,10 +1,5 @@
 export const SHOP_NAME = "Nega";
 
-export const BRAND_COLOR = "#260402";
-
-/** Максимальная ширина контента магазина (px) */
-export const SITE_MAX_WIDTH = 1800;
-
 export const SITE_CONTAINER_CLASS =
   "mx-auto w-full max-w-[1800px] px-4 lg:px-8";
 
@@ -26,7 +21,7 @@ export { HERO_SLIDES, CATEGORY_GRID, PLACEHOLDER_PRODUCT } from "./placeholders"
 export const FOOTER_HELP_LINKS = [
   { href: "/delivery", label: "Доставка" },
   { href: "/order/track", label: "Отслеживание заказа" },
-  { href: "/returns", label: "Отмена" },
+  { href: "/returns", label: "Отмена и возврат" },
   { href: "/faq", label: "FAQ" },
   { href: "/about", label: "О нас" },
   { href: "/reviews", label: "Отзывы" },

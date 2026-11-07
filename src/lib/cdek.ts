@@ -95,10 +95,6 @@ export function getCityByCode(cityCode: number): CdekCity | undefined {
   return CDEK_CITIES.find((city) => city.code === cityCode);
 }
 
-export function getPvzByCode(code: string): CdekPvz | undefined {
-  return CDEK_PVZ.find((pvz) => pvz.code === code);
-}
-
 export async function calculateDeliveryCost(
   type: DeliveryType,
   subtotal: number,

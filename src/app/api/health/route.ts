@@ -14,6 +14,10 @@ export async function GET() {
         : "production",
     cdek: process.env.CDEK_CLIENT_ID ? "ok" : "skip",
     resend: process.env.RESEND_API_KEY ? "ok" : "skip",
+    telegram:
+      process.env.TELEGRAM_BOT_TOKEN && process.env.TELEGRAM_CHAT_ID
+        ? "ok"
+        : "skip",
   };
 
   let status: "ok" | "degraded" = "ok";

@@ -1,7 +1,5 @@
 "use client";
 
-import Link from "next/link";
-import type { ReactNode } from "react";
 import { ButtonHTMLAttributes } from "react";
 import { useAuth } from "./AuthModalProvider";
 
@@ -31,19 +29,5 @@ export function AccountLoginTrigger({
     >
       {children}
     </button>
-  );
-}
-
-export function AccountRegisterLink({
-  className = "",
-  children,
-}: {
-  className?: string;
-  children: ReactNode;
-}) {
-  return (
-    <Link href="/account?auth=register" className={className}>
-      {children}
-    </Link>
   );
 }

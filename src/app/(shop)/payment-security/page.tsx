@@ -1,4 +1,5 @@
 import { InfoPage } from "@/components/info/InfoPage";
+import { formatSellerPhone, SELLER } from "@/lib/seller";
 
 export const metadata = { title: "Политика безопасности платежей" };
 
@@ -47,8 +48,8 @@ export default function PaymentSecurityPage() {
 
       <InfoPage.Section title="Контакты">
         <p>
-          По вопросам, связанным с оплатой, обращайтесь: support@nega.ru,
-          +7 (999) 000-00-00.
+          По вопросам, связанным с оплатой, обращайтесь: {SELLER.email},{" "}
+          {formatSellerPhone()}.
         </p>
       </InfoPage.Section>
     </InfoPage>

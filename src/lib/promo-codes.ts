@@ -1,7 +1,10 @@
 import type { Prisma } from "@prisma/client";
 import type { PromoCode, PromoCodeType } from "@prisma/client";
 import { getPrisma } from "@/lib/prisma";
-import { isGiftCertificateVariant } from "@/lib/gift-certificate";
+import {
+  isGiftCertificateVariant,
+  type GiftCertificateView,
+} from "@/lib/gift-certificate";
 
 export type PromoValidationResult = {
   promoCodeId: string;
@@ -135,11 +138,11 @@ async function generateUniqueGiftCode(
 
 export async function createGiftCertificatePromoCodes(
   orderId: string,
-  items: { variantId: string; quantity: number }[],
+  items: { variantId: string; quantity: number; typeLabel?: string | null }[],
   tx?: Prisma.TransactionClient,
-): Promise<string[]> {
+): Promise<GiftCertificateView[]> {
   const db = tx ?? getPrisma();
-  const codes: string[] = [];
+  const codes: GiftCertificateView[] = [];
   const expiresAt = new Date();
   expiresAt.setFullYear(expiresAt.getFullYear() + 1);
 
@@ -149,6 +152,7 @@ export async function createGiftCertificatePromoCodes(
     const parts = item.variantId.split("-");
     const nominal = Number(parts[parts.length - 2]);
     if (!Number.isFinite(nominal) || nominal <= 0) continue;
+    const typeLabel = item.typeLabel ?? null;
 
     for (let i = 0; i < item.quantity; i += 1) {
       const code = await generateUniqueGiftCode(db);
@@ -163,9 +167,33 @@ export async function createGiftCertificatePromoCodes(
           sourceOrderId: orderId,
         },
       });
-      codes.push(code);
+      codes.push({
+        code,
+        nominal,
+        expiresAt: expiresAt.toISOString(),
+        typeLabel,
+        isActive: true,
+        isUsed: false,
+      });
     }
   }
 
   return codes;
+}
+
+/** Сертификаты, выпущенные по заказу (для страницы оплаты и админки). */
+export async function getOrderGiftCertificates(
+  orderId: string,
+): Promise<GiftCertificateView[]> {
+  const promos = await getPrisma().promoCode.findMany({
+    where: { sourceOrderId: orderId, isGiftCert: true },
+    orderBy: { createdAt: "asc" },
+  });
+  return promos.map((promo) => ({
+    code: promo.code,
+    nominal: promo.value,
+    expiresAt: promo.expiresAt?.toISOString() ?? null,
+    isActive: promo.isActive,
+    isUsed: promo.maxUses !== null && promo.usedCount >= promo.maxUses,
+  }));
 }

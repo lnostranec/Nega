@@ -2,22 +2,18 @@
 
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Button } from "@/components/ui/Button";
 import { Breadcrumbs } from "@/components/ui/Breadcrumbs";
 import { ImagePreviewModal } from "@/components/ui/ImagePreviewModal";
 import { SiteContainer } from "@/components/layout/SiteContainer";
 import { formatPrice } from "@/lib/format";
 import {
-  GIFT_CERTIFICATE_DELIVERY,
-  GIFT_CERTIFICATE_DESCRIPTION,
-  GIFT_CERTIFICATE_DESIGNS,
-  GIFT_CERTIFICATE_IMAGE,
-  GIFT_CERTIFICATE_NOMINALS,
+  buildGiftCertificateVariantId,
+  giftCertificateFallbackBackground,
+  GIFT_CERTIFICATE_PLACEHOLDER_IMAGE,
   GIFT_CERTIFICATE_SKU,
-  GIFT_CERTIFICATE_TYPES,
-  type GiftCertificateDesignId,
-  type GiftCertificateTypeId,
+  type GiftCertificateConfig,
 } from "@/lib/gift-certificate";
 import { useCartStore } from "@/store/cart";
 
@@ -27,40 +23,43 @@ const defaultClass =
 
 type AccordionSection = "description" | "delivery" | null;
 
-export function GiftCertificateContent() {
+export function GiftCertificateContent({ config }: { config: GiftCertificateConfig }) {
   const router = useRouter();
   const addItem = useCartStore((s) => s.addItem);
 
-  const [design, setDesign] = useState<GiftCertificateDesignId>(
-    GIFT_CERTIFICATE_DESIGNS[0].id,
-  );
-  const [nominal, setNominal] = useState<number>(GIFT_CERTIFICATE_NOMINALS[0]);
-  const [type, setType] = useState<GiftCertificateTypeId>(
-    GIFT_CERTIFICATE_TYPES[0].id,
-  );
+  const [design, setDesign] = useState(config.designs[0].id);
+  const [nominal, setNominal] = useState(config.nominals[0]);
+  const [type, setType] = useState(config.types[0].id);
   const [openSection, setOpenSection] = useState<AccordionSection>(null);
-  const [viewers, setViewers] = useState(12);
   const [previewOpen, setPreviewOpen] = useState(false);
 
-  useEffect(() => {
-    setViewers(Math.floor(Math.random() * 12) + 8);
-  }, []);
+  const activeDesignIndex = Math.max(
+    0,
+    config.designs.findIndex((d) => d.id === design),
+  );
+  const activeDesign = config.designs[activeDesignIndex];
+  const activeType = config.types.find((t) => t.id === type) ?? config.types[0];
 
-  const activeDesign =
-    GIFT_CERTIFICATE_DESIGNS.find((d) => d.id === design) ?? GIFT_CERTIFICATE_DESIGNS[0];
-  const activeType =
-    GIFT_CERTIFICATE_TYPES.find((t) => t.id === type) ?? GIFT_CERTIFICATE_TYPES[0];
+  // Фото выбранного дизайна → общее фото сертификата → заглушка на градиенте
+  const activeImage = activeDesign.imageUrl ?? config.mainImageUrl;
+  const displayImage = activeImage ?? GIFT_CERTIFICATE_PLACEHOLDER_IMAGE;
+  const displayBackground = activeImage
+    ? "bg-stone-50"
+    : giftCertificateFallbackBackground(activeDesignIndex);
+  const displayImageClass = activeImage
+    ? "object-cover"
+    : "object-contain p-6 mix-blend-multiply";
 
   function handleAddToCart() {
     addItem({
       productId: "gift-certificate",
-      variantId: `gift-${design}-${nominal}-${type}`,
+      variantId: buildGiftCertificateVariantId(activeDesign.id, nominal, activeType.id),
       slug: "gift-certificate",
       name: "Подарочный сертификат",
       size: activeType.label,
-      color: `Дизайн ${design}`,
+      color: `Дизайн ${activeDesign.name}`,
       price: nominal,
-      imageUrl: GIFT_CERTIFICATE_IMAGE,
+      imageUrl: displayImage,
     });
     router.push("/cart");
   }
@@ -76,9 +75,9 @@ export function GiftCertificateContent() {
   }
 
   const sections = [
-    { id: "description" as const, label: "Описание", content: GIFT_CERTIFICATE_DESCRIPTION },
-    { id: "delivery" as const, label: "Доставка и возврат", content: GIFT_CERTIFICATE_DELIVERY },
-  ];
+    { id: "description" as const, label: "Описание", content: config.description },
+    { id: "delivery" as const, label: "Доставка и возврат", content: config.deliveryText },
+  ].filter((section) => section.content.trim());
 
   return (
     <SiteContainer className="py-8 lg:py-12">
@@ -97,47 +96,60 @@ export function GiftCertificateContent() {
             type="button"
             onClick={() => setPreviewOpen(true)}
             aria-label="Открыть изображение сертификата"
-            className={`relative aspect-[3/4] w-full cursor-pointer overflow-hidden border border-stone-200 transition duration-300 hover:opacity-95 ${activeDesign.previewClass}`}
+            className={`relative aspect-[3/4] w-full cursor-pointer overflow-hidden border border-stone-200 transition duration-300 hover:opacity-95 ${displayBackground}`}
           >
             <Image
-              src={GIFT_CERTIFICATE_IMAGE}
+              src={displayImage}
               alt="Подарочный сертификат Nega"
               fill
-              className="object-contain p-6 mix-blend-multiply"
+              className={displayImageClass}
               priority
               sizes="(max-width: 1024px) 100vw, 576px"
             />
           </button>
 
-          <div className="grid grid-cols-4 gap-2">
-            {GIFT_CERTIFICATE_DESIGNS.map((item) => (
-              <button
-                key={item.id}
-                type="button"
-                onClick={() => setDesign(item.id)}
-                aria-label={`Дизайн ${item.label}`}
-                aria-pressed={design === item.id}
-                className={`relative aspect-square cursor-pointer overflow-hidden border transition duration-300 ${
-                  design === item.id
-                    ? "border-brand ring-2 ring-brand ring-offset-2"
-                    : "border-stone-200 opacity-80 hover:opacity-100"
-                }`}
-              >
-                <div className={`absolute inset-0 ${item.previewClass}`} />
-                <span className="relative z-10 flex h-full items-center justify-center text-xs font-medium text-brand">
-                  {item.label}
-                </span>
-              </button>
-            ))}
-          </div>
+          {config.designs.length > 1 && (
+            <div className="grid grid-cols-4 gap-2">
+              {config.designs.map((item, index) => (
+                <button
+                  key={item.id}
+                  type="button"
+                  onClick={() => setDesign(item.id)}
+                  aria-label={`Дизайн ${item.name}`}
+                  aria-pressed={design === item.id}
+                  className={`relative aspect-square cursor-pointer overflow-hidden border transition duration-300 ${
+                    design === item.id
+                      ? "border-brand ring-2 ring-brand ring-offset-2"
+                      : "border-stone-200 opacity-80 hover:opacity-100"
+                  }`}
+                >
+                  {item.imageUrl ? (
+                    <Image
+                      src={item.imageUrl}
+                      alt={`Дизайн ${item.name}`}
+                      fill
+                      className="object-cover"
+                      sizes="130px"
+                    />
+                  ) : (
+                    <>
+                      <div
+                        className={`absolute inset-0 ${giftCertificateFallbackBackground(index)}`}
+                      />
+                      <span className="relative z-10 flex h-full items-center justify-center text-xs font-medium text-brand">
+                        {item.name}
+                      </span>
+                    </>
+                  )}
+                </button>
+              ))}
+            </div>
+          )}
         </div>
 
         <div>
           <p className="text-xs font-medium uppercase tracking-[0.2em] text-stone-400">
             Идеальный подарок
-          </p>
-          <p className="mt-2 text-sm text-stone-500">
-            Сейчас смотрят {viewers} {viewers % 10 >= 2 && viewers % 10 <= 4 ? "человека" : "человек"}
           </p>
 
           <h1 className="mt-4 text-xl font-semibold uppercase tracking-wide text-[#260402] sm:text-2xl lg:text-3xl">
@@ -156,7 +168,7 @@ export function GiftCertificateContent() {
                 Дизайн сертификата
               </p>
               <div className="flex flex-wrap gap-2">
-                {GIFT_CERTIFICATE_DESIGNS.map((item) => (
+                {config.designs.map((item) => (
                   <button
                     key={item.id}
                     type="button"
@@ -165,7 +177,7 @@ export function GiftCertificateContent() {
                       design === item.id ? selectedClass : defaultClass
                     }`}
                   >
-                    {item.label}
+                    {item.name}
                   </button>
                 ))}
               </div>
@@ -176,7 +188,7 @@ export function GiftCertificateContent() {
                 Номинал сертификата
               </p>
               <div className="flex flex-wrap gap-2">
-                {GIFT_CERTIFICATE_NOMINALS.map((value) => (
+                {config.nominals.map((value) => (
                   <button
                     key={value}
                     type="button"
@@ -196,7 +208,7 @@ export function GiftCertificateContent() {
                 Тип сертификата
               </p>
               <div className="flex flex-wrap gap-2">
-                {GIFT_CERTIFICATE_TYPES.map((item) => (
+                {config.types.map((item) => (
                   <button
                     key={item.id}
                     type="button"
@@ -224,58 +236,62 @@ export function GiftCertificateContent() {
             </button>
           </div>
 
-          <div className="mt-10 border-t border-stone-200">
-            {sections.map((section) => {
-              const isOpen = openSection === section.id;
+          {sections.length > 0 && (
+            <div className="mt-10 border-t border-stone-200">
+              {sections.map((section) => {
+                const isOpen = openSection === section.id;
 
-              return (
-                <div key={section.id} className="border-b border-stone-200">
-                  <button
-                    type="button"
-                    aria-expanded={isOpen}
-                    onClick={() =>
-                      setOpenSection((current) =>
-                        current === section.id ? null : section.id,
-                      )
-                    }
-                    className="flex w-full cursor-pointer items-center justify-between py-4 text-left text-sm font-medium uppercase tracking-widest text-[#260402]"
-                  >
-                    {section.label}
-                    <span
-                      className={`text-lg leading-none text-stone-400 transition-transform duration-300 ease-out ${
-                        isOpen ? "rotate-45" : "rotate-0"
-                      }`}
-                      aria-hidden
+                return (
+                  <div key={section.id} className="border-b border-stone-200">
+                    <button
+                      type="button"
+                      aria-expanded={isOpen}
+                      onClick={() =>
+                        setOpenSection((current) =>
+                          current === section.id ? null : section.id,
+                        )
+                      }
+                      className="flex w-full cursor-pointer items-center justify-between py-4 text-left text-sm font-medium uppercase tracking-widest text-[#260402]"
                     >
-                      +
-                    </span>
-                  </button>
-                  <div
-                    className={`grid transition-[grid-template-rows] duration-300 ease-in-out ${
-                      isOpen ? "grid-rows-[1fr]" : "grid-rows-[0fr]"
-                    }`}
-                  >
-                    <div className="overflow-hidden">
-                      <p className="pb-4 text-sm leading-relaxed text-stone-600">
-                        {section.content}
-                      </p>
+                      {section.label}
+                      <span
+                        className={`text-lg leading-none text-stone-400 transition-transform duration-300 ease-out ${
+                          isOpen ? "rotate-45" : "rotate-0"
+                        }`}
+                        aria-hidden
+                      >
+                        +
+                      </span>
+                    </button>
+                    <div
+                      className={`grid transition-[grid-template-rows] duration-300 ease-in-out ${
+                        isOpen ? "grid-rows-[1fr]" : "grid-rows-[0fr]"
+                      }`}
+                    >
+                      <div className="overflow-hidden">
+                        <p className="whitespace-pre-line pb-4 text-sm leading-relaxed text-stone-600">
+                          {section.content}
+                        </p>
+                      </div>
                     </div>
                   </div>
-                </div>
-              );
-            })}
-          </div>
+                );
+              })}
+            </div>
+          )}
         </div>
       </div>
 
       <ImagePreviewModal
         open={previewOpen}
         onClose={() => setPreviewOpen(false)}
-        src={GIFT_CERTIFICATE_IMAGE}
+        src={displayImage}
         alt="Подарочный сертификат Nega"
         ariaLabel="Подарочный сертификат"
-        frameClassName={`bg-white ${activeDesign.previewClass}`}
-        imageClassName="object-contain p-6 mix-blend-multiply"
+        frameClassName={`bg-white ${displayBackground}`}
+        imageClassName={
+          activeImage ? "object-contain" : "object-contain p-6 mix-blend-multiply"
+        }
       />
     </SiteContainer>
   );

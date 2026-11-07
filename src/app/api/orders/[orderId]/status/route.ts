@@ -1,4 +1,5 @@
 import { getOrderPaymentStatus } from "@/lib/orders";
+import { getOrderGiftCertificates } from "@/lib/promo-codes";
 import { syncYandexPayOrderStatus } from "@/lib/yandex-pay-webhook";
 import { dbUnavailableResponse } from "@/lib/auth";
 import { isDbConfigured } from "@/lib/prisma";
@@ -35,6 +36,9 @@ export async function GET(_request: Request, { params }: Params) {
     }
   }
 
+  const giftCertificates =
+    order.paymentStatus === "PAID" ? await getOrderGiftCertificates(order.id) : [];
+
   return Response.json({
     order: {
       id: order.id,
@@ -43,6 +47,11 @@ export async function GET(_request: Request, { params }: Params) {
       statusLabel: order.statusLabel,
       paymentStatus: order.paymentStatus,
       total: order.total,
+      giftCertificates: giftCertificates.map(({ code, nominal, expiresAt }) => ({
+        code,
+        nominal,
+        expiresAt,
+      })),
     },
   });
 }

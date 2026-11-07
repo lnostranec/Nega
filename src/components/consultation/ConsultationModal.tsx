@@ -4,7 +4,12 @@ import Link from "next/link";
 import { FormEvent, useEffect, useState } from "react";
 import { Button } from "@/components/ui/Button";
 import { useBodyScrollLock } from "@/hooks/useBodyScrollLock";
-import { sanitizePhoneInput, validateName, validatePhone } from "@/lib/validation";
+import {
+  CONSULTATION_COMMENT_MAX,
+  sanitizePhoneInput,
+  validateName,
+  validatePhone,
+} from "@/lib/validation";
 
 type ConsultationModalProps = {
   open: boolean;
@@ -17,7 +22,11 @@ const inputClass =
 export function ConsultationModal({ open, onClose }: ConsultationModalProps) {
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
+  const [comment, setComment] = useState("");
   const [agreed, setAgreed] = useState(false);
+  const [sending, setSending] = useState(false);
+  const [sent, setSent] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
   const [errors, setErrors] = useState<{
     name?: string;
     phone?: string;
@@ -28,8 +37,12 @@ export function ConsultationModal({ open, onClose }: ConsultationModalProps) {
     if (!open) {
       setName("");
       setPhone("");
+      setComment("");
       setAgreed(false);
       setErrors({});
+      setSending(false);
+      setSent(false);
+      setSubmitError(null);
     }
   }, [open]);
 
@@ -50,7 +63,7 @@ export function ConsultationModal({ open, onClose }: ConsultationModalProps) {
     if (!phone) setPhone("+7");
   }
 
-  function handleSubmit(e: FormEvent) {
+  async function handleSubmit(e: FormEvent) {
     e.preventDefault();
 
     const nextErrors = {
@@ -63,12 +76,29 @@ export function ConsultationModal({ open, onClose }: ConsultationModalProps) {
 
     if (nextErrors.name || nextErrors.phone || nextErrors.agreed) return;
 
-    alert("Заявка на консультацию будет отправлена после подключения CRM");
-    onClose();
+    setSubmitError(null);
+    setSending(true);
+    try {
+      const response = await fetch("/api/consultation", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name, phone, comment, agreed }),
+      });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        setSubmitError(data.error ?? "Не удалось отправить заявку. Попробуйте ещё раз");
+        return;
+      }
+      setSent(true);
+    } catch {
+      setSubmitError("Не удалось отправить заявку. Проверьте интернет и попробуйте ещё раз");
+    } finally {
+      setSending(false);
+    }
   }
 
   const canSubmit =
-    !validateName(name) && !validatePhone(phone) && agreed;
+    !validateName(name) && !validatePhone(phone) && agreed && !sending;
 
   return (
     <div
@@ -105,6 +135,17 @@ export function ConsultationModal({ open, onClose }: ConsultationModalProps) {
           Заявка на консультацию
         </h2>
 
+        {sent ? (
+          <div className="mt-8 text-center">
+            <p className="text-sm leading-relaxed text-stone-600">
+              Спасибо! Заявка отправлена — мы перезвоним вам в ближайшее рабочее
+              время.
+            </p>
+            <Button type="button" onClick={onClose} className="mt-8 w-full py-4">
+              Закрыть
+            </Button>
+          </div>
+        ) : (
         <form onSubmit={handleSubmit} className="mt-8 space-y-4" noValidate>
           <div>
             <input
@@ -141,6 +182,20 @@ export function ConsultationModal({ open, onClose }: ConsultationModalProps) {
             )}
           </div>
 
+          <div>
+            <textarea
+              value={comment}
+              onChange={(e) => setComment(e.target.value)}
+              maxLength={CONSULTATION_COMMENT_MAX}
+              rows={4}
+              placeholder="Комментарий (необязательно)"
+              className={`${inputClass} resize-y`}
+            />
+            <p className="mt-1 px-2 text-right text-xs text-stone-400">
+              {comment.length} / {CONSULTATION_COMMENT_MAX}
+            </p>
+          </div>
+
           <label className="flex cursor-pointer items-start gap-3 px-1 pt-1">
             <input
               type="checkbox"
@@ -164,9 +219,15 @@ export function ConsultationModal({ open, onClose }: ConsultationModalProps) {
             disabled={!canSubmit}
             className="mt-2 w-full py-4 disabled:bg-stone-200 disabled:text-stone-400"
           >
-            Перезвоните мне
+            {sending ? "Отправляем..." : "Перезвоните мне"}
           </Button>
+          {submitError && (
+            <p className="rounded border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
+              {submitError}
+            </p>
+          )}
         </form>
+        )}
 
         <p className="mt-6 text-center text-xs leading-relaxed text-stone-500">
           Отправляя заявку, вы принимаете условия{" "}

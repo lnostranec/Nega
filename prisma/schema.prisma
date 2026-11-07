@@ -301,6 +301,21 @@ model SiteSettings {
   loyaltyPercent3     Int    @default(10)
 }
 
+/// Страница «Подарочный сертификат» — настраивается в админке
+model GiftCertificateSettings {
+  id           String   @id @default("default")
+  mainImageUrl String?
+  description  String
+  deliveryText String
+  /// [{ id, name, imageUrl }]
+  designs      Json
+  /// [3000, 5000, ...]
+  nominals     Json
+  /// [{ id, label }]
+  types        Json
+  updatedAt    DateTime @updatedAt
+}
+
 enum EmailStatus {
   PENDING
   SENT

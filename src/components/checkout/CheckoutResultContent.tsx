@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { formatPrice } from "@/lib/format";
+import type { GiftCertificateView } from "@/lib/gift-certificate";
 
 type OrderStatusPayload = {
   id: string;
@@ -11,6 +12,7 @@ type OrderStatusPayload = {
   statusLabel: string;
   paymentStatus: string;
   total: number;
+  giftCertificates?: GiftCertificateView[];
 };
 
 type Props = {
@@ -94,6 +96,33 @@ export function CheckoutResultContent({ orderId }: Props) {
       <p className="mt-2 text-sm text-stone-500">
         {order.statusLabel} · {formatPrice(order.total)}
       </p>
+      {paid && order.giftCertificates && order.giftCertificates.length > 0 && (
+        <div className="mt-8 border border-stone-200 bg-stone-50 p-5 text-left">
+          <p className="text-sm font-medium text-[#260402]">
+            {order.giftCertificates.length > 1
+              ? "Коды подарочных сертификатов"
+              : "Код подарочного сертификата"}
+          </p>
+          <ul className="mt-3 space-y-3">
+            {order.giftCertificates.map((certificate) => (
+              <li key={certificate.code}>
+                <p className="font-mono text-lg font-semibold tracking-wider text-stone-900">
+                  {certificate.code}
+                </p>
+                <p className="text-xs text-stone-500">
+                  Номинал {formatPrice(certificate.nominal)}
+                  {certificate.expiresAt &&
+                    ` · действует до ${new Date(certificate.expiresAt).toLocaleDateString("ru-RU")}`}
+                </p>
+              </li>
+            ))}
+          </ul>
+          <p className="mt-3 text-xs text-stone-500">
+            Мы также отправили код на email. Введите его в поле «Промокод» при
+            оформлении заказа.
+          </p>
+        </div>
+      )}
       {!paid && !failed && (
         <p className="mt-6 text-sm text-stone-500">
           Если вы уже оплатили, статус обновится автоматически в течение минуты.

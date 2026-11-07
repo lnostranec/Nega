@@ -13,8 +13,13 @@ export const SELLER = {
   shipFromCity: "Нижний Новгород",
   /** Уточнить у заказчицы */
   shipFromAddress: null as string | null,
-  phone: null as string | null,
-  email: "support@nega.ru",
+  phones: [
+    { display: "+7 (910) 887-55-43", tel: "+79108875543" },
+    { display: "+7 (910) 887-73-93", tel: "+79108877393" },
+  ],
+  email: "nega.store@yandex.ru",
+  telegram: "@Nega_store",
+  telegramUrl: "https://t.me/Nega_store",
   bankAccount: null as string | null,
   bankName: null as string | null,
   bankBik: null as string | null,
@@ -25,11 +30,7 @@ export function formatSellerOgrnip(): string {
 }
 
 export function formatSellerPhone(): string {
-  return SELLER.phone ?? "[уточняется]";
-}
-
-export function formatShipFromAddress(): string {
-  return SELLER.shipFromAddress ?? "[уточняется]";
+  return SELLER.phones.map((phone) => phone.display).join(", ");
 }
 
 export function formatBankDetails(): string {

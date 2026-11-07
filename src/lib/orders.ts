@@ -19,8 +19,11 @@ import { getPrisma } from "@/lib/prisma";
 import { restoreOrderStock } from "@/lib/stock";
 import {
   isGiftCertificateVariant,
+  isGiftCertificateVariantAvailable,
   parseGiftCertificateNominal,
+  type GiftCertificateConfig,
 } from "@/lib/gift-certificate";
+import { getGiftCertificateConfig } from "@/lib/gift-certificate-settings";
 import { calculatePointsRedemption } from "@/lib/points";
 import {
   calculatePromoDiscount,
@@ -128,9 +131,16 @@ type TxClient = Prisma.TransactionClient;
 async function validateItemPrices(
   tx: TxClient,
   items: CreateOrderItemInput[],
+  giftConfig: GiftCertificateConfig | null,
 ): Promise<void> {
   for (const item of items) {
     if (isGiftProduct(item.productId, item.variantId)) {
+      if (
+        !giftConfig ||
+        !isGiftCertificateVariantAvailable(item.variantId, giftConfig)
+      ) {
+        throw new Error("VARIANT_NOT_FOUND");
+      }
       const nominal = parseGiftCertificateNominal(item.variantId);
       if (nominal === null || nominal !== item.price) {
         throw new Error("PRICE_MISMATCH");
@@ -413,11 +423,16 @@ export async function createOrder(input: CreateOrderInput) {
   });
   const pointsPercent = settings?.pointsPercent ?? 5;
   const minOrderForPoints = settings?.minOrderForPoints ?? 0;
+  const giftConfig = input.items.some((item) =>
+    isGiftProduct(item.productId, item.variantId),
+  )
+    ? await getGiftCertificateConfig()
+    : null;
 
   const result = await prisma.$transaction(async (tx) => {
     let pointsUsed = 0;
 
-    await validateItemPrices(tx, input.items);
+    await validateItemPrices(tx, input.items, giftConfig);
     await reserveStock(tx, input.items);
 
     if (promoCodeId) {
@@ -649,6 +664,8 @@ export async function confirmOrderPayment(orderId: string): Promise<OrderView> {
       order.items.map((item) => ({
         variantId: item.sourceVariantId ?? item.variantId ?? "",
         quantity: item.quantity,
+        // У сертификата в поле «размер» хранится тип (бумажный / электронный)
+        typeLabel: item.size,
       })),
       tx,
     );
@@ -666,11 +683,10 @@ export async function confirmOrderPayment(orderId: string): Promise<OrderView> {
   }, ORDER_TX_OPTIONS);
 
   if (result.order.customerEmail) {
-    void sendOrderPaidEmail(
-      result.order.customerEmail,
-      result.order.id,
-      orderToEmailData(result.order),
-    ).catch((error) => console.error("Order paid email error:", error));
+    void sendOrderPaidEmail(result.order.customerEmail, result.order.id, {
+      ...orderToEmailData(result.order),
+      giftCertificates: result.giftCertificateCodes,
+    }).catch((error) => console.error("Order paid email error:", error));
   }
 
   void tryCreateCdekShipment(result.order.id).catch((error) =>
@@ -681,7 +697,10 @@ export async function confirmOrderPayment(orderId: string): Promise<OrderView> {
     console.error("Yandex Delivery claim error:", error),
   );
 
-  return toOrderView(result.order, result.giftCertificateCodes);
+  return toOrderView(
+    result.order,
+    result.giftCertificateCodes.map((certificate) => certificate.code),
+  );
 }
 
 export async function setOrderExternalPaymentId(

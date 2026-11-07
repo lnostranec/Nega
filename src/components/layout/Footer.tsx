@@ -8,6 +8,7 @@ import {
   SHOP_NAME,
 } from "@/lib/constants";
 import { MailIcon, PhoneIcon, TelegramIcon, VkIcon, InstagramIcon } from "@/components/icons";
+import { SELLER } from "@/lib/seller";
 import { SizeCalculatorButton } from "@/components/size-calculator/SizeCalculatorButton";
 import { LeaveReviewButton } from "@/components/reviews/LeaveReviewButton";
 import { NewsletterForm } from "./NewsletterForm";
@@ -43,7 +44,13 @@ export function Footer() {
             >
               <h3 className="text-base font-semibold text-[#260402]">Социальные сети</h3>
               <div className="mt-4 flex items-center gap-3 text-[#260402]">
-                <a href="#" aria-label="Telegram" className="transition hover:opacity-70">
+                <a
+                  href={SELLER.telegramUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label="Telegram"
+                  className="transition hover:opacity-70"
+                >
                   <TelegramIcon className="h-5 w-5" />
                 </a>
                 <a href="#" aria-label="VK" className="transition hover:opacity-70">
@@ -57,21 +64,31 @@ export function Footer() {
               <ul className="mt-5 space-y-3 text-sm text-stone-600">
                 <li className="flex items-center gap-2">
                   <MailIcon />
-                  <a href="mailto:support@nega.ru" className="hover:text-[#260402]">
-                    support@nega.ru
+                  <a href="mailto:nega.store@yandex.ru" className="hover:text-[#260402]">
+                    nega.store@yandex.ru
                   </a>
                 </li>
-                <li className="flex items-center gap-2">
+                <li className="flex items-start gap-2">
                   <PhoneIcon />
-                  <span>+7 (999) 000-00-00 — Клиентский сервис</span>
+                  <span>
+                    {SELLER.phones.map((phone) => (
+                      <a
+                        key={phone.tel}
+                        href={`tel:${phone.tel}`}
+                        className="block hover:text-[#260402]"
+                      >
+                        {phone.display}
+                      </a>
+                    ))}
+                  </span>
                 </li>
               </ul>
 
               <h3 className="mt-8 text-base font-semibold text-[#260402]">Сотрудничество</h3>
               <p className="mt-3 flex items-center gap-2 text-sm text-stone-600">
                 <MailIcon />
-                <a href="mailto:info@nega.ru" className="hover:text-[#260402]">
-                  info@nega.ru
+                <a href="mailto:nega.store@yandex.ru" className="hover:text-[#260402]">
+                  nega.store@yandex.ru
                 </a>
               </p>
             </div>

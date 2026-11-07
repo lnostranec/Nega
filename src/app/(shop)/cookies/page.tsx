@@ -59,7 +59,7 @@ export default function CookiesPage() {
 
       <InfoPage.Section title="Контакты">
         <p>
-          Вопросы по использованию cookie: support@nega.ru.
+          Вопросы по использованию cookie: nega.store@yandex.ru.
         </p>
       </InfoPage.Section>
     </InfoPage>

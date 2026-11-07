@@ -13,10 +13,15 @@ export type AdminPromoCodeView = {
   expiresAt: string | null;
   isActive: boolean;
   isGiftCert: boolean;
+  /** Заказ, в котором куплен сертификат */
+  sourceOrder: { id: string; orderNumber: string } | null;
   createdAt: string;
 };
 
-function toView(promo: PromoCode): AdminPromoCodeView {
+function toView(
+  promo: PromoCode,
+  sourceOrder: AdminPromoCodeView["sourceOrder"] = null,
+): AdminPromoCodeView {
   return {
     id: promo.id,
     code: promo.code,
@@ -28,15 +33,41 @@ function toView(promo: PromoCode): AdminPromoCodeView {
     expiresAt: promo.expiresAt?.toISOString() ?? null,
     isActive: promo.isActive,
     isGiftCert: promo.isGiftCert,
+    sourceOrder,
     createdAt: promo.createdAt.toISOString(),
   };
 }
 
+async function findSourceOrder(
+  sourceOrderId: string | null,
+): Promise<AdminPromoCodeView["sourceOrder"]> {
+  if (!sourceOrderId) return null;
+  return getPrisma().order.findUnique({
+    where: { id: sourceOrderId },
+    select: { id: true, orderNumber: true },
+  });
+}
+
 export async function listAdminPromoCodes(): Promise<AdminPromoCodeView[]> {
-  const promos = await getPrisma().promoCode.findMany({
+  const prisma = getPrisma();
+  const promos = await prisma.promoCode.findMany({
     orderBy: [{ isGiftCert: "asc" }, { createdAt: "desc" }],
   });
-  return promos.map(toView);
+
+  const sourceOrderIds = [
+    ...new Set(promos.map((promo) => promo.sourceOrderId).filter((id) => id !== null)),
+  ];
+  const orders = sourceOrderIds.length
+    ? await prisma.order.findMany({
+        where: { id: { in: sourceOrderIds } },
+        select: { id: true, orderNumber: true },
+      })
+    : [];
+  const orderById = new Map(orders.map((order) => [order.id, order]));
+
+  return promos.map((promo) =>
+    toView(promo, promo.sourceOrderId ? orderById.get(promo.sourceOrderId) ?? null : null),
+  );
 }
 
 export type CreatePromoCodeInput = {
@@ -118,7 +149,18 @@ export async function updateAdminPromoCode(
   }
 
   if (existing.isGiftCert) {
-    throw new Error("GIFT_CERT_READONLY");
+    // У сертификата можно только включить / отключить, остальное — только чтение
+    const otherFields = Object.entries(input).filter(
+      ([key, value]) => key !== "isActive" && value !== undefined,
+    );
+    if (otherFields.length > 0 || input.isActive === undefined) {
+      throw new Error("GIFT_CERT_READONLY");
+    }
+    const promo = await prisma.promoCode.update({
+      where: { id },
+      data: { isActive: input.isActive },
+    });
+    return toView(promo, await findSourceOrder(promo.sourceOrderId));
   }
 
   const nextType = input.type ?? existing.type;

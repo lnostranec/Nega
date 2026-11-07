@@ -4,6 +4,7 @@ import {
   type DeliveryType,
 } from "@/lib/cdek";
 import type { OrderItemView } from "@/lib/orders";
+import type { GiftCertificateView } from "@/lib/gift-certificate";
 
 export type OrderEmailData = {
   orderNumber: string;
@@ -20,6 +21,7 @@ export type OrderEmailData = {
   cdekPvzName: string | null;
   cdekCityName: string | null;
   trackingNumber?: string | null;
+  giftCertificates?: GiftCertificateView[];
 };
 
 const SHOP_NAME = process.env.SHOP_NAME ?? "Nega";
@@ -91,6 +93,35 @@ function totalsBlock(data: OrderEmailData): string {
   return `<div style="margin-top:16px;font-size:14px">${lines.join("")}</div>`;
 }
 
+function formatEmailDate(iso: string | null): string {
+  if (!iso) return "";
+  return new Date(iso).toLocaleDateString("ru-RU", {
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+  });
+}
+
+function giftCertificatesBlock(certificates?: GiftCertificateView[]): string {
+  if (!certificates?.length) return "";
+  const rows = certificates
+    .map(
+      (certificate) =>
+        `<div style="margin-top:12px;padding:16px;border:1px dashed #260402;text-align:center">
+          <div style="font-size:13px;color:#78716c">Подарочный сертификат на ${formatPrice(certificate.nominal)}${certificate.typeLabel ? ` · ${certificate.typeLabel.toLowerCase()}` : ""}</div>
+          <div style="margin-top:6px;font-family:monospace;font-size:22px;letter-spacing:0.08em;font-weight:600">${certificate.code}</div>
+          ${certificate.expiresAt ? `<div style="margin-top:6px;font-size:13px;color:#78716c">Действует до ${formatEmailDate(certificate.expiresAt)}</div>` : ""}
+        </div>`,
+    )
+    .join("");
+
+  return `<div style="margin:24px 0">
+    <h2 style="font-size:16px;font-weight:600;margin:0">${certificates.length > 1 ? "Ваши подарочные сертификаты" : "Ваш подарочный сертификат"}</h2>
+    ${rows}
+    <p style="margin-top:12px;font-size:14px">Чтобы воспользоваться сертификатом, введите код в поле «Промокод» при оформлении заказа на <a href="${siteUrl()}" style="color:#260402">сайте</a>. Сертификат применяется к одному заказу.</p>
+  </div>`;
+}
+
 export function orderPaidEmail(data: OrderEmailData) {
   const subject = `Заказ ${data.orderNumber} оплачен — ${SHOP_NAME}`;
   const html = layout(
@@ -98,6 +129,7 @@ export function orderPaidEmail(data: OrderEmailData) {
     `<h1 style="font-size:20px;font-weight:600;margin:16px 0">Спасибо за заказ!</h1>
     <p>Здравствуйте${data.customerName ? `, ${data.customerName}` : ""}!</p>
     <p>Заказ <strong>${data.orderNumber}</strong> успешно оплачен и принят в обработку.</p>
+    ${giftCertificatesBlock(data.giftCertificates)}
     ${itemsTable(data.items)}
     ${deliveryBlock(data)}
     ${totalsBlock(data)}

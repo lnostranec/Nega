@@ -47,6 +47,9 @@ prisma/dev.db-journal
 # vercel
 .vercel
 
+# local editor/agent config (proxy settings, machine-specific paths)
+.claude/
+
 # typescript
 *.tsbuildinfo
 next-env.d.ts

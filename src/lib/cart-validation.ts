@@ -1,5 +1,10 @@
 import { getPrisma } from "@/lib/prisma";
-import { isGiftCertificateVariant, parseGiftCertificateNominal } from "@/lib/gift-certificate";
+import {
+  isGiftCertificateVariant,
+  isGiftCertificateVariantAvailable,
+  parseGiftCertificateNominal,
+} from "@/lib/gift-certificate";
+import { getGiftCertificateConfig } from "@/lib/gift-certificate-settings";
 import {
   isSetAddonCartKey,
   isSetCartKey,
@@ -44,10 +49,17 @@ export async function validateCartItems(
   const lines: CartValidateLine[] = [];
   const messages = new Set<string>();
 
+  const giftConfig = items.some((item) => isGiftCertificateVariant(item.variantId))
+    ? await getGiftCertificateConfig()
+    : null;
+
   for (const item of items) {
     if (isGiftCertificateVariant(item.variantId)) {
       const nominal = parseGiftCertificateNominal(item.variantId);
-      const unavailable = nominal === null;
+      const unavailable =
+        nominal === null ||
+        !giftConfig ||
+        !isGiftCertificateVariantAvailable(item.variantId, giftConfig);
       const priceChanged = nominal !== null && nominal !== item.price;
 
       if (unavailable) messages.add("Один из товаров больше недоступен");

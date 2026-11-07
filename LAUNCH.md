@@ -9,6 +9,7 @@
 - [ ] Деплой на Vercel (или аналог), SSL включён
 - [ ] `npm run db:migrate` / `prisma migrate deploy` на проде
 - [ ] Админ: `ADMIN_EMAIL` / `ADMIN_PASSWORD` при seed или вручную
+- [ ] Хранилище фото: `S3_*` (см. `docs/MEDIA-STORAGE-SETUP.md`) — без него админка не загружает фото
 
 ## 2. Оплата
 
