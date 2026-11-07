@@ -8,6 +8,7 @@ import {
 } from "@/lib/orders";
 import { getSessionUser, dbUnavailableResponse } from "@/lib/auth";
 import { isDbConfigured } from "@/lib/prisma";
+import { isTransientDbError } from "@/lib/prisma";
 import type { PaymentMethod } from "@prisma/client";
 import { validateEmail, validateName, validatePhone } from "@/lib/validation";
 import { validateDeliverySelection, type DeliveryType } from "@/lib/cdek";
@@ -240,12 +241,20 @@ export async function POST(request: Request) {
 
     console.error("Create order error:", error);
     void captureException(error, { route: "POST /api/orders" });
-    const detail =
-      error instanceof Error ? error.message.slice(0, 240) : "unknown";
+
+    // Временные проблемы с базой не показываем покупателю в виде текста Prisma
+    if (isTransientDbError(error)) {
+      return Response.json(
+        {
+          error:
+            "Сервис временно перегружен. Попробуйте оформить заказ ещё раз через минуту.",
+        },
+        { status: 503 },
+      );
+    }
+
     return Response.json(
-      {
-        error: `Не удалось создать заказ (${detail}). Попробуйте ещё раз`,
-      },
+      { error: "Не удалось создать заказ. Попробуйте ещё раз" },
       { status: 500 },
     );
   }
