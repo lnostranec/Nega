@@ -16,6 +16,7 @@ import {
   sendOrderPaidEmail,
 } from "@/lib/email/orders";
 import { getPrisma } from "@/lib/prisma";
+import { withDbRetry } from "@/lib/prisma";
 import { reserveOrderStock, restoreOrderStock } from "@/lib/stock";
 import { writeAuditLog } from "@/lib/audit";
 import {
@@ -385,7 +386,7 @@ async function cancelUnpaidOrder(orderId: string): Promise<void> {
   });
 }
 
-export async function createOrder(input: CreateOrderInput) {
+async function createOrderInner(input: CreateOrderInput) {
   await releaseExpiredOrders();
 
   const prisma = getPrisma();
@@ -579,7 +580,7 @@ export async function createOrder(input: CreateOrderInput) {
   return toOrderView(result.order);
 }
 
-export async function confirmOrderPayment(orderId: string): Promise<OrderView> {
+async function confirmOrderPaymentInner(orderId: string): Promise<OrderView> {
   const prisma = getPrisma();
 
   const result = await prisma.$transaction(async (tx) => {
@@ -974,6 +975,19 @@ export function parsePaymentMethod(value: string): PaymentMethod | null {
     default:
       return null;
   }
+}
+
+/**
+ * Создание заказа и подтверждение оплаты повторяем при обрыве соединения
+ * с пулером: операция либо откатилась целиком, либо уже прошла, а повтор
+ * транзиентной ошибки идемпотентен по смыслу (заказ либо есть, либо нет).
+ */
+export async function createOrder(input: CreateOrderInput) {
+  return withDbRetry(() => createOrderInner(input));
+}
+
+export async function confirmOrderPayment(orderId: string): Promise<OrderView> {
+  return withDbRetry(() => confirmOrderPaymentInner(orderId));
 }
 
 export { normalizePromoCode };
