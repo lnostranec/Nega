@@ -55,6 +55,11 @@ function providerReady(method: PaymentMethod | null): boolean {
   return isYooKassaConfigured();
 }
 
+/** Доступен ли способ оплаты при текущих ключах (для валидации заказа). */
+export function isPaymentMethodAvailable(method: PaymentMethod | null): boolean {
+  return providerReady(method);
+}
+
 /**
  * Запускает оплату по выбранному способу.
  * Без ключей провайдера — auto-confirm (локальная разработка).
@@ -70,8 +75,13 @@ export async function startOrderPayment(
 
   const method = order.paymentMethod;
   if (!providerReady(method)) {
+    // В проде оплату без провайдера не подтверждаем: иначе заказ станет
+    // «оплаченным» без денег. Автоподтверждение допустимо только локально.
+    if (process.env.NODE_ENV === "production") {
+      throw new Error("PAYMENT_METHOD_UNAVAILABLE");
+    }
     console.warn(
-      `[payments] provider for ${method ?? "CARD"} not configured — auto-confirming`,
+      `[payments] provider for ${method ?? "CARD"} not configured — auto-confirming (development only)`,
       order.orderNumber,
     );
     const paid = await confirmOrderPayment(order.id);

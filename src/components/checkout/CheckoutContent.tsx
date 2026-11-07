@@ -529,7 +529,6 @@ export function CheckoutContent() {
               {[
                 { id: "card", label: "Банковская карта" },
                 { id: "yandex_pay", label: "Яндекс Пэй" },
-                { id: "dolyami", label: "Долями" },
                 { id: "split", label: "Яндекс Сплит" },
               ].map((method) => (
                 <label

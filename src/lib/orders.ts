@@ -312,6 +312,9 @@ export function orderErrorMessage(error: Error): string {
   if (error.message === "ORDER_ALREADY_PAID") {
     return "Заказ уже оплачен";
   }
+  if (error.message === "PAYMENT_METHOD_UNAVAILABLE") {
+    return "Этот способ оплаты временно недоступен. Выберите другой.";
+  }
   if (error.message.startsWith("YooKassa:")) {
     return `Не удалось перейти к оплате (${error.message.replace(/^YooKassa:\s*/, "")}). Попробуйте ещё раз или выберите другой способ оплаты.`;
   }

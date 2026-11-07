@@ -1,4 +1,4 @@
-import { startOrderPayment } from "@/lib/payments";
+import { isPaymentMethodAvailable, startOrderPayment } from "@/lib/payments";
 import {
   createOrder,
   getUserOrders,
@@ -113,6 +113,17 @@ export async function POST(request: Request) {
 
   if (!paymentMethod) {
     return Response.json({ error: "Выберите способ оплаты" }, { status: 400 });
+  }
+
+  // В проде неподключённый провайдер отсекаем до создания заказа и резерва
+  // остатков. В разработке оставляем автоподтверждение, чтобы работать без ключей.
+  const unavailable =
+    paymentMethod === "DOLYAMI" || !isPaymentMethodAvailable(paymentMethod);
+  if (unavailable && process.env.NODE_ENV === "production") {
+    return Response.json(
+      { error: "Этот способ оплаты временно недоступен. Выберите другой." },
+      { status: 400 },
+    );
   }
 
   if (items.length === 0) {
