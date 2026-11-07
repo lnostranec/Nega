@@ -1,12 +1,15 @@
-import { Montserrat } from "next/font/google";
+import localFont from "next/font/local";
 import type { Metadata } from "next";
 import { Analytics } from "@/components/layout/Analytics";
 import "./globals.css";
 
-const montserrat = Montserrat({
-  subsets: ["latin", "cyrillic"],
+// Шрифт лежит в репозитории: сборка не зависит от доступности Google Fonts.
+const montserrat = localFont({
+  src: "./fonts/Montserrat-Variable.ttf",
   variable: "--font-montserrat",
-  weight: ["400", "500", "600", "700"],
+  weight: "100 900",
+  display: "swap",
+  fallback: ["system-ui", "Arial", "sans-serif"],
 });
 
 const SITE_URL =
