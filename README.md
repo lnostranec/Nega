@@ -72,7 +72,7 @@ prisma/
 
 1. Залейте проект на GitHub
 2. Подключите репозиторий на [vercel.com](https://vercel.com)
-3. Добавьте переменную `DATABASE_URL` в настройках Vercel
+3. Добавьте переменные `DATABASE_URL`, `VK_TOKEN`, `VK_PEER_ID` в настройках Vercel
 4. Vercel выдаст тестовый URL для показа заказчику
 
 ## Следующие этапы

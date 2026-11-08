@@ -5,7 +5,7 @@ import {
   rateLimit,
   rateLimitResponse,
 } from "@/lib/rate-limit";
-import { escapeTelegramHtml, sendTelegramMessage } from "@/lib/telegram";
+import { sendVkMessage } from "@/lib/vk";
 import {
   CONSULTATION_COMMENT_MAX,
   validateName,
@@ -65,20 +65,20 @@ export async function POST(request: Request) {
   });
 
   const lines = [
-    "📞 <b>Заявка на консультацию</b>",
+    "📞 Заявка на консультацию",
     "",
-    `<b>Имя:</b> ${escapeTelegramHtml(name)}`,
-    `<b>Телефон:</b> ${escapeTelegramHtml(normalizedPhone)}`,
-    `<b>Время:</b> ${time} (МСК)`,
+    `Имя: ${name}`,
+    `Телефон: ${normalizedPhone}`,
+    `Время: ${time} (МСК)`,
   ];
   if (comment) {
-    lines.push("", "<b>Комментарий:</b>", escapeTelegramHtml(comment));
+    lines.push("", "Комментарий:", comment);
   }
 
   try {
-    await sendTelegramMessage(lines.join("\n"));
+    await sendVkMessage(lines.join("\n"));
   } catch (error) {
-    console.error("[consultation] telegram error:", error);
+    console.error("[consultation] vk error:", error);
     void captureException(error, { route: "POST /api/consultation" });
     return Response.json(
       {

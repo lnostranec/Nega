@@ -2,7 +2,7 @@ import { NextRequest } from "next/server";
 import { dbUnavailableResponse, getSessionUser } from "@/lib/auth";
 import { isDbConfigured } from "@/lib/prisma";
 import { createReview, listActiveReviews } from "@/lib/reviews";
-import { escapeTelegramHtml, sendTelegramMessage } from "@/lib/telegram";
+import { sendVkMessage } from "@/lib/vk";
 
 export async function GET() {
   if (!isDbConfigured()) return dbUnavailableResponse();
@@ -42,20 +42,20 @@ export async function POST(request: NextRequest) {
     const review = await createReview({ userId: user.id, rating, text });
 
     try {
-      await sendTelegramMessage(
+      await sendVkMessage(
         [
           "⭐ Новый отзыв на сайте",
           "",
-          `<b>Оценка:</b> ${review.rating}/5`,
-          `<b>Автор:</b> ${escapeTelegramHtml(review.authorName)}`,
+          `Оценка: ${review.rating}/5`,
+          `Автор: ${review.authorName}`,
           "",
-          escapeTelegramHtml(review.text.slice(0, 800)),
+          review.text.slice(0, 800),
           "",
           "Опубликовать: /admin/reviews",
         ].join("\n"),
       );
     } catch (error) {
-      console.error("[reviews] telegram error:", error);
+      console.error("[reviews] vk error:", error);
     }
 
     return Response.json(
