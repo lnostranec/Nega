@@ -17,9 +17,11 @@ type OrderStatusPayload = {
 
 type Props = {
   orderId: string;
+  /** Подпись из ссылки возврата — даёт право видеть коды сертификатов */
+  token?: string;
 };
 
-export function CheckoutResultContent({ orderId }: Props) {
+export function CheckoutResultContent({ orderId, token }: Props) {
   const [order, setOrder] = useState<OrderStatusPayload | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -29,7 +31,9 @@ export function CheckoutResultContent({ orderId }: Props) {
 
     async function load() {
       try {
-        const response = await fetch(`/api/orders/${orderId}/status`);
+        const response = await fetch(
+          `/api/orders/${orderId}/status${token ? `?token=${encodeURIComponent(token)}` : ""}`,
+        );
         const data = await response.json();
         if (cancelled) return;
 
@@ -57,7 +61,7 @@ export function CheckoutResultContent({ orderId }: Props) {
       cancelled = true;
       if (timer) clearTimeout(timer);
     };
-  }, [orderId]);
+  }, [orderId, token]);
 
   if (error) {
     return (

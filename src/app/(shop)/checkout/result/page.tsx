@@ -1,11 +1,11 @@
 import { CheckoutResultContent } from "@/components/checkout/CheckoutResultContent";
 
 type Props = {
-  searchParams: Promise<{ orderId?: string }>;
+  searchParams: Promise<{ orderId?: string; token?: string }>;
 };
 
 export default async function CheckoutResultPage({ searchParams }: Props) {
-  const { orderId } = await searchParams;
+  const { orderId, token } = await searchParams;
 
   if (!orderId) {
     return (
@@ -16,5 +16,5 @@ export default async function CheckoutResultPage({ searchParams }: Props) {
     );
   }
 
-  return <CheckoutResultContent orderId={orderId} />;
+  return <CheckoutResultContent orderId={orderId} token={token} />;
 }

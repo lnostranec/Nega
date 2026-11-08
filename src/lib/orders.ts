@@ -753,6 +753,7 @@ export async function markOrderPaymentFailed(orderId: string): Promise<void> {
 export async function getOrderPaymentStatus(orderId: string): Promise<{
   id: string;
   orderNumber: string;
+  userId: string | null;
   status: OrderStatus;
   statusLabel: string;
   paymentStatus: PaymentStatus;
@@ -766,6 +767,7 @@ export async function getOrderPaymentStatus(orderId: string): Promise<{
     select: {
       id: true,
       orderNumber: true,
+      userId: true,
       status: true,
       paymentStatus: true,
       paymentMethod: true,
@@ -777,6 +779,7 @@ export async function getOrderPaymentStatus(orderId: string): Promise<{
   return {
     id: order.id,
     orderNumber: order.orderNumber,
+    userId: order.userId,
     status: order.status,
     statusLabel: ORDER_STATUS_LABELS[order.status],
     paymentStatus: order.paymentStatus,

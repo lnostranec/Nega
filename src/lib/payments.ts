@@ -5,6 +5,7 @@ import {
   type OrderView,
 } from "@/lib/orders";
 import { getPrisma } from "@/lib/prisma";
+import { buildOrderResultUrl } from "@/lib/order-token";
 import {
   createDolyamiOrder,
   isDolyamiConfigured,
@@ -92,7 +93,7 @@ export async function startOrderPayment(
   const email = context.customerEmail ?? dbOrder.customerEmail;
   const phone = context.customerPhone ?? dbOrder.customerPhone;
   const name = context.customerName ?? dbOrder.customerName;
-  const returnUrl = `${siteUrl()}/checkout/result?orderId=${order.id}`;
+  const returnUrl = buildOrderResultUrl(siteUrl(), order.id);
   const failUrl = `${siteUrl()}/checkout?payment=failed`;
 
   const items = dbOrder.items.map((item) => ({

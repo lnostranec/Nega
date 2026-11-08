@@ -1,12 +1,13 @@
 import { getOrderPaymentStatus } from "@/lib/orders";
 import { getOrderGiftCertificates } from "@/lib/promo-codes";
 import { syncYandexPayOrderStatus } from "@/lib/yandex-pay-webhook";
-import { dbUnavailableResponse } from "@/lib/auth";
+import { dbUnavailableResponse, getSessionUser } from "@/lib/auth";
 import { isDbConfigured } from "@/lib/prisma";
+import { verifyOrderToken } from "@/lib/order-token";
 
 type Params = { params: Promise<{ orderId: string }> };
 
-export async function GET(_request: Request, { params }: Params) {
+export async function GET(request: Request, { params }: Params) {
   if (!isDbConfigured()) return dbUnavailableResponse();
 
   const { orderId } = await params;
@@ -36,8 +37,18 @@ export async function GET(_request: Request, { params }: Params) {
     }
   }
 
+  // Коды сертификатов — это деньги. Отдаём их только владельцу заказа
+  // (по сессии) или тому, кто пришёл по подписанной ссылке после оплаты.
+  const token = new URL(request.url).searchParams.get("token");
+  const user = await getSessionUser();
+  const canViewCodes =
+    verifyOrderToken(order.id, token) ||
+    Boolean(user && order.userId && order.userId === user.id);
+
   const giftCertificates =
-    order.paymentStatus === "PAID" ? await getOrderGiftCertificates(order.id) : [];
+    order.paymentStatus === "PAID" && canViewCodes
+      ? await getOrderGiftCertificates(order.id)
+      : [];
 
   return Response.json({
     order: {
