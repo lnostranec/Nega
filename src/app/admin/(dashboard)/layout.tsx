@@ -48,6 +48,12 @@ export default async function AdminDashboardLayout({
                 Промокоды
               </Link>
               <Link
+                href="/admin/reviews"
+                className="text-stone-600 hover:text-stone-900"
+              >
+                Отзывы
+              </Link>
+              <Link
                 href="/admin/gift-certificate"
                 className="text-stone-600 hover:text-stone-900"
               >

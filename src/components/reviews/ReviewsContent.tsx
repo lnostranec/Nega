@@ -68,7 +68,8 @@ type ReviewsContentProps = {
 
 export function ReviewsContent({ initialReviews }: ReviewsContentProps) {
   const { user, loading, openLogin } = useAuth();
-  const [reviews, setReviews] = useState(initialReviews);
+  // Отзыв публикуется только после модерации, поэтому локально список не меняем.
+  const reviews = initialReviews;
   const [rating, setRating] = useState(5);
   const [text, setText] = useState("");
   const [error, setError] = useState("");
@@ -109,10 +110,11 @@ export function ReviewsContent({ initialReviews }: ReviewsContentProps) {
         setError(data.error ?? "Не удалось сохранить отзыв");
         return;
       }
-      setReviews((prev) => [data.review, ...prev]);
       setText("");
       setRating(5);
-      setSuccess("Спасибо! Ваш отзыв опубликован.");
+      setSuccess(
+        "Спасибо! Отзыв отправлен на модерацию — он появится на сайте после проверки.",
+      );
     } catch {
       setError("Не удалось сохранить отзыв");
     } finally {
@@ -178,7 +180,7 @@ export function ReviewsContent({ initialReviews }: ReviewsContentProps) {
             {error && <p className="text-sm text-red-600">{error}</p>}
             {success && <p className="text-sm text-green-700">{success}</p>}
             <Button type="submit" disabled={submitting}>
-              {submitting ? "Отправка..." : "Опубликовать отзыв"}
+              {submitting ? "Отправка..." : "Отправить отзыв"}
             </Button>
           </form>
         )}
@@ -196,7 +198,14 @@ export function ReviewsContent({ initialReviews }: ReviewsContentProps) {
               <li key={review.id} className="py-6">
                 <div className="flex flex-wrap items-center justify-between gap-3">
                   <div>
-                    <p className="font-medium text-[#260402]">{review.authorName}</p>
+                    <p className="font-medium text-[#260402]">
+                      {review.authorName}
+                      {review.verified && (
+                        <span className="ml-2 bg-stone-100 px-2 py-0.5 text-[10px] uppercase tracking-wide text-stone-600">
+                          Покупка подтверждена
+                        </span>
+                      )}
+                    </p>
                     <p className="mt-1 text-xs text-stone-500">
                       {new Date(review.createdAt).toLocaleDateString("ru-RU", {
                         day: "numeric",

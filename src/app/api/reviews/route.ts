@@ -2,6 +2,7 @@ import { NextRequest } from "next/server";
 import { dbUnavailableResponse, getSessionUser } from "@/lib/auth";
 import { isDbConfigured } from "@/lib/prisma";
 import { createReview, listActiveReviews } from "@/lib/reviews";
+import { escapeTelegramHtml, sendTelegramMessage } from "@/lib/telegram";
 
 export async function GET() {
   if (!isDbConfigured()) return dbUnavailableResponse();
@@ -39,9 +40,41 @@ export async function POST(request: NextRequest) {
 
   try {
     const review = await createReview({ userId: user.id, rating, text });
-    return Response.json({ review }, { status: 201 });
+
+    try {
+      await sendTelegramMessage(
+        [
+          "⭐ Новый отзыв на сайте",
+          "",
+          `<b>Оценка:</b> ${review.rating}/5`,
+          `<b>Автор:</b> ${escapeTelegramHtml(review.authorName)}`,
+          "",
+          escapeTelegramHtml(review.text.slice(0, 800)),
+          "",
+          "Опубликовать: /admin/reviews",
+        ].join("\n"),
+      );
+    } catch (error) {
+      console.error("[reviews] telegram error:", error);
+    }
+
+    return Response.json(
+      { review, moderation: true },
+      { status: 201 },
+    );
   } catch (error) {
     const code = error instanceof Error ? error.message : "";
+
+    if (code === "REVIEW_TOO_OFTEN") {
+      return Response.json(
+        {
+          error:
+            "Вы уже оставляли отзыв сегодня. Следующий можно будет через сутки.",
+        },
+        { status: 429 },
+      );
+    }
+
     if (code === "REVIEW_TEXT_EMPTY") {
       return Response.json(
         { error: "Текст отзыва не должен быть пустым" },
