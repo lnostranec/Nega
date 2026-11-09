@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { AdminNavSelect } from "@/components/admin/AdminNavSelect";
 import { getAdminUser } from "@/lib/admin";
 
 export const metadata = {
@@ -17,12 +18,13 @@ export default async function AdminDashboardLayout({
   return (
     <div className="min-h-screen bg-stone-100">
       <header className="border-b border-stone-200 bg-white">
-        <div className="mx-auto flex h-14 max-w-7xl items-center justify-between px-4 sm:px-6">
-          <div className="flex items-center gap-6">
-            <Link href="/admin" className="font-medium text-[#260402]">
-              Админка Nega
-            </Link>
-            <nav className="hidden gap-4 text-sm sm:flex">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6">
+          <div className="flex h-14 items-center justify-between">
+            <div className="flex items-center gap-6">
+              <Link href="/admin" className="font-medium text-[#260402]">
+                Админка Nega
+              </Link>
+              <nav className="hidden gap-4 text-sm sm:flex">
               <Link
                 href="/admin/products"
                 className="text-stone-600 hover:text-stone-900"
@@ -84,6 +86,10 @@ export default async function AdminDashboardLayout({
             <Link href="/" className="text-stone-500 hover:text-stone-900">
               На сайт →
             </Link>
+          </div>
+          </div>
+          <div className="pb-3 sm:hidden">
+            <AdminNavSelect />
           </div>
         </div>
       </header>
