@@ -31,7 +31,7 @@ export default async function CollectionPage({ params }: Props) {
         <p className="mt-2 text-stone-500">{collection.description}</p>
       )}
 
-      <div className="mt-10 grid grid-cols-2 gap-x-3 gap-y-8 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
+      <div className="mt-10 grid grid-cols-2 gap-x-3 gap-y-8 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-4">
         {products.map((product) => (
           <ProductCard
             key={product.id}

@@ -137,7 +137,7 @@ export default async function CatalogPage({ searchParams }: Props) {
 
           {data.products.length > 0 ? (
             <>
-                <div className="mt-8 grid grid-cols-2 gap-x-3 gap-y-8 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
+                <div className="mt-8 grid grid-cols-2 gap-x-3 gap-y-8 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-4">
                 {data.products.map((product) => (
                   <ProductCard
                     key={product.id}
