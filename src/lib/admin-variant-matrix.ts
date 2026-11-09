@@ -56,6 +56,34 @@ export function allSizes() {
   return [...SIZES];
 }
 
+/** Система размеров товара: буквы (XS–XL) или пояса с чашками (65A…90B). */
+export type SizeSystem = "letters" | "bra";
+
+const BRA_SIZE_PATTERN = /^\d{2,3}[A-Z]{1,2}$/;
+const CUSTOM_SIZE_PATTERN = /^[0-9A-ZА-Я]{1,8}$/;
+
+/** Определяет систему по уже сохранённым размерам товара. */
+export function detectSizeSystem(sizes: readonly string[]): SizeSystem {
+  return sizes.some((size) => BRA_SIZE_PATTERN.test(size.trim().toUpperCase()))
+    ? "bra"
+    : "letters";
+}
+
+/** Базовые размеры системы плюс «свои», которых в базовом списке нет. */
+export function mergeSizeOptions(
+  base: readonly string[],
+  selected: readonly string[],
+): string[] {
+  const extra = selected.filter((size) => !base.includes(size));
+  return [...base, ...extra];
+}
+
+/** Нормализует ввод своего размера: «70f» → «70F», «4xl» → «4XL». */
+export function normalizeNewSize(value: string): string | null {
+  const normalized = value.trim().toUpperCase();
+  return CUSTOM_SIZE_PATTERN.test(normalized) ? normalized : null;
+}
+
 export function getStock(
   matrix: VariantMatrixState,
   color: string,

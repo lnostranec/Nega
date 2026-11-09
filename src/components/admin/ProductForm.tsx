@@ -9,12 +9,15 @@ import {
   addColor,
   allSizes,
   defaultVariantMatrix,
+  detectSizeSystem,
   getStock,
   matrixToVariants,
+  normalizeNewSize,
   removeColor,
   setStock,
   toggleSize,
   variantsToMatrix,
+  type SizeSystem,
   type VariantMatrixState,
 } from "@/lib/admin-variant-matrix";
 import {
@@ -35,6 +38,7 @@ import {
 import {
   DEFAULT_BOTTOM_MODELS,
   SETS_COLLECTION_SLUG,
+  TOP_SIZES,
 } from "@/lib/product-sets";
 import {
   AdminSetVariantsEditor,
@@ -139,6 +143,41 @@ export function ProductForm({
   const [loading, setLoading] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [uploadingAddon, setUploadingAddon] = useState(false);
+
+  const [sizeSystem, setSizeSystem] = useState<SizeSystem>(() =>
+    detectSizeSystem(initial.variants.map((variant) => variant.size)),
+  );
+  const [newSize, setNewSize] = useState("");
+  /** Размеры, добавленные вручную: остаются в списке, даже если снять галочку */
+  const [customSizes, setCustomSizes] = useState<string[]>([]);
+
+  const baseSizes: string[] =
+    sizeSystem === "bra" ? [...TOP_SIZES] : allSizes();
+  const sizeOptions = [
+    ...baseSizes,
+    ...[
+      ...new Set([
+        ...matrix.sizes.filter((size) => !baseSizes.includes(size)),
+        ...customSizes,
+      ]),
+    ],
+  ];
+
+  function handleAddSize() {
+    const normalized = normalizeNewSize(newSize);
+    if (!normalized) return;
+
+    setCustomSizes((list) =>
+      list.includes(normalized) ? list : [...list, normalized],
+    );
+    setMatrix((m) => toggleSize(m, normalized, true));
+    setNewSize("");
+  }
+
+  function handleRemoveCustomSize(size: string) {
+    setCustomSizes((list) => list.filter((item) => item !== size));
+    setMatrix((m) => toggleSize(m, size, false));
+  }
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const setCollectionId = collections.find(
@@ -623,21 +662,94 @@ export function ProductForm({
         </div>
 
         <div>
-          <label className="text-sm text-stone-600">Размеры в линейке</label>
-          <div className="mt-2 flex flex-wrap gap-3">
-            {allSizes().map((size) => (
-              <label key={size} className="flex items-center gap-2 text-sm">
-                <input
-                  type="checkbox"
-                  checked={matrix.sizes.includes(size)}
-                  onChange={(e) =>
-                    setMatrix((m) => toggleSize(m, size, e.target.checked))
-                  }
-                />
-                {size}
-              </label>
-            ))}
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <label className="text-sm text-stone-600">Размеры в линейке</label>
+            <div className="inline-flex overflow-hidden rounded border border-stone-300 text-xs">
+              {[
+                { id: "letters" as const, label: "Буквенные" },
+                { id: "bra" as const, label: "Пояса и чашки" },
+              ].map((option) => (
+                <button
+                  key={option.id}
+                  type="button"
+                  onClick={() => setSizeSystem(option.id)}
+                  className={`px-3 py-1.5 transition ${
+                    sizeSystem === option.id
+                      ? "bg-stone-900 text-white"
+                      : "bg-white text-stone-600 hover:bg-stone-50"
+                  }`}
+                >
+                  {option.label}
+                </button>
+              ))}
+            </div>
           </div>
+
+          <div className="mt-2 flex flex-wrap gap-3">
+            {sizeOptions.map((size) => {
+              const isCustom = !baseSizes.includes(size);
+
+              return (
+                <div key={size} className="flex items-center gap-1 text-sm">
+                  <label className="flex items-center gap-2">
+                    <input
+                      type="checkbox"
+                      checked={matrix.sizes.includes(size)}
+                      onChange={(e) => {
+                        const checked = e.target.checked;
+                        setMatrix((m) => toggleSize(m, size, checked));
+                        // Снятый свой размер оставляем в списке, чтобы можно было вернуть
+                        if (!checked && isCustom) {
+                          setCustomSizes((list) =>
+                            list.includes(size) ? list : [...list, size],
+                          );
+                        }
+                      }}
+                    />
+                    {size}
+                  </label>
+                  {isCustom && (
+                    <button
+                      type="button"
+                      onClick={() => handleRemoveCustomSize(size)}
+                      aria-label={`Убрать размер ${size}`}
+                      title="Убрать размер из списка"
+                      className="cursor-pointer px-1 text-stone-400 transition hover:text-red-600"
+                    >
+                      ×
+                    </button>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+
+          <div className="mt-3 flex max-w-md gap-2">
+            <input
+              value={newSize}
+              onChange={(e) => setNewSize(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  e.preventDefault();
+                  handleAddSize();
+                }
+              }}
+              placeholder="Свой размер, например 70F или 4XL"
+              maxLength={8}
+              className="flex-1 border border-stone-300 px-3 py-2 text-sm"
+            />
+            <Button
+              type="button"
+              onClick={handleAddSize}
+              disabled={!normalizeNewSize(newSize)}
+            >
+              Добавить
+            </Button>
+          </div>
+          <p className="mt-2 text-xs text-stone-500">
+            Переключение системы не снимает отмеченные размеры — свои размеры
+            остаются в списке.
+          </p>
         </div>
 
         {matrix.colors.length > 0 && matrix.sizes.length > 0 && (
