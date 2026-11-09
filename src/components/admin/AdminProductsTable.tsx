@@ -92,8 +92,8 @@ export function AdminProductsTable({ products: initial }: AdminProductsTableProp
         </span>
       </div>
 
-      <div className="mt-4 overflow-hidden rounded-lg border border-stone-200 bg-white">
-        <table className="w-full text-left text-sm">
+      <div className="mt-4 overflow-x-auto rounded-lg border border-stone-200 bg-white">
+        <table className="w-full min-w-[680px] text-left text-sm">
           <thead className="border-b border-stone-200 bg-stone-50">
             <tr>
               <th className="px-4 py-3 font-medium">Название</th>

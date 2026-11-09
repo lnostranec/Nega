@@ -56,8 +56,8 @@ export function AdminOrdersTable({ orders: initial }: Props) {
   }
 
   return (
-    <div className="overflow-hidden rounded-lg border border-stone-200 bg-white">
-      <table className="w-full text-left text-sm">
+    <div className="overflow-x-auto rounded-lg border border-stone-200 bg-white">
+      <table className="w-full min-w-[720px] text-left text-sm">
         <thead className="border-b border-stone-200 bg-stone-50">
           <tr>
             <th className="px-4 py-3 font-medium">Номер</th>
