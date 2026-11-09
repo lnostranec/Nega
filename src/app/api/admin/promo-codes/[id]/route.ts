@@ -29,7 +29,8 @@ function mapUpdateError(error: unknown): { message: string; status: number } {
       return { message: "Сумма скидки должна быть больше 0", status: 400 };
     case "MAX_USES_TOO_LOW":
       return {
-        message: "Лимит использований не может быть меньше уже использованных",
+        message:
+          "Лимит использований должен быть не меньше числа использований (счётчик можно уменьшить в поле «Использований»)",
         status: 400,
       };
     default:
@@ -53,6 +54,7 @@ export async function PATCH(request: Request, context: RouteContext) {
     value?: number;
     minOrderAmount?: number;
     maxUses?: number | null;
+    usedCount?: number;
     expiresAt?: string | null;
     isActive?: boolean;
   };

@@ -16,6 +16,7 @@ type EditDraft = {
   value: string;
   minOrderAmount: string;
   maxUses: string;
+  usedCount: string;
   isActive: boolean;
 };
 
@@ -85,6 +86,7 @@ export function AdminPromoCodesPanel({ initialPromos }: AdminPromoCodesPanelProp
       value: String(promo.value),
       minOrderAmount: String(promo.minOrderAmount),
       maxUses: promo.maxUses !== null ? String(promo.maxUses) : "",
+      usedCount: String(promo.usedCount),
       isActive: promo.isActive,
     });
     setRowError(null);
@@ -149,6 +151,7 @@ export function AdminPromoCodesPanel({ initialPromos }: AdminPromoCodesPanelProp
           value: Number(editDraft.value),
           minOrderAmount: Number(editDraft.minOrderAmount) || 0,
           maxUses: editDraft.maxUses.trim() ? Number(editDraft.maxUses) : null,
+          usedCount: Math.max(0, Math.floor(Number(editDraft.usedCount) || 0)),
           isActive: editDraft.isActive,
         }),
       });
@@ -431,7 +434,26 @@ export function AdminPromoCodesPanel({ initialPromos }: AdminPromoCodesPanelProp
                       "∞"
                     )}
                   </td>
-                  <td className="px-4 py-3">{promo.usedCount}</td>
+                  <td className="px-4 py-3">
+                    {isEditing ? (
+                      <input
+                        type="number"
+                        min={0}
+                        title="Сколько раз промокод уже использован"
+                        value={editDraft.usedCount}
+                        onChange={(e) =>
+                          setEditDraft((draft) =>
+                            draft
+                              ? { ...draft, usedCount: e.target.value }
+                              : draft,
+                          )
+                        }
+                        className={inputClass}
+                      />
+                    ) : (
+                      promo.usedCount
+                    )}
+                  </td>
                   <td className="px-4 py-3">
                     {promo.isGiftCert ? (
                       <div className="flex flex-col items-start gap-1">

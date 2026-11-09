@@ -121,6 +121,8 @@ export type UpdatePromoCodeInput = {
   value?: number;
   minOrderAmount?: number;
   maxUses?: number | null;
+  /** Счётчик использований — админ может поправить вручную */
+  usedCount?: number;
   expiresAt?: string | null;
   isActive?: boolean;
 };
@@ -176,7 +178,12 @@ export async function updateAdminPromoCode(
         ? null
         : Math.max(1, Math.floor(input.maxUses));
 
-  if (nextMaxUses !== null && nextMaxUses < existing.usedCount) {
+  const nextUsedCount =
+    input.usedCount === undefined
+      ? existing.usedCount
+      : Math.max(0, Math.floor(input.usedCount));
+
+  if (nextMaxUses !== null && nextMaxUses < nextUsedCount) {
     throw new Error("MAX_USES_TOO_LOW");
   }
 
@@ -200,6 +207,7 @@ export async function updateAdminPromoCode(
           ? Math.max(0, Math.floor(input.minOrderAmount))
           : undefined,
       maxUses: input.maxUses !== undefined ? nextMaxUses : undefined,
+      usedCount: input.usedCount !== undefined ? nextUsedCount : undefined,
       expiresAt:
         input.expiresAt === undefined
           ? undefined

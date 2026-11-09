@@ -20,18 +20,46 @@ export async function PATCH(request: NextRequest, { params }: Params) {
     isActive?: boolean;
   };
 
-  const collection = await getPrisma().collection.update({
-    where: { id },
-    data: {
-      name: body.name?.trim(),
-      slug: body.slug ? slugify(body.slug) : undefined,
-      description: body.description?.trim(),
-      sortOrder: body.sortOrder,
-      isActive: body.isActive,
-    },
-  });
+  const name = body.name?.trim();
+  if (body.name !== undefined && !name) {
+    return Response.json(
+      { error: "Название не может быть пустым" },
+      { status: 400 },
+    );
+  }
 
-  return Response.json({ collection });
+  try {
+    const collection = await getPrisma().collection.update({
+      where: { id },
+      data: {
+        name,
+        slug: body.slug ? slugify(body.slug) : undefined,
+        description: body.description?.trim(),
+        sortOrder: body.sortOrder,
+        isActive: body.isActive,
+      },
+    });
+
+    return Response.json({ collection });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "";
+
+    if (message.includes("Unique constraint")) {
+      return Response.json(
+        { error: "Такой slug уже занят другой категорией" },
+        { status: 400 },
+      );
+    }
+    if (message.includes("Record to update not found")) {
+      return Response.json({ error: "Категория не найдена" }, { status: 404 });
+    }
+
+    console.error("Update collection error:", error);
+    return Response.json(
+      { error: "Не удалось сохранить категорию" },
+      { status: 400 },
+    );
+  }
 }
 
 export async function DELETE(_request: NextRequest, { params }: Params) {

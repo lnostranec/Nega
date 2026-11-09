@@ -13,6 +13,26 @@ type Category = {
   isActive: boolean;
 };
 
+function PencilIcon() {
+  return (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      fill="none"
+      viewBox="0 0 24 24"
+      strokeWidth={1.5}
+      stroke="currentColor"
+      className="h-4 w-4"
+      aria-hidden
+    >
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0 1 15.75 21H5.25A2.25 2.25 0 0 1 3 18.75V8.25A2.25 2.25 0 0 1 5.25 6H10"
+      />
+    </svg>
+  );
+}
+
 function TrashIcon() {
   return (
     <svg
@@ -33,6 +53,8 @@ function TrashIcon() {
   );
 }
 
+const inputClass = "w-full border border-stone-300 px-3 py-2 text-sm";
+
 export function AdminCategoriesManager({
   initial,
 }: {
@@ -45,6 +67,10 @@ export function AdminCategoriesManager({
   const [loading, setLoading] = useState(false);
   const [rowLoadingId, setRowLoadingId] = useState<string | null>(null);
   const [error, setError] = useState("");
+
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editName, setEditName] = useState("");
+  const [editSlug, setEditSlug] = useState("");
 
   async function handleCreate(e: FormEvent) {
     e.preventDefault();
@@ -67,6 +93,51 @@ export function AdminCategoriesManager({
       router.refresh();
     } finally {
       setLoading(false);
+    }
+  }
+
+  function startEdit(category: Category) {
+    setEditingId(category.id);
+    setEditName(category.name);
+    setEditSlug(category.slug);
+    setError("");
+  }
+
+  function cancelEdit() {
+    setEditingId(null);
+    setError("");
+  }
+
+  async function saveEdit(category: Category) {
+    const nextName = editName.trim();
+    if (!nextName) {
+      setError("Название не может быть пустым");
+      return;
+    }
+
+    setRowLoadingId(category.id);
+    setError("");
+    try {
+      const res = await fetch(`/api/admin/collections/${category.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: nextName,
+          slug: editSlug.trim() || undefined,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setError(data.error ?? "Не удалось сохранить");
+        return;
+      }
+      setCategories((prev) =>
+        prev.map((c) => (c.id === category.id ? { ...c, ...data.collection } : c)),
+      );
+      setEditingId(null);
+      router.refresh();
+    } finally {
+      setRowLoadingId(null);
     }
   }
 
@@ -135,11 +206,16 @@ export function AdminCategoriesManager({
             className="border border-stone-300 px-3 py-2 text-sm"
           />
         </div>
-        {error && <p className="mt-2 text-sm text-red-600">{error}</p>}
         <Button type="submit" className="mt-4" disabled={loading}>
           Добавить категорию
         </Button>
       </form>
+
+      {error && (
+        <p className="rounded border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+          {error}
+        </p>
+      )}
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {categories.map((category) => (
@@ -147,29 +223,82 @@ export function AdminCategoriesManager({
             key={category.id}
             className="rounded-lg border border-stone-200 bg-white p-6"
           >
-            <div className="flex items-start justify-between gap-3">
-              <h3 className="font-medium">{category.name}</h3>
-              <button
-                type="button"
-                onClick={() => handleDelete(category)}
-                disabled={rowLoadingId === category.id}
-                aria-label={`Удалить ${category.name}`}
-                className="rounded p-1.5 text-stone-400 hover:bg-red-50 hover:text-red-600 disabled:opacity-50"
-              >
-                <TrashIcon />
-              </button>
-            </div>
-            <p className="mt-1 text-sm text-stone-500">
-              /catalog?collection={category.slug}
-            </p>
-            {category.description && (
-              <p className="mt-2 text-sm text-stone-600">{category.description}</p>
+            {editingId === category.id ? (
+              <div className="space-y-3">
+                <input
+                  value={editName}
+                  onChange={(e) => setEditName(e.target.value)}
+                  placeholder="Название"
+                  aria-label="Название категории"
+                  className={inputClass}
+                  autoFocus
+                />
+                <input
+                  value={editSlug}
+                  onChange={(e) => setEditSlug(e.target.value)}
+                  placeholder="slug (латиница)"
+                  aria-label="Slug категории"
+                  className={inputClass}
+                />
+                <div className="flex gap-2">
+                  <button
+                    type="button"
+                    onClick={() => void saveEdit(category)}
+                    disabled={rowLoadingId === category.id}
+                    className="cursor-pointer rounded bg-stone-900 px-3 py-1.5 text-xs text-white hover:bg-stone-800 disabled:opacity-50"
+                  >
+                    Сохранить
+                  </button>
+                  <button
+                    type="button"
+                    onClick={cancelEdit}
+                    className="cursor-pointer rounded border border-stone-300 px-3 py-1.5 text-xs hover:bg-stone-50"
+                  >
+                    Отмена
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <>
+                <div className="flex items-start justify-between gap-3">
+                  <h3 className="font-medium">{category.name}</h3>
+                  <div className="flex items-center gap-1">
+                    <button
+                      type="button"
+                      onClick={() => startEdit(category)}
+                      disabled={rowLoadingId === category.id || editingId !== null}
+                      aria-label={`Редактировать ${category.name}`}
+                      className="cursor-pointer rounded p-1.5 text-stone-400 hover:bg-stone-100 hover:text-stone-900 disabled:opacity-40"
+                    >
+                      <PencilIcon />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleDelete(category)}
+                      disabled={rowLoadingId === category.id || editingId !== null}
+                      aria-label={`Удалить ${category.name}`}
+                      className="cursor-pointer rounded p-1.5 text-stone-400 hover:bg-red-50 hover:text-red-600 disabled:opacity-50"
+                    >
+                      <TrashIcon />
+                    </button>
+                  </div>
+                </div>
+                <p className="mt-1 text-sm text-stone-500">
+                  /catalog?collection={category.slug}
+                </p>
+                {category.description && (
+                  <p className="mt-2 text-sm text-stone-600">
+                    {category.description}
+                  </p>
+                )}
+              </>
             )}
+
             <div className="mt-4">
               <button
                 type="button"
                 onClick={() => toggleActive(category)}
-                disabled={rowLoadingId === category.id}
+                disabled={rowLoadingId === category.id || editingId === category.id}
                 className={`cursor-pointer rounded px-2 py-1 text-xs transition-colors disabled:cursor-wait disabled:opacity-60 ${
                   category.isActive
                     ? "bg-green-100 text-green-800 hover:bg-green-200"

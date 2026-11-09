@@ -1,4 +1,10 @@
-/** EU-style bra size from underbust + bust, matching ROOMARÉ calculator. */
+/**
+ * Размерная сетка лифа.
+ *
+ * Чашка определяется смещением обхвата груди от **номинала пояса**
+ * (например, 91 при поясе 75 → смещение 16 → чашка D). Так же построена
+ * таблица размеров, поэтому калькулятор и таблица всегда совпадают.
+ */
 
 export const BAND_RANGES: Array<{ min: number; max: number; band: number }> = [
   { min: 63, max: 67, band: 65 },
@@ -10,17 +16,22 @@ export const BAND_RANGES: Array<{ min: number; max: number; band: number }> = [
   { min: 93, max: 97, band: 95 },
 ];
 
-export const CUP_RANGES: Array<{ min: number; max: number; cup: string }> = [
-  { min: 6, max: 8, cup: "AA" },
-  { min: 9, max: 11, cup: "A" },
-  { min: 12, max: 14, cup: "B" },
-  { min: 15, max: 17, cup: "C" },
-  { min: 18, max: 19, cup: "D" },
-  { min: 20, max: 21, cup: "E" },
-  { min: 22, max: 24, cup: "F" },
-  { min: 25, max: 27, cup: "G" },
+/**
+ * Смещение обхвата груди от номинала пояса, см.
+ * Нижняя граница включается, верхняя — нет: [min, max).
+ */
+export const CUP_RANGES: Array<{ cup: string; min: number; max: number }> = [
+  { cup: "AA", min: 8, max: 10 },
+  { cup: "A", min: 10, max: 12 },
+  { cup: "B", min: 12, max: 14 },
+  { cup: "C", min: 14, max: 16 },
+  { cup: "D", min: 16, max: 18 },
+  { cup: "E", min: 18, max: 20 },
+  { cup: "F", min: 20, max: 22 },
+  { cup: "G", min: 22, max: 24 },
 ];
 
+/** Меньшие пояса шьём до G, большие — только до определённой чашки. */
 export const CUPS_BY_BAND: Record<number, readonly string[]> = {
   65: ["AA", "A", "B", "C", "D", "E", "F", "G"],
   70: ["AA", "A", "B", "C", "D", "E", "F", "G"],
@@ -34,10 +45,32 @@ export const CUPS_BY_BAND: Record<number, readonly string[]> = {
 export const SAMPLE_BRA_SIZES = ["70B", "75B", "75C", "80B", "85C"] as const;
 export const SAMPLE_PANTY_SIZES = ["XS", "S", "M", "L", "XL"] as const;
 
+/**
+ * Обхват груди для пары «пояс + чашка» — цифры под размером в таблице.
+ * Считается из той же сетки, что и калькулятор, поэтому расхождений нет.
+ */
+export const BUST_RANGES_BY_BAND: Record<number, Record<string, string>> = {};
+
+for (const { band } of BAND_RANGES) {
+  const allowed = CUPS_BY_BAND[band] ?? [];
+  BUST_RANGES_BY_BAND[band] = {};
+
+  for (const { cup, min, max } of CUP_RANGES) {
+    if (allowed.includes(cup)) {
+      BUST_RANGES_BY_BAND[band][cup] = `${band + min}–${band + max}`;
+    }
+  }
+}
+
+export function getBustRange(band: number, cup: string): string | null {
+  return BUST_RANGES_BY_BAND[band]?.[cup] ?? null;
+}
+
 export type BraSizeResult = {
   size: string;
   band: number;
   cup: string;
+  /** Смещение обхвата груди от номинала пояса, см */
   difference: number;
 };
 
@@ -89,9 +122,11 @@ export function calculateBraSize(
   )?.band;
   if (!band) return null;
 
-  const difference = bustCm - underbustCm;
+  // Смещение считаем от номинала пояса, а не от измеренного обхвата:
+  // 77 и 75 при обхвате груди 91 дают один и тот же размер 75D.
+  const difference = bustCm - band;
   const cup = CUP_RANGES.find(
-    (row) => difference >= row.min && difference <= row.max,
+    (row) => difference >= row.min && difference < row.max,
   )?.cup;
   if (!cup) return null;
 

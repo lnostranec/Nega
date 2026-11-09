@@ -2,6 +2,7 @@ import {
   BAND_RANGES,
   CUP_RANGES,
   CUPS_BY_BAND,
+  getBustRange,
   HIP_RANGES,
   PANTY_ORDER,
   WAIST_RANGES,
@@ -20,13 +21,10 @@ export function BraSizeTable() {
       <table className="w-full min-w-[640px] border-collapse text-center text-sm">
         <thead>
           <tr>
-            <th className={`${headCell} text-left`}>Под грудью</th>
+            <th className={`${headCell} text-left`}>Пояс / ОПГ</th>
             {CUP_RANGES.map((cup) => (
               <th key={cup.cup} className={headCell}>
                 <span className="block text-base text-[#260402]">{cup.cup}</span>
-                <span className="block text-[11px] font-normal normal-case tracking-normal text-stone-500">
-                  {range(cup.min, cup.max)} см
-                </span>
               </th>
             ))}
           </tr>
@@ -46,9 +44,16 @@ export function BraSizeTable() {
                 </th>
                 {CUP_RANGES.map((cup) =>
                   cups.includes(cup.cup) ? (
-                    <td key={cup.cup} className="px-2 py-3 font-medium text-[#260402]">
-                      {band.band}
-                      {cup.cup}
+                    <td key={cup.cup} className="px-2 py-3">
+                      <span className="block font-medium text-[#260402]">
+                        {band.band}
+                        {cup.cup}
+                      </span>
+                      {getBustRange(band.band, cup.cup) && (
+                        <span className="mt-0.5 block text-[11px] text-stone-500">
+                          {getBustRange(band.band, cup.cup)}
+                        </span>
+                      )}
                     </td>
                   ) : (
                     <td key={cup.cup} className="bg-stone-50 px-2 py-3 text-stone-300">
