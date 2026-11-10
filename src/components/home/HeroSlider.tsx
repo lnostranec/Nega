@@ -145,13 +145,13 @@ export function HeroSlider({ slides }: HeroSliderProps) {
           onPointerDown={onPointerDown}
           onClickCapture={onClickCapture}
           onDragStart={(e) => e.preventDefault()}
-          className={`snap-carousel relative aspect-[16/7] w-full min-h-[450px] max-h-[730px] overflow-hidden sm:aspect-[21/9] ${
+          className={`snap-carousel relative h-[450px] w-full overflow-hidden sm:h-auto sm:aspect-[21/9] sm:max-h-[730px] ${
             isDragging ? "cursor-grabbing" : "cursor-grab"
           }`}
         >
           <div
             ref={trackRef}
-            className="flex h-full"
+            className="absolute inset-0 flex"
             style={{
               width: viewportWidth > 0 ? viewportWidth * total : "100%",
             }}
