@@ -44,7 +44,7 @@ export default async function AdminEditProductPage({ params }: Props) {
             care: product.care ?? "",
             style: product.style ?? "",
             country: product.country ?? "",
-            material: product.material ?? "",
+            materials: product.materials,
             price: Number(product.price),
             comparePrice: product.comparePrice ? Number(product.comparePrice) : null,
             sku: product.sku ?? "",

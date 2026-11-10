@@ -1,4 +1,4 @@
-import { PrismaClient } from "@prisma/client";
+﻿import { PrismaClient } from "@prisma/client";
 import bcrypt from "bcryptjs";
 import { getDemoProducts } from "../src/lib/demo-products";
 import { NEGRA_PHOTOS } from "../src/lib/photos";
@@ -120,7 +120,7 @@ async function main() {
         style: demo.style,
         country: demo.country,
         pattern: demo.pattern,
-        material: demo.material,
+        materials: demo.materials,
       },
       create: {
         name: demo.name,
@@ -134,7 +134,7 @@ async function main() {
         style: demo.style,
         country: demo.country,
         pattern: demo.pattern,
-        material: demo.material,
+        materials: demo.materials,
       },
     });
 

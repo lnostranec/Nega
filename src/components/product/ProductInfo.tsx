@@ -40,7 +40,7 @@ type ProductInfoProps = {
   care: string;
   style?: string | null;
   country?: string | null;
-  material?: string | null;
+  materials?: string[];
   imageUrl?: string;
   variants: Variant[];
   isSet?: boolean;
@@ -60,7 +60,7 @@ export function ProductInfo({
   care,
   style,
   country,
-  material,
+  materials = [],
   imageUrl,
   variants,
   isSet = false,
@@ -75,7 +75,9 @@ export function ProductInfo({
   const specs = [
     style ? { label: "Коллекция", value: style } : null,
     country ? { label: "Страна производства", value: country } : null,
-    material ? { label: "Материал", value: material } : null,
+    materials.length > 0
+      ? { label: "Материал", value: materials.join(", ") }
+      : null,
   ].filter(Boolean) as { label: string; value: string }[];
 
   return (

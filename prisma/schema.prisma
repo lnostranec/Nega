@@ -81,7 +81,7 @@ model Product {
   style        String?
   country      String?
   pattern      String?
-  material     String?
+  materials    String[]            @default([])
   isActive     Boolean             @default(true)
   images       ProductImage[]
   variants     ProductVariant[]

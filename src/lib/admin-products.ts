@@ -35,7 +35,7 @@ export type AdminProductInput = {
   care?: string;
   style?: string | null;
   country?: string | null;
-  material?: string | null;
+  materials?: string[];
   price: number;
   comparePrice?: number | null;
   sku?: string | null;
@@ -208,7 +208,11 @@ function buildProductData(
     care: input.care?.trim() || null,
     style: input.style?.trim() || null,
     country: input.country?.trim() || null,
-    material: input.material?.trim() || null,
+    materials: [
+      ...new Set(
+        (input.materials ?? []).map((item) => item.trim()).filter(Boolean),
+      ),
+    ],
     price: input.price,
     comparePrice: input.comparePrice ?? null,
     sku: input.sku?.trim() || null,

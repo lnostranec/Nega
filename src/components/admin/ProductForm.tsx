@@ -106,7 +106,7 @@ export function ProductForm({
   const [care, setCare] = useState(initial.care ?? "");
   const [style, setStyle] = useState(initial.style ?? "");
   const [country, setCountry] = useState(initial.country ?? "");
-  const [material, setMaterial] = useState(initial.material ?? "");
+  const [materials, setMaterials] = useState<string[]>(initial.materials ?? []);
   const [onSale, setOnSale] = useState(initialOnSale);
   const [regularPrice, setRegularPrice] = useState(
     initialOnSale ? initial.comparePrice! : initial.price,
@@ -255,7 +255,7 @@ export function ProductForm({
       care,
       style: style || null,
       country: country || null,
-      material: material || null,
+      materials,
       price,
       comparePrice,
       sku,
@@ -838,20 +838,30 @@ export function ProductForm({
               ))}
             </select>
           </div>
-          <div>
-            <label className="text-sm text-stone-600">Материал</label>
-            <select
-              value={material}
-              onChange={(e) => setMaterial(e.target.value)}
-              className="mt-1 w-full border border-stone-300 bg-white px-3 py-2 text-sm"
-            >
-              <option value="">Не указан</option>
+          <div className="sm:col-span-2">
+            <label className="text-sm text-stone-600">Материалы</label>
+            <div className="mt-2 flex flex-wrap gap-3">
               {CATALOG_MATERIAL_OPTIONS.map((option) => (
-                <option key={option} value={option}>
+                <label key={option} className="flex items-center gap-2 text-sm">
+                  <input
+                    type="checkbox"
+                    checked={materials.includes(option)}
+                    onChange={(e) =>
+                      setMaterials((list) =>
+                        e.target.checked
+                          ? [...list, option]
+                          : list.filter((item) => item !== option),
+                      )
+                    }
+                  />
                   {option}
-                </option>
+                </label>
               ))}
-            </select>
+            </div>
+            <p className="mt-1 text-xs text-stone-500">
+              Можно отметить несколько — все попадут в карточку товара и в фильтр
+              каталога.
+            </p>
           </div>
         </div>
       </section>

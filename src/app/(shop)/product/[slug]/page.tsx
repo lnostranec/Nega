@@ -115,7 +115,7 @@ export default async function ProductPage({ params, searchParams }: Props) {
           care={care || "Рекомендации по уходу будут добавлены позже."}
           style={product.style}
           country={product.country}
-          material={product.material}
+          materials={product.materials}
           imageUrl={mainImage}
           variants={product.variants}
           isSet={isSet}

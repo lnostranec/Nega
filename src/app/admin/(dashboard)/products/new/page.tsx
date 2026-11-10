@@ -35,7 +35,7 @@ export default async function AdminNewProductPage() {
             care: "",
             style: "",
             country: "",
-            material: "",
+            materials: [],
             isActive: true,
             collectionIds: [],
             imageUrls: [],

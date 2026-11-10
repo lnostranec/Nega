@@ -94,7 +94,7 @@ function filterDemoProducts(
   }
 
   if (query.material) {
-    items = items.filter((p) => p.material === query.material);
+    items = items.filter((p) => p.materials.includes(query.material!));
   }
 
   if (query.pattern) {
@@ -251,7 +251,7 @@ function buildProductWhere(query: CatalogQuery) {
     ...(Object.keys(priceFilter).length > 0 && { price: priceFilter }),
     ...(query.style && { style: query.style }),
     ...(query.country && { country: query.country }),
-    ...(query.material && { material: query.material }),
+    ...(query.material && { materials: { has: query.material } }),
     ...(query.pattern && { pattern: query.pattern }),
   };
 }
@@ -295,9 +295,8 @@ async function getDbFacets(collectionSlug?: string): Promise<CatalogFacets> {
         distinct: ["country"],
       }),
       prisma.product.findMany({
-        where: { ...baseWhere, material: { not: null } },
-        select: { material: true },
-        distinct: ["material"],
+        where: baseWhere,
+        select: { materials: true },
       }),
       prisma.product.findMany({
         where: { ...baseWhere, pattern: { not: null } },
@@ -321,10 +320,15 @@ async function getDbFacets(collectionSlug?: string): Promise<CatalogFacets> {
       countryRows.length > 0
         ? (countryRows.map((r) => r.country!).sort() as string[])
         : [...CATALOG_COUNTRY_OPTIONS],
-    materials:
-      materialRows.length > 0
-        ? (materialRows.map((r) => r.material!).sort() as string[])
-        : [...CATALOG_MATERIAL_OPTIONS],
+    materials: (() => {
+      const values = [
+        ...new Set(materialRows.flatMap((row) => row.materials)),
+      ]
+        .filter(Boolean)
+        .sort((a, b) => a.localeCompare(b, "ru"));
+
+      return values.length > 0 ? values : [...CATALOG_MATERIAL_OPTIONS];
+    })(),
     patterns:
       patternRows.length > 0
         ? (patternRows.map((r) => r.pattern!).sort() as string[])
