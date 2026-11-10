@@ -43,9 +43,9 @@ describe("BUST_RANGES_BY_BAND", () => {
   });
 
   it("getBustRange отдаёт диапазон и null для неизвестных пар", () => {
-    assert.equal(getBustRange(70, "C"), "84–86");
-    assert.equal(getBustRange(65, "A"), "75–77");
-    assert.equal(getBustRange(75, "D"), "91–93");
+    assert.equal(getBustRange(70, "C"), "86–88");
+    assert.equal(getBustRange(65, "A"), "77–79");
+    assert.equal(getBustRange(75, "D"), "93–95");
     assert.equal(getBustRange(100, "A"), null);
   });
 
@@ -63,16 +63,18 @@ describe("BUST_RANGES_BY_BAND", () => {
 
 describe("calculateBraSize", () => {
   it("maps underbust to the nearest 5 cm band", () => {
-    assert.equal(calculateBraSize(75, 88)?.size, "75B");
-    assert.equal(calculateBraSize(70, 80)?.size, "70A");
+    assert.equal(calculateBraSize(75, 90)?.size, "75B");
+    assert.equal(calculateBraSize(70, 82)?.size, "70A");
   });
 
-  it("считает чашку от номинала пояса, как в таблице", () => {
-    // 91 при поясе 75 → смещение 16 → D (таблица: 75D = 91–93)
-    assert.equal(calculateBraSize(77, 91)?.size, "75D");
-    assert.equal(calculateBraSize(73, 88)?.size, "75B");
-    assert.equal(calculateBraSize(80, 96)?.size, "80D");
-    assert.equal(calculateBraSize(90, 106)?.size, "90D");
+  it("считает чашку от номинала пояса, как в таблице заказчицы", () => {
+    // 91 при поясе 75 → смещение 16 → C (таблица: 75C = 91–93)
+    assert.equal(calculateBraSize(77, 91)?.size, "75C");
+    assert.equal(calculateBraSize(77, 88)?.size, "75A");
+    assert.equal(calculateBraSize(70, 80)?.size, "70AA");
+    assert.equal(calculateBraSize(80, 96)?.size, "80C");
+    assert.equal(calculateBraSize(90, 106)?.size, "90C");
+    assert.equal(calculateBraSize(95, 111)?.size, "95C");
   });
 
   it("returns null outside the grid", () => {

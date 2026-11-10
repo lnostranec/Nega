@@ -19,21 +19,27 @@ export const BAND_RANGES: Array<{ min: number; max: number; band: number }> = [
 /**
  * Смещение обхвата груди от номинала пояса, см.
  * Нижняя граница включается, верхняя — нет: [min, max).
+ * Данные заказчицы (10.11.2026): AA 10–12, A 12–14, B 14–16, C 16–18,
+ * D 18–20, E 20–22, F 22–24.
  */
 export const CUP_RANGES: Array<{ cup: string; min: number; max: number }> = [
-  { cup: "AA", min: 8, max: 10 },
-  { cup: "A", min: 10, max: 12 },
-  { cup: "B", min: 12, max: 14 },
-  { cup: "C", min: 14, max: 16 },
-  { cup: "D", min: 16, max: 18 },
-  { cup: "E", min: 18, max: 20 },
-  { cup: "F", min: 20, max: 22 },
-  { cup: "G", min: 22, max: 24 },
+  { cup: "AA", min: 10, max: 12 },
+  { cup: "A", min: 12, max: 14 },
+  { cup: "B", min: 14, max: 16 },
+  { cup: "C", min: 16, max: 18 },
+  { cup: "D", min: 18, max: 20 },
+  { cup: "E", min: 20, max: 22 },
+  { cup: "F", min: 22, max: 24 },
+  { cup: "G", min: 24, max: 26 },
 ];
 
-/** Меньшие пояса шьём до G, большие — только до определённой чашки. */
+/**
+ * Какие чашки шьём для каждого пояса — как в исходной таблице.
+ * У 65-го пояса к списку заказчицы добавились только две чашки (E, F).
+ * Мерки обхвата груди при этом берём новые (см. CUP_RANGES).
+ */
 export const CUPS_BY_BAND: Record<number, readonly string[]> = {
-  65: ["AA", "A", "B", "C", "D", "E", "F", "G"],
+  65: ["AA", "A", "B", "C", "D", "E", "F"],
   70: ["AA", "A", "B", "C", "D", "E", "F", "G"],
   75: ["AA", "A", "B", "C", "D", "E", "F", "G"],
   80: ["AA", "A", "B", "C", "D", "E", "F"],
