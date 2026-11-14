@@ -42,8 +42,7 @@ export function CookieConsent() {
       <div className="flex gap-3">
         <CookieIcon className="mt-0.5 h-5 w-5 shrink-0 text-[#260402]" />
         <p id="cookie-consent-text" className="text-sm leading-relaxed text-stone-600">
-          Мы используем cookie для работы сайта и аналитики. Продолжая, вы
-          соглашаетесь с{" "}
+          Мы используем cookie для работы сайта. Продолжая, вы соглашаетесь с{" "}
           <Link href="/cookies" className="text-[#260402] underline underline-offset-2 transition hover:opacity-70">
             политикой cookie
           </Link>
