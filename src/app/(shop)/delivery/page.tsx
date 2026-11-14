@@ -3,15 +3,15 @@ import { InfoPage } from "@/components/info/InfoPage";
 import { getDeliverySettings } from "@/lib/cdek";
 import { formatPrice } from "@/lib/format";
 import { SELLER } from "@/lib/seller";
-import { isYandexDeliveryConfigured } from "@/lib/yandex-delivery";
 
 export const metadata = { title: "Доставка" };
 export const dynamic = "force-dynamic";
 
 export default async function DeliveryPage() {
   const settings = await getDeliverySettings();
-  const yandexEnabled =
-    isYandexDeliveryConfigured() && settings.yandexBaseCost > 0;
+  // Яндекс Доставку оформляем вручную (курьера вызываем сами), поэтому
+  // достаточно заданной цены — наличие API-токена не требуется.
+  const yandexEnabled = settings.yandexBaseCost > 0;
 
   return (
     <InfoPage title="Доставка">
