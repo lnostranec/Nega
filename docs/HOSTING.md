@@ -22,7 +22,8 @@
 | Переменные окружения | `/var/www/nega/.env` (права 600, владелец www-data) |
 | Сервис приложения | `systemd` → `nega.service` |
 | Конфиг nginx | `/etc/nginx/sites-available/nega.conf` |
-| Бэкапы базы | `/var/backups/nega` (14 дней) |
+| Бэкапы базы и фото | `/var/backups/nega` (14 дней) |
+| Фотографии товаров | `/var/www/nega/public/uploads` (входят в бэкап) |
 | Скрипт обновления | `/usr/local/bin/nega-deploy` |
 | Скрипт бэкапа | `/usr/local/bin/nega-backup.sh` |
 
@@ -81,11 +82,11 @@ certbot renew --dry-run
 |---|---|
 | ЮKassa (ShopID 1438625) | кабинет ЮKassa → HTTP-уведомления → `https://negalingerie.ru/api/payments/yookassa` |
 | Resend (письма) | домен `negalingerie.ru`, отправитель `orders@negalingerie.ru` |
-| S3 (фото) | бакет `nega-media` в Яндекс Облаке |
+| Фото | диск сервера: `public/uploads`, входят в ежедневный бэкап |
 | СДЭК | ключи в `.env` |
 | ВКонтакте | `VK_TOKEN`, `VK_PEER_ID` в `.env` |
 
 ## Что осталось от прежней инфраструктуры
 
 - **Vercel** — старый адрес `nega-phi.vercel.app`, оставлен как резерв.
-- **Яндекс Облако** — кластер PostgreSQL и бакет S3. Кластер можно остановить: база уже перенесена на сервер. Бакет нужен, пока фотографии хранятся в S3.
+- **Яндекс Облако** — больше не используется: кластер PostgreSQL остановлен, фото перенесены на сервер, S3 в приложении отключён. Бакет `nega-media` можно удалить, когда убедитесь, что всё работает (копия файлов уже на сервере).
