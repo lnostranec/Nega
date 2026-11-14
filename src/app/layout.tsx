@@ -1,6 +1,7 @@
 import localFont from "next/font/local";
 import type { Metadata } from "next";
 import { Analytics } from "@/components/layout/Analytics";
+import { siteUrl } from "@/lib/site-url";
 import "./globals.css";
 
 // Шрифт лежит в репозитории: сборка не зависит от доступности Google Fonts.
@@ -12,9 +13,7 @@ const montserrat = localFont({
   fallback: ["system-ui", "Arial", "sans-serif"],
 });
 
-const SITE_URL =
-  process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, "") ||
-  "http://localhost:3000";
+const SITE_URL = siteUrl();
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),

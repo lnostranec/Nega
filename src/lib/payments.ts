@@ -6,6 +6,7 @@ import {
 } from "@/lib/orders";
 import { getPrisma } from "@/lib/prisma";
 import { buildOrderResultUrl } from "@/lib/order-token";
+import { siteUrl as getSiteUrl } from "@/lib/site-url";
 import {
   createDolyamiOrder,
   isDolyamiConfigured,
@@ -21,10 +22,7 @@ import {
 import type { PaymentMethod } from "@prisma/client";
 
 function siteUrl(): string {
-  return (
-    process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, "") ||
-    "http://localhost:3000"
-  );
+  return getSiteUrl();
 }
 
 export type StartPaymentResult = {

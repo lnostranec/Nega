@@ -3,14 +3,12 @@ import { getPrisma } from "@/lib/prisma";
 import { normalizeEmail } from "@/lib/auth-types";
 import { hashPassword } from "@/lib/auth";
 import { enqueueEmail } from "@/lib/email/outbox";
+import { siteUrl as getSiteUrl } from "@/lib/site-url";
 
 const RESET_TTL_MS = 60 * 60 * 1000;
 
 function siteUrl() {
-  return (
-    process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, "") ||
-    "http://localhost:3000"
-  );
+  return getSiteUrl();
 }
 
 export async function requestPasswordReset(emailRaw: string): Promise<void> {

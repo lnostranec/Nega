@@ -5,6 +5,7 @@ import {
 } from "@/lib/cdek";
 import type { OrderItemView } from "@/lib/orders";
 import type { GiftCertificateView } from "@/lib/gift-certificate";
+import { siteUrl as getSiteUrl } from "@/lib/site-url";
 
 export type OrderEmailData = {
   orderNumber: string;
@@ -236,5 +237,5 @@ export function orderCancelledEmail(data: OrderEmailData) {
 }
 
 function siteUrl(): string {
-  return process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
+  return getSiteUrl();
 }

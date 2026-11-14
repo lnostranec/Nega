@@ -32,5 +32,5 @@ export const FOOTER_HELP_LINKS = [
 export const FOOTER_LEGAL_LINKS = [
   { href: "/payment-security", label: "Политика безопасности платежей" },
   { href: "/offer", label: "Публичная оферта" },
-  { href: "/privacy", label: "Политика конфиденциальности" },
+  { href: "/privacy", label: "Политика обработки персональных данных" },
 ] as const;

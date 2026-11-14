@@ -1,65 +1,25 @@
 import Link from "next/link";
 import { InfoPage } from "@/components/info/InfoPage";
-import { SHOP_NAME } from "@/lib/constants";
+import { LegalBlocks } from "@/components/legal/LegalBlocks";
+import { COOKIE_BLOCKS } from "@/lib/legal/policies";
 
-export const metadata = { title: "Согласие на использование cookie" };
+export const metadata = { title: "Условия использования файлов cookie" };
 
 export default function CookiesPage() {
   return (
-    <InfoPage title="Согласие на использование cookie">
-      <p>
-        На сайте {SHOP_NAME} используются файлы cookie и аналогичные технологии
-        для обеспечения работы сервиса, анализа посещаемости и улучшения
-        пользовательского опыта. Настоящий документ описывает, какие cookie мы
-        применяем и как вы можете управлять ими.
-      </p>
+    <InfoPage title="Условия использования файлов cookie">
+      <LegalBlocks blocks={COOKIE_BLOCKS} />
 
-      <InfoPage.Section title="Что такое cookie">
+      <InfoPage.Section title="Персональные данные">
         <p>
-          Cookie — это небольшие текстовые файлы, которые сохраняются в браузере
-          при посещении сайта. Они помогают запоминать ваши настройки, содержимое
-          корзины и предпочтения.
-        </p>
-      </InfoPage.Section>
-
-      <InfoPage.Section title="Какие cookie мы используем">
-        <p>
-          <strong>Необходимые</strong> — обеспечивают работу корзины, избранного,
-          авторизации и сохранения согласия на cookie.
-        </p>
-        <p>
-          <strong>Аналитические</strong> — помогают понять, как посетители
-          используют сайт (например, Яндекс.Метрика). Собирают обезличенную
-          статистику.
-        </p>
-        <p>
-          <strong>Функциональные</strong> — запоминают выбранные параметры и
-          улучшают удобство навигации.
-        </p>
-      </InfoPage.Section>
-
-      <InfoPage.Section title="Как дать или отозвать согласие">
-        <p>
-          При первом посещении сайта вы видите уведомление о cookie. Нажимая
-          «Принимаю», вы соглашаетесь на использование файлов cookie в
-          соответствии с настоящим документом. Вы можете удалить cookie в
-          настройках браузера в любой момент.
-        </p>
-      </InfoPage.Section>
-
-      <InfoPage.Section title="Связь с политикой конфиденциальности">
-        <p>
-          Подробнее о том, как мы обрабатываем персональные данные, читайте в{" "}
-          <Link href="/privacy" className="text-[#260402] underline underline-offset-2">
-            Политике конфиденциальности
+          Подробнее о том, как обрабатываются персональные данные, — в{" "}
+          <Link
+            href="/privacy"
+            className="text-[#260402] underline underline-offset-2"
+          >
+            Политике в отношении обработки персональных данных
           </Link>
           .
-        </p>
-      </InfoPage.Section>
-
-      <InfoPage.Section title="Контакты">
-        <p>
-          Вопросы по использованию cookie: nega.store@yandex.ru.
         </p>
       </InfoPage.Section>
     </InfoPage>
