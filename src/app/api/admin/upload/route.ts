@@ -60,25 +60,13 @@ export async function POST(request: NextRequest) {
     }
   }
 
-  // Локальная разработка без облака: пишем в public/uploads.
-  if (process.env.NODE_ENV !== "production") {
-    try {
-      const uploaded = await saveToLocalUploads({ body, contentType: file.type });
-      return Response.json({ url: uploaded.url, key: uploaded.key });
-    } catch (error) {
-      console.error("[upload] local write error:", error);
-      return Response.json(
-        { error: "Не удалось сохранить файл" },
-        { status: 500 },
-      );
-    }
+  // Без облака фото пишутся на диск сервера: public/uploads переживает
+  // перезапуски и попадает в бэкап (см. nega-backup.sh).
+  try {
+    const uploaded = await saveToLocalUploads({ body, contentType: file.type });
+    return Response.json({ url: uploaded.url, key: uploaded.key });
+  } catch (error) {
+    console.error("[upload] local write error:", error);
+    return Response.json({ error: "Не удалось сохранить файл" }, { status: 500 });
   }
-
-  return Response.json(
-    {
-      error:
-        "Хранилище фото не настроено. Добавьте S3_BUCKET, S3_ACCESS_KEY_ID и S3_SECRET_ACCESS_KEY в переменные окружения.",
-    },
-    { status: 503 },
-  );
 }
