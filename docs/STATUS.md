@@ -1,9 +1,10 @@
 # Состояние проекта Nega
 
-**Обновлено:** 09.11.2026
-**Прод:** https://nega-phi.vercel.app (доступен из РФ только через VPN — см. «Ограничения»)
+**Обновлено:** 14.11.2026
+**Прод:** https://negalingerie.ru (VPS в России, см. `docs/HOSTING.md`)
+**Резерв:** https://nega-phi.vercel.app (старый адрес, доступен из РФ только через VPN)
 **Репозиторий:** github.com/lnostranec/Nega, ветка `master`
-**База:** Yandex Cloud Managed PostgreSQL, `negas_shop@rc1a-bisqrj6aj7oerorq.mdb.yandexcloud.net:6432`
+**База:** PostgreSQL 16 на том же VPS (`negas_shop`), миграции через `prisma migrate deploy`
 **Фото:** Yandex Object Storage, бакет `nega-media`
 
 Документ для передачи контекста: что сделано, что проверено, что осталось.
