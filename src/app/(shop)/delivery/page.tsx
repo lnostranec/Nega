@@ -25,20 +25,20 @@ export default async function DeliveryPage() {
             <span className="font-medium text-[#260402]">
               Пункт выдачи СДЭК:
             </span>{" "}
-            {formatPrice(settings.pvzBaseCost)}, срок — 1–5 рабочих дней.
+            от {formatPrice(settings.pvzBaseCost)}, срок — 1–5 рабочих дней.
           </li>
           <li>
             <span className="font-medium text-[#260402]">
               Курьером до двери (СДЭК):
             </span>{" "}
-            {formatPrice(settings.courierBaseCost)}, срок — 1–5 рабочих дней.
+            от {formatPrice(settings.courierBaseCost)}, срок — 1–5 рабочих дней.
           </li>
           {yandexEnabled && (
             <li>
               <span className="font-medium text-[#260402]">
                 Яндекс Доставка:
               </span>{" "}
-              {formatPrice(settings.yandexBaseCost)}, срок — 1–5 рабочих дней.
+              от {formatPrice(settings.yandexBaseCost)}, срок — 1–5 рабочих дней.
             </li>
           )}
           {settings.freeDeliveryFrom !== null &&
@@ -52,9 +52,9 @@ export default async function DeliveryPage() {
             )}
         </ul>
         <p>
-          Точную стоимость и срок для вашего города система рассчитывает при
-          оформлении заказа. После передачи посылки в службу доставки мы пришлём
-          трек-номер на email.
+          Итоговую стоимость и срок система рассчитывает при оформлении заказа по
+          тарифам службы доставки — она зависит от города и веса посылки. После
+          отправки пришлём трек-номер на email.
         </p>
       </InfoPage.Section>
 
