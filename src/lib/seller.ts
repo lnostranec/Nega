@@ -20,6 +20,8 @@ export const SELLER = {
   email: "nega.store@yandex.ru",
   telegram: "@Nega_store",
   telegramUrl: "https://t.me/Nega_store",
+  vkUrl: "https://vk.ru/negalingerie",
+  instagramUrl: "https://www.instagram.com/negalingerie.ru",
   bankAccount: null as string | null,
   bankName: null as string | null,
   bankBik: null as string | null,

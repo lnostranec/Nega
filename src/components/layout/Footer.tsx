@@ -53,10 +53,22 @@ export function Footer() {
                 >
                   <TelegramIcon className="h-5 w-5" />
                 </a>
-                <a href="#" aria-label="VK" className="transition hover:opacity-70">
+                <a
+                  href={SELLER.vkUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label="ВКонтакте"
+                  className="transition hover:opacity-70"
+                >
                   <VkIcon className="h-5 w-5" />
                 </a>
-                <a href="#" aria-label="Instagram" className="transition hover:opacity-70">
+                <a
+                  href={SELLER.instagramUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label="Instagram"
+                  className="transition hover:opacity-70"
+                >
                   <InstagramIcon className="h-5 w-5" />
                 </a>
               </div>
@@ -118,7 +130,7 @@ export function Footer() {
                 href="/cookies"
                 className="mt-5 block text-sm text-stone-500 transition hover:text-[#260402]"
               >
-                Согласие на использование cookie
+                Условия использования cookie
               </Link>
               <Link
                 href="/gift-certificate"
@@ -135,7 +147,7 @@ export function Footer() {
           <p className="text-xs text-stone-400">
             © {new Date().getFullYear()} {SHOP_NAME}.{" "}
             <Link href="/privacy" className="transition hover:text-[#260402]">
-              Политика конфиденциальности
+              Политика обработки персональных данных
             </Link>
           </p>
         </div>
