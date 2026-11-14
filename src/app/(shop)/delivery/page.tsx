@@ -1,10 +1,18 @@
 import Link from "next/link";
 import { InfoPage } from "@/components/info/InfoPage";
+import { getDeliverySettings } from "@/lib/cdek";
+import { formatPrice } from "@/lib/format";
 import { SELLER } from "@/lib/seller";
+import { isYandexDeliveryConfigured } from "@/lib/yandex-delivery";
 
 export const metadata = { title: "Доставка" };
+export const dynamic = "force-dynamic";
 
-export default function DeliveryPage() {
+export default async function DeliveryPage() {
+  const settings = await getDeliverySettings();
+  const yandexEnabled =
+    isYandexDeliveryConfigured() && settings.yandexBaseCost > 0;
+
   return (
     <InfoPage title="Доставка">
       <InfoPage.Section title="Доставка по России">
@@ -17,20 +25,31 @@ export default function DeliveryPage() {
             <span className="font-medium text-[#260402]">
               Пункт выдачи СДЭК:
             </span>{" "}
-            350&nbsp;₽, срок — 1–5 рабочих дней.
+            {formatPrice(settings.pvzBaseCost)}, срок — 1–5 рабочих дней.
           </li>
           <li>
             <span className="font-medium text-[#260402]">
               Курьером до двери (СДЭК):
             </span>{" "}
-            500&nbsp;₽, срок — 1–5 рабочих дней.
+            {formatPrice(settings.courierBaseCost)}, срок — 1–5 рабочих дней.
           </li>
-          <li>
-            <span className="font-medium text-[#260402]">
-              Бесплатная доставка:
-            </span>{" "}
-            при заказе на сумму от 10&nbsp;000&nbsp;₽.
-          </li>
+          {yandexEnabled && (
+            <li>
+              <span className="font-medium text-[#260402]">
+                Яндекс Доставка:
+              </span>{" "}
+              {formatPrice(settings.yandexBaseCost)}, срок — 1–5 рабочих дней.
+            </li>
+          )}
+          {settings.freeDeliveryFrom !== null &&
+            settings.freeDeliveryFrom > 0 && (
+              <li>
+                <span className="font-medium text-[#260402]">
+                  Бесплатная доставка:
+                </span>{" "}
+                при заказе на сумму от {formatPrice(settings.freeDeliveryFrom)}.
+              </li>
+            )}
         </ul>
         <p>
           Точную стоимость и срок для вашего города система рассчитывает при
