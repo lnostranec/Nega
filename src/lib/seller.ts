@@ -23,8 +23,9 @@ export const SELLER = {
   vkUrl: "https://vk.ru/negalingerie",
   instagramUrl: "https://www.instagram.com/negalingerie.ru",
   bankAccount: "40802810242710002943" as string | null,
-  bankName: null as string | null,
-  bankBik: null as string | null,
+  bankName: "Волго-Вятский банк ПАО Сбербанк" as string | null,
+  bankBik: "042202603" as string | null,
+  bankCorrAccount: "30101810900000000603" as string | null,
 } as const;
 
 export function formatSellerOgrnip(): string {
@@ -40,6 +41,9 @@ export function formatBankDetails(): string {
 
   const bank = SELLER.bankName ? ` в ${SELLER.bankName}` : "";
   const bik = SELLER.bankBik ? `, БИК ${SELLER.bankBik}` : "";
+  const corr = SELLER.bankCorrAccount
+    ? `, корр. счёт ${SELLER.bankCorrAccount}`
+    : "";
 
-  return `Расчётный счёт: ${SELLER.bankAccount}${bank}${bik}`;
+  return `Расчётный счёт: ${SELLER.bankAccount}${bank}${bik}${corr}`;
 }
