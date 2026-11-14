@@ -83,7 +83,7 @@ export async function POST(request: Request) {
     return Response.json(
       {
         error:
-          "Не удалось отправить заявку. Попробуйте ещё раз или напишите нам в Telegram @Nega_store",
+          "Не удалось отправить заявку. Попробуйте ещё раз или напишите нам во ВКонтакте (vk.ru/negalingerie) или в Telegram @Nega_store",
       },
       { status: 502 },
     );

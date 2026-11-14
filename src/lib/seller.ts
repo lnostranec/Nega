@@ -22,7 +22,7 @@ export const SELLER = {
   telegramUrl: "https://t.me/Nega_store",
   vkUrl: "https://vk.ru/negalingerie",
   instagramUrl: "https://www.instagram.com/negalingerie.ru",
-  bankAccount: null as string | null,
+  bankAccount: "40802810242710002943" as string | null,
   bankName: null as string | null,
   bankBik: null as string | null,
 } as const;
@@ -36,8 +36,10 @@ export function formatSellerPhone(): string {
 }
 
 export function formatBankDetails(): string {
-  if (SELLER.bankAccount && SELLER.bankName && SELLER.bankBik) {
-    return `Расчётный счёт: ${SELLER.bankAccount} в ${SELLER.bankName}, БИК ${SELLER.bankBik}`;
-  }
-  return "Расчётный счёт: [уточняется]";
+  if (!SELLER.bankAccount) return "Расчётный счёт: [уточняется]";
+
+  const bank = SELLER.bankName ? ` в ${SELLER.bankName}` : "";
+  const bik = SELLER.bankBik ? `, БИК ${SELLER.bankBik}` : "";
+
+  return `Расчётный счёт: ${SELLER.bankAccount}${bank}${bik}`;
 }
