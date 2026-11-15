@@ -1,9 +1,10 @@
 import { isDbConfigured } from "@/lib/prisma";
-import { dbUnavailableResponse } from "@/lib/auth";
+import { dbUnavailableResponse, getSessionUser } from "@/lib/auth";
 import { promoErrorMessage, validatePromoCode } from "@/lib/promo-codes";
 
 type ValidateBody = {
   code?: string;
+  email?: string;
   items?: {
     variantId: string;
     price: number;
@@ -29,7 +30,11 @@ export async function POST(request: Request) {
   }
 
   try {
-    const promo = await validatePromoCode(code, items);
+    const user = await getSessionUser();
+    const promo = await validatePromoCode(code, items, {
+      userId: user?.id ?? null,
+      email: body.email?.trim() || user?.email || null,
+    });
     return Response.json({ promo });
   } catch (error) {
     if (error instanceof Error && error.message.startsWith("PROMO_")) {

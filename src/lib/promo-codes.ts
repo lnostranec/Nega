@@ -1,5 +1,5 @@
 import type { Prisma } from "@prisma/client";
-import type { PromoCode, PromoCodeType } from "@prisma/client";
+import type { PrismaClient, PromoCode, PromoCodeType } from "@prisma/client";
 import { getPrisma } from "@/lib/prisma";
 import {
   isGiftCertificateVariant,
@@ -46,6 +46,7 @@ export function getDiscountableSubtotal(
 export async function validatePromoCode(
   code: string,
   items: { variantId: string; price: number; quantity: number }[],
+  customer: PromoCustomer = {},
 ): Promise<PromoValidationResult> {
   const normalized = normalizePromoCode(code);
   if (!normalized) {
@@ -88,6 +89,8 @@ export async function validatePromoCode(
       ? `Скидка ${promo.value}%`
       : `Скидка ${promo.value.toLocaleString("ru-RU")} ₽`;
 
+  await assertPromoNotUsedByCustomer(prisma, promo.id, customer);
+
   return {
     promoCodeId: promo.id,
     code: promo.code,
@@ -107,12 +110,57 @@ export function promoErrorMessage(code: string): string {
       return "Срок действия промокода истёк";
     case "PROMO_EXHAUSTED":
       return "Промокод уже использован";
+    case "PROMO_ALREADY_USED":
+      return "Вы уже использовали этот промокод";
     case "PROMO_MIN_ORDER":
       return "Сумма заказа недостаточна для этого промокода";
     case "PROMO_NO_PRODUCTS":
       return "Промокод действует только на товары из каталога";
     default:
       return "Не удалось применить промокод";
+  }
+}
+
+type PromoCustomer = {
+  userId?: string | null;
+  email?: string | null;
+};
+
+/**
+ * Промокод можно использовать один раз на покупателя.
+ * Считаем только оплаченные заказы: если оплата не прошла, промокод
+ * остаётся доступным.
+ */
+export async function assertPromoNotUsedByCustomer(
+  client: Pick<PrismaClient, "order">,
+  promoCodeId: string,
+  customer: PromoCustomer,
+): Promise<void> {
+  const conditions: Record<string, unknown>[] = [];
+
+  if (customer.userId) {
+    conditions.push({ userId: customer.userId });
+  }
+
+  if (customer.email) {
+    conditions.push({
+      customerEmail: { equals: customer.email, mode: "insensitive" },
+    });
+  }
+
+  if (conditions.length === 0) return;
+
+  const used = await client.order.findFirst({
+    where: {
+      promoCodeId,
+      paymentStatus: "PAID",
+      OR: conditions,
+    },
+    select: { id: true },
+  });
+
+  if (used) {
+    throw new Error("PROMO_ALREADY_USED");
   }
 }
 

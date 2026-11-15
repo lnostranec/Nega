@@ -102,6 +102,7 @@ export function CheckoutContent() {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             code,
+            email: (user?.email ?? guestEmail.trim()) || undefined,
             items: items.map((item) => ({
               variantId: item.variantId,
               price: item.price,
@@ -119,12 +120,12 @@ export function CheckoutContent() {
           setPromoError(null);
         } else {
           setAppliedPromo(null);
-          setPromoError(data.error ?? "Промокод больше не действует");
+          setPromoError(data.error ?? "РџСЂРѕРјРѕРєРѕРґ Р±РѕР»СЊС€Рµ РЅРµ РґРµР№СЃС‚РІСѓРµС‚");
           appliedCodeRef.current = null;
         }
       } catch {
         if (!cancelled) {
-          setPromoError("Не удалось пересчитать промокод");
+          setPromoError("РќРµ СѓРґР°Р»РѕСЃСЊ РїРµСЂРµСЃС‡РёС‚Р°С‚СЊ РїСЂРѕРјРѕРєРѕРґ");
         }
       } finally {
         if (!cancelled) setPromoLoading(false);
@@ -147,6 +148,7 @@ export function CheckoutContent() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           code: promoInput,
+          email: (user?.email ?? guestEmail.trim()) || undefined,
           items: orderItems.map((item) => ({
             variantId: item.variantId,
             price: item.price,
@@ -158,7 +160,7 @@ export function CheckoutContent() {
       const data = await response.json();
       if (!response.ok) {
         setAppliedPromo(null);
-        setPromoError(data.error ?? "Промокод недействителен");
+        setPromoError(data.error ?? "РџСЂРѕРјРѕРєРѕРґ РЅРµРґРµР№СЃС‚РІРёС‚РµР»РµРЅ");
         return;
       }
 
@@ -166,7 +168,7 @@ export function CheckoutContent() {
       setPromoInput(data.promo.code);
       appliedCodeRef.current = data.promo.code;
     } catch {
-      setPromoError("Ошибка сети");
+      setPromoError("РћС€РёР±РєР° СЃРµС‚Рё");
     } finally {
       setPromoLoading(false);
     }
@@ -176,9 +178,9 @@ export function CheckoutContent() {
     return (
       <SiteContainer className="py-20">
         <div className="mx-auto max-w-lg text-center">
-          <p className="text-stone-600">Корзина пуста</p>
+          <p className="text-stone-600">РљРѕСЂР·РёРЅР° РїСѓСЃС‚Р°</p>
           <Link href="/catalog" className="mt-4 inline-block underline">
-            В каталог
+            Р’ РєР°С‚Р°Р»РѕРі
           </Link>
         </div>
       </SiteContainer>
@@ -189,14 +191,14 @@ export function CheckoutContent() {
     return (
       <SiteContainer className="py-20">
         <div className="mx-auto max-w-lg text-center">
-          <p className="text-2xl font-medium text-[#260402]">Заказ оформлен</p>
+          <p className="text-2xl font-medium text-[#260402]">Р—Р°РєР°Р· РѕС„РѕСЂРјР»РµРЅ</p>
           <p className="mt-3 text-stone-600">
-            Номер заказа: <span className="font-medium">{success.orderNumber}</span>
+            РќРѕРјРµСЂ Р·Р°РєР°Р·Р°: <span className="font-medium">{success.orderNumber}</span>
           </p>
           {success.giftCertificateCodes && success.giftCertificateCodes.length > 0 && (
             <div className="mt-6 border border-stone-200 bg-stone-50 p-5 text-left">
               <p className="text-sm font-medium text-[#260402]">
-                Коды подарочных сертификатов
+                РљРѕРґС‹ РїРѕРґР°СЂРѕС‡РЅС‹С… СЃРµСЂС‚РёС„РёРєР°С‚РѕРІ
               </p>
               <ul className="mt-3 space-y-2">
                 {success.giftCertificateCodes.map((code) => (
@@ -206,19 +208,19 @@ export function CheckoutContent() {
                 ))}
               </ul>
               <p className="mt-3 text-xs text-stone-500">
-                Сохраните коды — они действуют 1 год и применяются при оформлении заказа.
+                РЎРѕС…СЂР°РЅРёС‚Рµ РєРѕРґС‹ вЂ” РѕРЅРё РґРµР№СЃС‚РІСѓСЋС‚ 1 РіРѕРґ Рё РїСЂРёРјРµРЅСЏСЋС‚СЃСЏ РїСЂРё РѕС„РѕСЂРјР»РµРЅРёРё Р·Р°РєР°Р·Р°.
               </p>
             </div>
           )}
           {user ? (
             <p className="mt-2 text-sm text-stone-500">
-              Заказ сохранён в личном кабинете. Баллы начислены автоматически.
+              Р—Р°РєР°Р· СЃРѕС…СЂР°РЅС‘РЅ РІ Р»РёС‡РЅРѕРј РєР°Р±РёРЅРµС‚Рµ. Р‘Р°Р»Р»С‹ РЅР°С‡РёСЃР»РµРЅС‹ Р°РІС‚РѕРјР°С‚РёС‡РµСЃРєРё.
             </p>
           ) : (
             <p className="mt-2 text-sm text-stone-500">
-              Войдите в аккаунт, чтобы видеть историю заказов в профиле.{" "}
+              Р’РѕР№РґРёС‚Рµ РІ Р°РєРєР°СѓРЅС‚, С‡С‚РѕР±С‹ РІРёРґРµС‚СЊ РёСЃС‚РѕСЂРёСЋ Р·Р°РєР°Р·РѕРІ РІ РїСЂРѕС„РёР»Рµ.{" "}
               <Link href="/order/track" className="underline">
-                Отследить заказ
+                РћС‚СЃР»РµРґРёС‚СЊ Р·Р°РєР°Р·
               </Link>
             </p>
           )}
@@ -228,7 +230,7 @@ export function CheckoutContent() {
                 href="/account"
                 className="btn-site btn-site-filled inline-block bg-brand px-8 py-3 text-sm uppercase tracking-widest text-white"
               >
-                Личный кабинет
+                Р›РёС‡РЅС‹Р№ РєР°Р±РёРЅРµС‚
               </Link>
             ) : (
               <button
@@ -236,14 +238,14 @@ export function CheckoutContent() {
                 onClick={openLogin}
                 className="btn-site btn-site-filled inline-block bg-brand px-8 py-3 text-sm uppercase tracking-widest text-white"
               >
-                Войти
+                Р’РѕР№С‚Рё
               </button>
             )}
             <Link
               href="/catalog"
               className="btn-site inline-block border border-stone-300 px-8 py-3 text-sm uppercase tracking-widest text-[#260402]"
             >
-              Продолжить покупки
+              РџСЂРѕРґРѕР»Р¶РёС‚СЊ РїРѕРєСѓРїРєРё
             </Link>
           </div>
         </div>
@@ -256,7 +258,7 @@ export function CheckoutContent() {
     setError(null);
 
     if (!acceptOffer) {
-      setError("Необходимо принять условия оферты и политику конфиденциальности");
+      setError("РќРµРѕР±С…РѕРґРёРјРѕ РїСЂРёРЅСЏС‚СЊ СѓСЃР»РѕРІРёСЏ РѕС„РµСЂС‚С‹ Рё РїРѕР»РёС‚РёРєСѓ РєРѕРЅС„РёРґРµРЅС†РёР°Р»СЊРЅРѕСЃС‚Рё");
       return;
     }
 
@@ -282,7 +284,7 @@ export function CheckoutContent() {
       const freshItems = useCartStore.getState().items;
 
       if (freshItems.length === 0) {
-        setError("Корзина пуста или товары недоступны");
+        setError("РљРѕСЂР·РёРЅР° РїСѓСЃС‚Р° РёР»Рё С‚РѕРІР°СЂС‹ РЅРµРґРѕСЃС‚СѓРїРЅС‹");
         return;
       }
 
@@ -327,7 +329,7 @@ export function CheckoutContent() {
       const data = await response.json();
 
       if (!response.ok) {
-        setError(data.error ?? "Не удалось оформить заказ");
+        setError(data.error ?? "РќРµ СѓРґР°Р»РѕСЃСЊ РѕС„РѕСЂРјРёС‚СЊ Р·Р°РєР°Р·");
         return;
       }
 
@@ -355,7 +357,7 @@ export function CheckoutContent() {
       }
       router.refresh();
     } catch {
-      setError("Ошибка сети. Попробуйте ещё раз");
+      setError("РћС€РёР±РєР° СЃРµС‚Рё. РџРѕРїСЂРѕР±СѓР№С‚Рµ РµС‰С‘ СЂР°Р·");
     } finally {
       setLoading(false);
     }
@@ -364,7 +366,7 @@ export function CheckoutContent() {
   return (
     <SiteContainer className="py-10">
       <div className="mx-auto max-w-3xl">
-        <h1 className="font-serif text-4xl text-stone-900">Оформление заказа</h1>
+        <h1 className="font-serif text-4xl text-stone-900">РћС„РѕСЂРјР»РµРЅРёРµ Р·Р°РєР°Р·Р°</h1>
 
         {messages.length > 0 && (
           <div className="mt-6 border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
@@ -377,15 +379,15 @@ export function CheckoutContent() {
         {!user && (
           <div className="mt-6 border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
             <button type="button" onClick={openLogin} className="underline">
-              Войдите
+              Р’РѕР№РґРёС‚Рµ
             </button>
-            , чтобы заказ сохранился в личном кабинете и начислились баллы.
+            , С‡С‚РѕР±С‹ Р·Р°РєР°Р· СЃРѕС…СЂР°РЅРёР»СЃСЏ РІ Р»РёС‡РЅРѕРј РєР°Р±РёРЅРµС‚Рµ Рё РЅР°С‡РёСЃР»РёР»РёСЃСЊ Р±Р°Р»Р»С‹.
           </div>
         )}
 
         <div className="mt-8 border border-stone-200 p-6">
           <h2 className="text-sm font-medium uppercase tracking-widest text-stone-500">
-            Ваш заказ
+            Р’Р°С€ Р·Р°РєР°Р·
           </h2>
           <ul className="mt-4 divide-y divide-stone-100">
             {items.map((item) => (
@@ -396,8 +398,8 @@ export function CheckoutContent() {
                 <div>
                   <p className="font-medium text-stone-900">{item.name}</p>
                   <p className="mt-1 text-stone-500">
-                    {[item.color, item.size].filter(Boolean).join(" · ")}
-                    {item.quantity > 1 ? ` · ${item.quantity} шт.` : ""}
+                    {[item.color, item.size].filter(Boolean).join(" В· ")}
+                    {item.quantity > 1 ? ` В· ${item.quantity} С€С‚.` : ""}
                   </p>
                 </div>
                 <p className="shrink-0 font-medium">
@@ -408,7 +410,7 @@ export function CheckoutContent() {
           </ul>
 
           <div className="mt-6 border-t border-stone-200 pt-4">
-            <p className="text-sm font-medium text-stone-700">Промокод</p>
+            <p className="text-sm font-medium text-stone-700">РџСЂРѕРјРѕРєРѕРґ</p>
             <div className="mt-2 flex flex-col gap-2 sm:flex-row">
               <input
                 type="text"
@@ -418,7 +420,7 @@ export function CheckoutContent() {
                   setAppliedPromo(null);
                   setPromoError(null);
                 }}
-                placeholder="Введите код"
+                placeholder="Р’РІРµРґРёС‚Рµ РєРѕРґ"
                 className={`flex-1 ${inputClass}`}
               />
               <button
@@ -427,12 +429,12 @@ export function CheckoutContent() {
                 disabled={promoLoading || !promoInput.trim()}
                 className="btn-site border border-stone-300 px-6 py-3 text-sm uppercase tracking-widest text-[#260402] disabled:opacity-50"
               >
-                {promoLoading ? "..." : "Применить"}
+                {promoLoading ? "..." : "РџСЂРёРјРµРЅРёС‚СЊ"}
               </button>
             </div>
             {appliedPromo && (
               <p className="mt-2 text-sm text-brand">
-                {appliedPromo.label} (−{formatPrice(appliedPromo.discount)})
+                {appliedPromo.label} (в€’{formatPrice(appliedPromo.discount)})
               </p>
             )}
             {promoError && (
@@ -456,9 +458,9 @@ export function CheckoutContent() {
             {!user && !authLoading && (
               <p className="mt-3 text-xs text-stone-500">
                 <button type="button" onClick={openLogin} className="underline">
-                  Войдите
+                  Р’РѕР№РґРёС‚Рµ
                 </button>
-                , чтобы списать баллы
+                , С‡С‚РѕР±С‹ СЃРїРёСЃР°С‚СЊ Р±Р°Р»Р»С‹
               </p>
             )}
           </div>
@@ -467,12 +469,12 @@ export function CheckoutContent() {
         <form onSubmit={handleSubmit} className="mt-10 space-y-8">
           <section>
             <h2 className="text-sm font-medium uppercase tracking-widest text-stone-500">
-              Контакты
+              РљРѕРЅС‚Р°РєС‚С‹
             </h2>
             <div className="mt-4 grid gap-4 sm:grid-cols-2">
               <input
                 type="text"
-                placeholder="Имя"
+                placeholder="РРјСЏ"
                 value={firstName}
                 onChange={(e) => setFirstName(e.target.value)}
                 required
@@ -480,7 +482,7 @@ export function CheckoutContent() {
               />
               <input
                 type="tel"
-                placeholder="Телефон"
+                placeholder="РўРµР»РµС„РѕРЅ"
                 value={phone}
                 onChange={(e) => setPhone(sanitizePhoneInput(e.target.value))}
                 required
@@ -509,7 +511,7 @@ export function CheckoutContent() {
 
           <section>
             <h2 className="text-sm font-medium uppercase tracking-widest text-stone-500">
-              Доставка
+              Р”РѕСЃС‚Р°РІРєР°
             </h2>
             <CdekDeliveryPicker
               subtotal={Math.max(
@@ -523,13 +525,13 @@ export function CheckoutContent() {
 
           <section>
             <h2 className="text-sm font-medium uppercase tracking-widest text-stone-500">
-              Способ оплаты
+              РЎРїРѕСЃРѕР± РѕРїР»Р°С‚С‹
             </h2>
             <div className="mt-4 space-y-2">
               {[
-                { id: "card", label: "Банковская карта" },
-                { id: "yandex_pay", label: "Яндекс Пэй" },
-                { id: "split", label: "Яндекс Сплит" },
+                { id: "card", label: "Р‘Р°РЅРєРѕРІСЃРєР°СЏ РєР°СЂС‚Р°" },
+                { id: "yandex_pay", label: "РЇРЅРґРµРєСЃ РџСЌР№" },
+                { id: "split", label: "РЇРЅРґРµРєСЃ РЎРїР»РёС‚" },
               ].map((method) => (
                 <label
                   key={method.id}
@@ -551,18 +553,18 @@ export function CheckoutContent() {
               ))}
             </div>
             <p className="mt-2 text-xs text-stone-400">
-              Товары резервируются на 15 минут. После оформления откроется страница оплаты.
+              РўРѕРІР°СЂС‹ СЂРµР·РµСЂРІРёСЂСѓСЋС‚СЃСЏ РЅР° 15 РјРёРЅСѓС‚. РџРѕСЃР»Рµ РѕС„РѕСЂРјР»РµРЅРёСЏ РѕС‚РєСЂРѕРµС‚СЃСЏ СЃС‚СЂР°РЅРёС†Р° РѕРїР»Р°С‚С‹.
             </p>
           </section>
 
           <section>
             <h2 className="text-sm font-medium uppercase tracking-widest text-stone-500">
-              Комментарий
+              РљРѕРјРјРµРЅС‚Р°СЂРёР№
             </h2>
             <textarea
               value={comment}
               onChange={(e) => setComment(e.target.value)}
-              placeholder="Пожелания к заказу (необязательно)"
+              placeholder="РџРѕР¶РµР»Р°РЅРёСЏ Рє Р·Р°РєР°Р·Сѓ (РЅРµРѕР±СЏР·Р°С‚РµР»СЊРЅРѕ)"
               rows={3}
               className={`mt-4 ${inputClass}`}
             />
@@ -583,19 +585,19 @@ export function CheckoutContent() {
               className="mt-0.5 h-4 w-4 shrink-0 accent-[#260402]"
             />
             <span>
-              Я принимаю условия{" "}
+              РЇ РїСЂРёРЅРёРјР°СЋ СѓСЃР»РѕРІРёСЏ{" "}
               <Link href="/offer" className="underline hover:text-[#260402]" target="_blank">
-                публичной оферты
+                РїСѓР±Р»РёС‡РЅРѕР№ РѕС„РµСЂС‚С‹
               </Link>{" "}
-              и{" "}
+              Рё{" "}
               <Link href="/privacy" className="underline hover:text-[#260402]" target="_blank">
-                политики конфиденциальности
+                РїРѕР»РёС‚РёРєРё РєРѕРЅС„РёРґРµРЅС†РёР°Р»СЊРЅРѕСЃС‚Рё
               </Link>
             </span>
           </label>
 
           <Button type="submit" className="w-full" disabled={loading || validating}>
-            {loading ? "Оформляем..." : validating ? "Проверяем корзину..." : "Оформить заказ"}
+            {loading ? "РћС„РѕСЂРјР»СЏРµРј..." : validating ? "РџСЂРѕРІРµСЂСЏРµРј РєРѕСЂР·РёРЅСѓ..." : "РћС„РѕСЂРјРёС‚СЊ Р·Р°РєР°Р·"}
           </Button>
         </form>
       </div>

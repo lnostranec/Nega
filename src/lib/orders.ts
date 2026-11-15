@@ -30,6 +30,7 @@ import { calculatePointsRedemption } from "@/lib/points";
 import {
   calculatePromoDiscount,
   createGiftCertificatePromoCodes,
+  assertPromoNotUsedByCustomer,
   getDiscountableSubtotal,
   normalizePromoCode,
   validatePromoCode,
@@ -463,6 +464,11 @@ async function createOrderInner(input: CreateOrderInput) {
       if (promo.maxUses !== null && promo.usedCount >= promo.maxUses) {
         throw new Error("PROMO_EXHAUSTED");
       }
+
+      await assertPromoNotUsedByCustomer(tx, promo.id, {
+        userId: input.userId ?? null,
+        email: normalizedEmail ?? null,
+      });
 
       const discountableSubtotal = getDiscountableSubtotal(input.items);
       promoDiscount = calculatePromoDiscount(promo, discountableSubtotal);
