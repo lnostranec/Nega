@@ -277,6 +277,16 @@ export function AccountDashboard({
                     +{order.pointsEarned} баллов за этот заказ
                   </p>
                 )}
+
+                {order.paymentStatus === "PENDING" &&
+                  order.paymentMethod === "CARD" && (
+                    <a
+                      href={`/api/payments/resume?order=${encodeURIComponent(order.orderNumber)}`}
+                      className="btn-site btn-site-filled mt-4 inline-block bg-brand px-6 py-2.5 text-xs uppercase tracking-widest text-white"
+                    >
+                      Оплатить заказ
+                    </a>
+                  )}
               </article>
             ))}
           </div>
