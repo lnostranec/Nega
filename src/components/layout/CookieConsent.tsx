@@ -37,7 +37,7 @@ export function CookieConsent() {
       role="dialog"
       aria-label="Согласие на использование cookie"
       aria-describedby="cookie-consent-text"
-      className="fixed bottom-4 left-4 z-50 w-[min(100%-2rem,22rem)] border border-stone-200 bg-white p-5 shadow-lg sm:w-96"
+      className="fixed bottom-4 left-4 right-4 z-50 border border-stone-200 bg-white p-5 shadow-lg sm:right-auto sm:w-96"
     >
       <div className="flex gap-3">
         <CookieIcon className="mt-0.5 h-5 w-5 shrink-0 text-[#260402]" />
