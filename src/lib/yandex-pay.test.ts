@@ -54,6 +54,14 @@ test("позиции с количеством сохраняют цену за 
   }
 });
 
+test("промокод и баллы вместе — сумма позиций равна итогу", () => {
+  // товар 105 + доставка 350 = 455; промокод 10 и баллы 5 → итог 440
+  const items = [item(105), item(350)];
+  const result = fitCartToAmount(items, 440);
+
+  assert.equal(sum(result), 440);
+});
+
 test("нулевой итог не ломает расчёт", () => {
   const items = [item(100)];
   const result = fitCartToAmount(items, 0);
