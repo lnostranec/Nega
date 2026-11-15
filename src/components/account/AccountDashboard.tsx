@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useState } from "react";
 import type { PublicUser } from "@/lib/auth-types";
 import type { OrderView } from "@/lib/orders";
 import type { PointTransactionView } from "@/lib/points-history";
@@ -70,6 +71,10 @@ export function AccountDashboard({
 }: AccountDashboardProps) {
   const displayName = user.firstName ?? user.email.split("@")[0];
   const ordersCount = orders.length;
+  const [showAllPoints, setShowAllPoints] = useState(false);
+  const visiblePoints = showAllPoints
+    ? pointTransactions
+    : pointTransactions.slice(0, 10);
 
   return (
     <div className="mx-auto max-w-3xl">
@@ -140,6 +145,7 @@ export function AccountDashboard({
             Пока нет операций с баллами. Они начисляются после оплаты заказа.
           </p>
         ) : (
+          <>
           <div className="mt-6 overflow-x-auto">
             <table className="w-full min-w-[320px] text-left text-sm">
               <thead>
@@ -151,29 +157,47 @@ export function AccountDashboard({
                 </tr>
               </thead>
               <tbody className="divide-y divide-stone-100">
-                {pointTransactions.map((tx) => (
-                  <tr key={tx.id}>
-                    <td className="py-3 pr-4 whitespace-nowrap text-stone-600">
-                      {new Date(tx.createdAt).toLocaleDateString("ru-RU", {
-                        day: "numeric",
-                        month: "short",
-                        year: "numeric",
-                      })}
-                    </td>
-                    <td className="py-3 pr-4 text-stone-900">{tx.label}</td>
-                    <td
-                      className={`py-3 pr-4 font-medium whitespace-nowrap ${
-                        tx.amount > 0 ? "text-brand" : "text-stone-700"
-                      }`}
-                    >
-                      {tx.amount > 0 ? `+${tx.amount}` : tx.amount}
-                    </td>
-                    <td className="py-3 text-stone-500">{tx.note ?? "—"}</td>
-                  </tr>
-                ))}
+                {visiblePoints.map((tx) => {
+                  const signed =
+                    tx.type === "SPENT" ? -Math.abs(tx.amount) : tx.amount;
+
+                  return (
+                    <tr key={tx.id}>
+                      <td className="py-3 pr-4 whitespace-nowrap text-stone-600">
+                        {new Date(tx.createdAt).toLocaleDateString("ru-RU", {
+                          day: "numeric",
+                          month: "short",
+                          year: "numeric",
+                        })}
+                      </td>
+                      <td className="py-3 pr-4 text-stone-900">{tx.label}</td>
+                      <td
+                        className={`py-3 pr-4 font-medium whitespace-nowrap ${
+                          signed > 0 ? "text-brand" : "text-stone-700"
+                        }`}
+                      >
+                        {signed > 0 ? `+${signed}` : signed}
+                      </td>
+                      <td className="py-3 text-stone-500">{tx.note ?? "—"}</td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>
+
+          {pointTransactions.length > 10 && (
+            <button
+              type="button"
+              onClick={() => setShowAllPoints((value) => !value)}
+              className="mt-3 text-sm text-stone-500 underline underline-offset-2 transition hover:text-[#260402]"
+            >
+              {showAllPoints
+                ? "Свернуть"
+                : `Показать все (${pointTransactions.length})`}
+            </button>
+          )}
+        </>
         )}
       </section>
 
