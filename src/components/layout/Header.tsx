@@ -135,7 +135,7 @@ export function Header() {
             <div className="flex h-[92px] items-center justify-between gap-3">
               <Link
                 href="/"
-                className="relative block h-[46px] w-[73px] shrink-0 sm:h-[72px] sm:w-[114px]"
+                className="relative block h-[22px] w-[134px] shrink-0 sm:h-[32px] sm:w-[195px]"
               >
                 <Image
                   src={LOGO_SRC}
@@ -143,7 +143,7 @@ export function Header() {
                   fill
                   className="object-contain object-left"
                   priority
-                  sizes="(max-width: 640px) 73px, 114px"
+                  sizes="(max-width: 640px) 134px, 195px"
                 />
               </Link>
 
