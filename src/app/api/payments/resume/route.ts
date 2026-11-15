@@ -42,7 +42,10 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    if (order.paymentMethod === "YANDEX_PAY") {
+    if (
+      order.paymentMethod === "YANDEX_PAY" ||
+      order.paymentMethod === "YANDEX_SPLIT"
+    ) {
       const payment = await getYandexPayOrder(order.externalPaymentId);
       const paidStatuses = ["SUCCESS", "PAID", "CAPTURED"];
 
