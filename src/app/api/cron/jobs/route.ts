@@ -1,5 +1,6 @@
 import { processPendingEmails } from "@/lib/email/outbox";
 import { releaseExpiredOrders } from "@/lib/orders";
+import { reconcileYandexPayments } from "@/lib/payment-reconcile";
 import { isDbConfigured } from "@/lib/prisma";
 
 function authorize(request: Request): boolean {
@@ -26,7 +27,12 @@ export async function POST(request: Request) {
   }
 
   const expiredOrders = await releaseExpiredOrders();
+  const paymentsConfirmed = await reconcileYandexPayments();
   const emailsProcessed = await processPendingEmails();
 
-  return Response.json({ expiredOrders, emailsProcessed });
+  return Response.json({
+    expiredOrders,
+    paymentsConfirmed,
+    emailsProcessed,
+  });
 }
