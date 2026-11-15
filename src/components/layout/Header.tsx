@@ -1,6 +1,5 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
@@ -135,15 +134,20 @@ export function Header() {
             <div className="flex h-[92px] items-center justify-between gap-3">
               <Link
                 href="/"
-                className="relative block h-[22px] w-[134px] shrink-0 sm:h-[32px] sm:w-[195px]"
+                className="relative block h-[36px] w-[90px] shrink-0 sm:h-[22px] sm:w-[257px]"
               >
-                <Image
+                {/* На телефоне — двухстрочный знак, на десктопе — строка */}
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src="/images/logo/nega-wordmark-stacked.svg"
+                  alt="Nega Lingerie"
+                  className="h-full w-full object-contain object-left sm:hidden"
+                />
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
                   src={LOGO_SRC}
                   alt="Nega Lingerie"
-                  fill
-                  className="object-contain object-left"
-                  priority
-                  sizes="(max-width: 640px) 134px, 195px"
+                  className="hidden h-full w-full object-contain object-left sm:block"
                 />
               </Link>
 

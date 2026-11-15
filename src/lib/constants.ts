@@ -5,7 +5,7 @@ export const SITE_CONTAINER_CLASS =
 
 export const COOKIE_CONSENT_KEY = "nega-cookie-consent";
 
-export const LOGO_SRC = "/images/logo/wordmark.png";
+export const LOGO_SRC = "/images/logo/nega-wordmark.svg";
 
 export const FOOTER_CONTACTS_ID = "contacts";
 
