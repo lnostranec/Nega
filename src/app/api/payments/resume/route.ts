@@ -2,6 +2,7 @@ import { NextRequest } from "next/server";
 import { getSessionUser } from "@/lib/auth";
 import { getPrisma } from "@/lib/prisma";
 import { siteUrl } from "@/lib/site-url";
+import { getYandexPayOrder } from "@/lib/yandex-pay";
 import { getYooKassaPayment } from "@/lib/yookassa";
 
 /**
@@ -41,6 +42,24 @@ export async function GET(request: NextRequest) {
   }
 
   try {
+    if (order.paymentMethod === "YANDEX_PAY") {
+      const payment = await getYandexPayOrder(order.externalPaymentId);
+      const paidStatuses = ["SUCCESS", "PAID", "CAPTURED"];
+
+      if (
+        payment.paymentStatus &&
+        paidStatuses.includes(payment.paymentStatus.toUpperCase())
+      ) {
+        return Response.redirect(backToAccount, 303);
+      }
+
+      if (payment.paymentUrl) {
+        return Response.redirect(payment.paymentUrl, 303);
+      }
+
+      return Response.redirect(backToAccount, 303);
+    }
+
     const payment = await getYooKassaPayment(order.externalPaymentId);
 
     if (payment.status === "succeeded") {
@@ -52,7 +71,7 @@ export async function GET(request: NextRequest) {
       return Response.redirect(confirmationUrl, 303);
     }
   } catch {
-    // ЮKassa недоступна — возвращаем в кабинет, там видно статус заказа
+    // Провайдер недоступен — возвращаем в кабинет, там видно статус заказа
   }
 
   return Response.redirect(backToAccount, 303);

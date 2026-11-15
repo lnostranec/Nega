@@ -205,17 +205,20 @@ export async function getYandexPayOrder(orderId: string): Promise<{
   orderId: string;
   paymentStatus?: string;
   orderStatus?: string;
+  paymentUrl?: string;
 }> {
   const data = await yandexPayFetch<{
     data?: {
       orderId?: string;
       paymentStatus?: string;
       orderStatus?: string;
+      paymentUrl?: string;
       /** API вкладывает статус в объект order */
       order?: {
         orderId?: string;
         paymentStatus?: string;
         orderStatus?: string;
+        paymentUrl?: string;
       };
     };
   }>(`/orders/${encodeURIComponent(orderId)}`, { method: "GET" });
@@ -228,5 +231,6 @@ export async function getYandexPayOrder(orderId: string): Promise<{
     orderId: order?.orderId || orderId,
     paymentStatus: order?.paymentStatus,
     orderStatus: order?.orderStatus,
+    paymentUrl: order?.paymentUrl ?? data.data?.paymentUrl,
   };
 }
