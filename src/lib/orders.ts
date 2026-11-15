@@ -333,7 +333,7 @@ export function orderErrorMessage(error: Error): string {
     return `Не удалось перейти к оплате (${error.message.replace(/^YooKassa:\s*/, "")}). Попробуйте ещё раз или выберите другой способ оплаты.`;
   }
   if (error.message.startsWith("YandexPay:")) {
-    return `Не удалось перейти к оплате Яндекс Сплит (${error.message.replace(/^YandexPay:\s*/, "")}). Попробуйте ещё раз или оплатите картой.`;
+    return `Не удалось перейти к оплате через Яндекс (${error.message.replace(/^YandexPay:\s*/, "")}). Попробуйте ещё раз или оплатите картой.`;
   }
   // Любая другая ошибка оплаты / провайдера
   if (

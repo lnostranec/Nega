@@ -75,6 +75,63 @@ async function yandexPayFetch<T>(
   return data as T;
 }
 
+type YandexPayCartItem = {
+  productId: string;
+  title: string;
+  quantity: { count: string };
+  total: string;
+  unitPrice: string;
+};
+
+function toKopecks(value: number): number {
+  return Math.round(value * 100);
+}
+
+function fromKopecks(value: number): string {
+  return (value / 100).toFixed(2);
+}
+
+/**
+ * API Яндекс Пэя требует, чтобы сумма позиций совпадала с итогом заказа.
+ * Скидки (промокод, баллы, скидка клиента) уменьшают итог, поэтому
+ * распределяем их по позициям — пропорционально и с точностью до копейки.
+ */
+export function fitCartToAmount(
+  items: YandexPayCartItem[],
+  amountRub: number,
+): YandexPayCartItem[] {
+  const target = toKopecks(amountRub);
+  const counts = items.map((item) =>
+    Math.max(1, Number(item.quantity.count) || 1),
+  );
+  const weights = items.map((item) => toKopecks(Number(item.total)));
+  const sum = weights.reduce((acc, value) => acc + value, 0);
+
+  if (sum === target || sum === 0) return items;
+
+  let allocated = 0;
+
+  return items.map((item, index) => {
+    const isLast = index === items.length - 1;
+
+    const lineKopecks = isLast
+      ? target - allocated
+      : Math.round((target * weights[index]) / sum / counts[index]) *
+        counts[index];
+
+    allocated += lineKopecks;
+
+    const count = counts[index];
+    const safeKopecks = Math.max(0, lineKopecks);
+
+    return {
+      ...item,
+      total: fromKopecks(safeKopecks),
+      unitPrice: fromKopecks(safeKopecks / count),
+    };
+  });
+}
+
 export async function createYandexPayOrder(
   input: YandexPayCreateInput,
 ): Promise<{ paymentId: string; confirmationUrl: string }> {
@@ -110,7 +167,7 @@ export async function createYandexPayOrder(
     preferredPaymentMethod:
       input.methods.length === 1 ? input.methods[0] : undefined,
     cart: {
-      items: cartItems,
+      items: fitCartToAmount(cartItems, Number(amount)),
       total: { amount },
     },
     redirectUrls: {
