@@ -78,6 +78,7 @@ export type OrderView = {
   subtotal: number;
   deliveryCost: number;
   promoDiscount: number;
+  promoCode?: string | null;
   loyaltyDiscount: number;
   total: number;
   pointsUsed: number;
@@ -917,7 +918,7 @@ export async function getUserOrders(userId: string): Promise<OrderView[]> {
   const prisma = getPrisma();
   const orders = await prisma.order.findMany({
     where: { userId },
-    include: { items: true },
+    include: { items: true, promoCode: { select: { code: true } } },
     orderBy: { createdAt: "desc" },
   });
 
@@ -935,6 +936,7 @@ function toOrderView(
     subtotal: { toString(): string };
     deliveryCost: { toString(): string };
     promoDiscount: { toString(): string };
+    promoCode?: { code: string } | null;
     loyaltyDiscount?: { toString(): string };
     total: { toString(): string };
     pointsUsed: number;
@@ -965,6 +967,7 @@ function toOrderView(
     subtotal: Number(order.subtotal),
     deliveryCost: Number(order.deliveryCost),
     promoDiscount: Number(order.promoDiscount),
+    promoCode: order.promoCode?.code ?? null,
     loyaltyDiscount: Number(order.loyaltyDiscount ?? 0),
     total: Number(order.total),
     pointsUsed: order.pointsUsed,

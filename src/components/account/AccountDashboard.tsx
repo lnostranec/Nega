@@ -257,7 +257,9 @@ export function AccountDashboard({
                     )}
                     {order.promoDiscount > 0 && (
                       <p className="mt-1 text-xs text-stone-500">
-                        Промокод −{formatPrice(order.promoDiscount)}
+                        {order.promoCode
+                          ? `Промокод ${order.promoCode} −${formatPrice(order.promoDiscount)}`
+                          : `Промокод −${formatPrice(order.promoDiscount)}`}
                       </p>
                     )}
                     {order.pointsUsed > 0 && (
