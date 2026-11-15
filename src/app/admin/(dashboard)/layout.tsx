@@ -24,7 +24,7 @@ export default async function AdminDashboardLayout({
               <Link href="/admin" className="font-medium text-[#260402]">
                 Админка Nega
               </Link>
-              <nav className="hidden gap-4 text-sm sm:flex">
+              <nav className="hidden flex-wrap gap-x-4 gap-y-1 text-sm sm:flex [&>a]:whitespace-nowrap">
               <Link
                 href="/admin/products"
                 className="text-stone-600 hover:text-stone-900"
@@ -87,8 +87,7 @@ export default async function AdminDashboardLayout({
               </Link>
             </nav>
           </div>
-          <div className="flex items-center gap-4 text-sm">
-            <span className="hidden text-stone-500 sm:inline">{admin.email}</span>
+          <div className="flex shrink-0 items-center gap-4 text-sm">
             <Link href="/" className="text-stone-500 hover:text-stone-900">
               На сайт →
             </Link>
