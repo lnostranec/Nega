@@ -1,6 +1,7 @@
 import { NextRequest } from "next/server";
 import { getSessionUser } from "@/lib/auth";
 import { getPrisma } from "@/lib/prisma";
+import { siteUrl } from "@/lib/site-url";
 import { getYooKassaPayment } from "@/lib/yookassa";
 
 /**
@@ -10,8 +11,8 @@ import { getYooKassaPayment } from "@/lib/yookassa";
 export async function GET(request: NextRequest) {
   const url = new URL(request.url);
   const orderNumber = url.searchParams.get("order");
-  const backToAccount = new URL("/account", request.url);
-  const backToCatalog = new URL("/catalog", request.url);
+  const backToAccount = new URL("/account", siteUrl());
+  const backToCatalog = new URL("/catalog", siteUrl());
 
   if (!orderNumber) {
     return Response.redirect(backToAccount, 303);
