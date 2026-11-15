@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useEffect, useState } from "react";
+import { FormEvent, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/Button";
@@ -38,6 +38,7 @@ export function AccountAuthModal({
   const router = useRouter();
   const { setUser } = useAuth();
   const mounted = useIsClient();
+  const backdropPressed = useRef(false);
 
   const [firstName, setFirstName] = useState("");
   const [email, setEmail] = useState("");
@@ -155,7 +156,15 @@ export function AccountAuthModal({
   return createPortal(
     <div
       className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 p-4"
-      onClick={onClose}
+      onMouseDown={(event) => {
+        backdropPressed.current = event.target === event.currentTarget;
+      }}
+      onClick={(event) => {
+        if (event.target === event.currentTarget && backdropPressed.current) {
+          onClose();
+        }
+        backdropPressed.current = false;
+      }}
     >
       <div
         role="dialog"

@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { FormEvent, useEffect, useState } from "react";
+import { FormEvent, useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/Button";
 import { useBodyScrollLock } from "@/hooks/useBodyScrollLock";
 import {
@@ -20,6 +20,7 @@ const inputClass =
   "w-full border border-stone-200 px-5 py-3.5 text-sm text-stone-800 outline-none transition placeholder:text-stone-400 focus:border-brand";
 
 export function ConsultationModal({ open, onClose }: ConsultationModalProps) {
+  const backdropPressed = useRef(false);
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
   const [comment, setComment] = useState("");
@@ -103,7 +104,15 @@ export function ConsultationModal({ open, onClose }: ConsultationModalProps) {
   return (
     <div
       className="fixed inset-0 z-[60] flex items-center justify-center bg-black/60 p-4"
-      onClick={onClose}
+      onMouseDown={(event) => {
+        backdropPressed.current = event.target === event.currentTarget;
+      }}
+      onClick={(event) => {
+        if (event.target === event.currentTarget && backdropPressed.current) {
+          onClose();
+        }
+        backdropPressed.current = false;
+      }}
     >
       <div
         role="dialog"

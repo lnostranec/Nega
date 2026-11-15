@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { CloseIcon } from "@/components/icons";
 import { useBodyScrollLock } from "@/hooks/useBodyScrollLock";
 import { buildCatalogUrl } from "@/lib/catalog";
@@ -97,6 +97,7 @@ function ResultLine({
 }
 
 export function SizeCalculatorModal({ open, onClose }: SizeCalculatorModalProps) {
+  const backdropPressed = useRef(false);
   const [underbust, setUnderbust] = useState("");
   const [bust, setBust] = useState("");
   const [waist, setWaist] = useState("");
@@ -137,7 +138,15 @@ export function SizeCalculatorModal({ open, onClose }: SizeCalculatorModalProps)
   return (
     <div
       className="fixed inset-0 z-[60] flex items-center justify-center bg-black/60 p-4"
-      onClick={onClose}
+      onMouseDown={(event) => {
+        backdropPressed.current = event.target === event.currentTarget;
+      }}
+      onClick={(event) => {
+        if (event.target === event.currentTarget && backdropPressed.current) {
+          onClose();
+        }
+        backdropPressed.current = false;
+      }}
     >
       <div
         role="dialog"
