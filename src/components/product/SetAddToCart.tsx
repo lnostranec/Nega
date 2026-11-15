@@ -26,12 +26,20 @@ type BottomModel = {
   name: string;
 };
 
+type SetAddonModel = {
+  id: string;
+  name: string;
+  price: number;
+  isActive?: boolean;
+};
+
 type SetAddon = {
   id: string;
   name: string;
   price: number;
   imageUrl?: string | null;
   note?: string | null;
+  models?: SetAddonModel[];
 };
 
 type SetAddToCartProps = {
@@ -65,6 +73,7 @@ export function SetAddToCart({
   setAddons = [],
 }: SetAddToCartProps) {
   const addItem = useCartStore((s) => s.addItem);
+  const removeItem = useCartStore((s) => s.removeItem);
   const cartItems = useCartStore((s) => s.items);
 
   const topVariants = useMemo(
@@ -92,7 +101,7 @@ export function SetAddToCart({
   const [topSize, setTopSize] = useState("");
   const [bottomSize, setBottomSize] = useState("");
   const [bottomModel, setBottomModel] = useState(bottomModels[0]?.name ?? "");
-  const [selectedAddonIds, setSelectedAddonIds] = useState<string[]>([]);
+  const [openAddonIds, setOpenAddonIds] = useState<string[]>([]);
   const [modelsOpen, setModelsOpen] = useState(false);
   const [panelStyle, setPanelStyle] = useState<CSSProperties>({ height: 0 });
   const modelsContentRef = useRef<HTMLDivElement>(null);
@@ -129,10 +138,39 @@ export function SetAddToCart({
     setPanelStyle({ height: "auto" });
   }
 
-  function toggleAddon(id: string) {
-    setSelectedAddonIds((prev) =>
-      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id],
-    );
+  function addAddon(addon: SetAddon, model?: SetAddonModel) {
+    addItem({
+      productId,
+      variantId: buildSetAddonCartKey(addon.id, model?.id),
+      slug,
+      name: `${name} · ${addon.name}${model ? ` (${model.name})` : ""}`,
+      size: model ? model.name : "доп. к комплекту",
+      color: color || undefined,
+      price: model ? model.price : addon.price,
+      imageUrl: addon.imageUrl ?? undefined,
+    });
+  }
+
+  function addonKeys(addonId: string) {
+    const single = `addon:${addonId}`;
+    const prefix = `addon:${addonId}:`;
+    return cartItems
+      .filter((item) => item.variantId === single || item.variantId.startsWith(prefix))
+      .map((item) => item.variantId);
+  }
+
+  function addonQty(addonId: string) {
+    return cartItems
+      .filter(
+        (item) =>
+          item.variantId === `addon:${addonId}` ||
+          item.variantId.startsWith(`addon:${addonId}:`),
+      )
+      .reduce((sum, item) => sum + item.quantity, 0);
+  }
+
+  function removeAddon(addonId: string) {
+    for (const key of addonKeys(addonId)) removeItem(key);
   }
 
   const topSizes = useMemo(() => {
@@ -221,20 +259,6 @@ export function SetAddToCart({
       bottomModel: effectiveModel,
       bottomVariantId: selectedBottom.id,
     });
-
-    for (const addon of setAddons) {
-      if (!selectedAddonIds.includes(addon.id)) continue;
-      addItem({
-        productId,
-        variantId: buildSetAddonCartKey(addon.id),
-        slug,
-        name: `${name} · ${addon.name}`,
-        size: "доп. к комплекту",
-        color: color || undefined,
-        price: addon.price,
-        imageUrl: addon.imageUrl ?? undefined,
-      });
-    }
   }
 
   return (
@@ -398,75 +422,99 @@ export function SetAddToCart({
       {setAddons.length > 0 && (
         <div className={SIZE_ROW_CLASS}>
           <p className="mb-3 text-xs font-medium uppercase tracking-[0.2em] text-stone-500">
-            Добавить к заказу
+            Добавить к этому комплекту
           </p>
-          <div className="-mx-1 flex gap-2 overflow-x-auto px-1 pb-1 [scrollbar-width:thin]">
+
+          <div className="space-y-3">
             {setAddons.map((addon) => {
-              const selected = selectedAddonIds.includes(addon.id);
+              const models = (addon.models ?? []).filter(
+                (model) => model.isActive !== false,
+              );
+              const qty = addonQty(addon.id);
+              const isOpen = openAddonIds.includes(addon.id);
+
               return (
-                <button
+                <div
                   key={addon.id}
-                  type="button"
-                  onClick={() => toggleAddon(addon.id)}
-                  aria-pressed={selected}
-                  className={`relative w-[calc((100%-1rem)/3)] shrink-0 overflow-hidden rounded-md border bg-white text-left transition ${
-                    selected
-                      ? "border-[#260402]"
-                      : "border-stone-200 hover:border-stone-300"
-                  }`}
+                  className="rounded-md border border-stone-200 p-3"
                 >
-                  <span
-                    className={`absolute right-1.5 top-1.5 z-10 flex h-5 w-5 items-center justify-center rounded-full border transition ${
-                      selected
-                        ? "border-[#260402] bg-[#260402] text-white"
-                        : "border-stone-300 bg-white/90 text-transparent"
-                    }`}
-                    aria-hidden
-                  >
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      viewBox="0 0 16 16"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth={2}
-                      className="h-3 w-3"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        d="m3.5 8.5 3 3 6-6"
-                      />
-                    </svg>
-                  </span>
-                  <div className="relative aspect-square bg-stone-50">
+                  <div className="flex items-start gap-3">
                     {addon.imageUrl ? (
-                      <Image
-                        src={addon.imageUrl}
-                        alt={addon.name}
-                        fill
-                        className="object-cover"
-                        sizes="160px"
-                      />
-                    ) : (
-                      <span className="flex h-full items-center justify-center text-[10px] text-stone-400">
-                        Нет фото
-                      </span>
-                    )}
-                  </div>
-                  <div className="space-y-0.5 px-2 py-2">
-                    <p className="truncate text-xs font-medium text-stone-900">
-                      {addon.name}
-                    </p>
-                    <p className="text-xs text-[#8B4513]">
-                      +{formatPrice(addon.price)}
-                    </p>
-                    {addon.note && (
-                      <p className="line-clamp-2 text-[10px] leading-snug text-stone-400">
-                        ({addon.note})
+                      <div className="relative h-16 w-16 shrink-0 overflow-hidden rounded bg-stone-50">
+                        <Image
+                          src={addon.imageUrl}
+                          alt={addon.name}
+                          fill
+                          className="object-cover"
+                          sizes="64px"
+                        />
+                      </div>
+                    ) : null}
+
+                    <div className="min-w-0 flex-1">
+                      <p className="text-sm font-medium text-stone-900">
+                        {addon.name}
+                        {qty > 0 ? " — добавлено" : ""}
                       </p>
+                      {addon.note && (
+                        <p className="text-xs text-stone-400">{addon.note}</p>
+                      )}
+                    </div>
+
+                    {qty > 0 ? (
+                      <button
+                        type="button"
+                        onClick={() => removeAddon(addon.id)}
+                        className="shrink-0 text-xs text-stone-500 underline-offset-2 transition hover:text-stone-900 hover:underline"
+                      >
+                        — Убрать
+                      </button>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          if (models.length > 0) {
+                            setOpenAddonIds((prev) =>
+                              prev.includes(addon.id)
+                                ? prev.filter((id) => id !== addon.id)
+                                : [...prev, addon.id],
+                            );
+                          } else {
+                            addAddon(addon);
+                          }
+                        }}
+                        className="shrink-0 text-sm text-[#8B4513] transition hover:opacity-70"
+                      >
+                        + {formatPrice(addon.price)}
+                      </button>
                     )}
                   </div>
-                </button>
+
+                  {isOpen && models.length > 0 && (
+                    <div className="mt-3 flex flex-wrap gap-2">
+                      {models.map((model) => {
+                        const modelQty =
+                          cartItems.find(
+                            (item) =>
+                              item.variantId ===
+                              buildSetAddonCartKey(addon.id, model.id),
+                          )?.quantity ?? 0;
+
+                        return (
+                          <button
+                            key={model.id}
+                            type="button"
+                            onClick={() => addAddon(addon, model)}
+                            className="rounded-full border border-stone-300 bg-white px-3 py-1.5 text-xs text-stone-700 transition hover:border-brand"
+                          >
+                            + {model.name} · {formatPrice(model.price)}
+                            {modelQty > 0 ? ` · ${modelQty} шт` : ""}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
               );
             })}
           </div>

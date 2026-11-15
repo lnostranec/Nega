@@ -25,6 +25,7 @@ export type AdminSetAddonInput = {
   note?: string | null;
   isActive?: boolean;
   sortOrder?: number;
+  models?: { name: string; price: number }[];
 };
 
 export type AdminProductInput = {
@@ -66,7 +67,10 @@ const productInclude = {
     ],
   },
   bottomModels: { orderBy: { sortOrder: "asc" as const } },
-  setAddons: { orderBy: { sortOrder: "asc" as const } },
+  setAddons: {
+    orderBy: { sortOrder: "asc" as const },
+    include: { models: { orderBy: { sortOrder: "asc" as const } } },
+  },
   relatedProducts: {
     orderBy: { sortOrder: "asc" as const },
     include: {
@@ -254,6 +258,15 @@ function buildProductData(
           note: addon.note?.trim() || null,
           isActive: addon.isActive ?? true,
           sortOrder: addon.sortOrder ?? index,
+          models: {
+            create: (addon.models ?? [])
+              .map((model, modelIndex) => ({
+                name: model.name.trim(),
+                price: Math.max(0, Number(model.price) || 0),
+                sortOrder: modelIndex,
+              }))
+              .filter((model) => model.name.length > 0),
+          },
         }))
         .filter((addon) => addon.name.length > 0),
     },

@@ -166,8 +166,8 @@ export async function validateCartItems(
     }
 
     if (isSetAddonCartKey(item.variantId)) {
-      const addonId = parseSetAddonCartKey(item.variantId);
-      if (!addonId) {
+      const parsed = parseSetAddonCartKey(item.variantId);
+      if (!parsed) {
         messages.add("Один из товаров больше недоступен");
         lines.push({
           variantId: item.variantId,
@@ -185,17 +185,25 @@ export async function validateCartItems(
       }
 
       const addon = await prisma.productSetAddon.findUnique({
-        where: { id: addonId },
+        where: { id: parsed.addonId },
         include: {
           product: { select: { isActive: true, id: true } },
+          models: true,
         },
       });
+
+      const activeModels = (addon?.models ?? []).filter((m) => m.isActive);
+      const chosenModel =
+        activeModels.length > 0
+          ? activeModels.find((m) => m.id === parsed.modelId)
+          : undefined;
 
       const unavailable =
         !addon ||
         !addon.isActive ||
-        addon.productId !== item.productId ||
-        !addon.product.isActive;
+        (addon.productId !== null && addon.productId !== item.productId) ||
+        (addon.product ? !addon.product.isActive : false) ||
+        (activeModels.length > 0 && !chosenModel);
 
       if (unavailable) {
         messages.add("Один из товаров больше недоступен");
@@ -214,7 +222,7 @@ export async function validateCartItems(
         continue;
       }
 
-      const currentPrice = Number(addon.price);
+      const currentPrice = Number(chosenModel?.price ?? addon.price);
       const priceChanged = currentPrice !== item.price;
 
       if (priceChanged) messages.add("Цены в корзине обновлены");

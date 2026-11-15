@@ -132,6 +132,14 @@ export default async function ProductPage({ params, searchParams }: Props) {
                   price: Number(a.price),
                   imageUrl: a.imageUrl,
                   note: a.note,
+                  models: "models" in a
+                    ? a.models.map((model) => ({
+                        id: model.id,
+                        name: model.name,
+                        price: Number(model.price),
+                        isActive: model.isActive,
+                      }))
+                    : [],
                 }))
               : []
           }

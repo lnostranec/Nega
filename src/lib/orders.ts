@@ -182,25 +182,37 @@ async function validateItemPrices(
     }
 
     if (isSetAddonCartKey(item.variantId)) {
-      const addonId = parseSetAddonCartKey(item.variantId);
-      if (!addonId) throw new Error("VARIANT_NOT_FOUND");
+      const parsed = parseSetAddonCartKey(item.variantId);
+      if (!parsed) throw new Error("VARIANT_NOT_FOUND");
 
       const addon = await tx.productSetAddon.findUnique({
-        where: { id: addonId },
+        where: { id: parsed.addonId },
         include: {
           product: { select: { isActive: true } },
+          models: true,
         },
       });
 
       if (
         !addon ||
         !addon.isActive ||
-        addon.productId !== item.productId
+        (addon.productId !== null && addon.productId !== item.productId)
       ) {
         throw new Error("VARIANT_NOT_FOUND");
       }
-      if (!addon.product.isActive) throw new Error("PRODUCT_INACTIVE");
-      if (Number(addon.price) !== item.price) {
+      if (addon.product && !addon.product.isActive) {
+        throw new Error("PRODUCT_INACTIVE");
+      }
+
+      const activeModels = addon.models.filter((model) => model.isActive);
+
+      if (activeModels.length > 0) {
+        const model = activeModels.find((m) => m.id === parsed.modelId);
+        if (!model) throw new Error("VARIANT_NOT_FOUND");
+        if (Number(model.price) !== item.price) {
+          throw new Error("PRICE_MISMATCH");
+        }
+      } else if (Number(addon.price) !== item.price) {
         throw new Error("PRICE_MISMATCH");
       }
       continue;

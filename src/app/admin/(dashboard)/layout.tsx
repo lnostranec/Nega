@@ -38,6 +38,12 @@ export default async function AdminDashboardLayout({
                 Категории
               </Link>
               <Link
+                href="/admin/sets"
+                className="text-stone-600 hover:text-stone-900"
+              >
+                Комплекты
+              </Link>
+              <Link
                 href="/admin/orders"
                 className="text-stone-600 hover:text-stone-900"
               >

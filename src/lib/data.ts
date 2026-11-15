@@ -100,11 +100,33 @@ export async function getProductBySlug(slug: string) {
         setAddons: {
           where: { isActive: true },
           orderBy: { sortOrder: "asc" },
+          include: {
+            models: {
+              where: { isActive: true },
+              orderBy: { sortOrder: "asc" },
+            },
+          },
         },
         collections: { include: { collection: true } },
       },
     });
-    if (product) return product;
+    if (product) {
+      const globalAddons = await getPrisma().productSetAddon.findMany({
+        where: { isActive: true, productId: null },
+        orderBy: { sortOrder: "asc" },
+        include: {
+          models: {
+            where: { isActive: true },
+            orderBy: { sortOrder: "asc" },
+          },
+        },
+      });
+
+      return {
+        ...product,
+        setAddons: [...globalAddons, ...product.setAddons],
+      };
+    }
   }
 
   const demo = getDemoProductBySlug(slug);

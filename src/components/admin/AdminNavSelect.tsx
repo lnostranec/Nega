@@ -6,6 +6,7 @@ const ITEMS = [
   { href: "/admin", label: "Сводка" },
   { href: "/admin/products", label: "Товары" },
   { href: "/admin/categories", label: "Категории" },
+  { href: "/admin/sets", label: "Комплекты" },
   { href: "/admin/collections", label: "Коллекции" },
   { href: "/admin/orders", label: "Заказы" },
   { href: "/admin/promo-codes", label: "Промокоды" },

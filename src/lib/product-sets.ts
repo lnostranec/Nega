@@ -99,15 +99,28 @@ export function isSetCartKey(variantId: string): boolean {
   return variantId.startsWith("set:");
 }
 
-/** Корзинный ключ допа к комплекту: addon:{addonId} */
-export function buildSetAddonCartKey(addonId: string): string {
-  return `addon:${addonId}`;
+/** Корзинный ключ допа к комплекту: addon:{addonId}[:{modelId}] */
+export function buildSetAddonCartKey(addonId: string, modelId?: string): string {
+  return modelId ? `addon:${addonId}:${modelId}` : `addon:${addonId}`;
 }
 
-export function parseSetAddonCartKey(variantId: string): string | null {
+export type ParsedSetAddonKey = { addonId: string; modelId: string | null };
+
+export function parseSetAddonCartKey(
+  variantId: string,
+): ParsedSetAddonKey | null {
   if (!variantId.startsWith("addon:")) return null;
-  const addonId = variantId.slice(6);
-  return addonId || null;
+  const rest = variantId.slice(6);
+  if (!rest) return null;
+
+  const separator = rest.indexOf(":");
+  if (separator < 0) return { addonId: rest, modelId: null };
+
+  const addonId = rest.slice(0, separator);
+  const modelId = rest.slice(separator + 1);
+  if (!addonId || !modelId) return null;
+
+  return { addonId, modelId };
 }
 
 export function isSetAddonCartKey(variantId: string): boolean {

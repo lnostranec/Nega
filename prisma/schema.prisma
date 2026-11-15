@@ -132,15 +132,27 @@ model ProductBottomModel {
 }
 
 model ProductSetAddon {
-  id          String  @id @default(cuid())
-  productId   String
-  product     Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  id          String   @id @default(cuid())
+  productId   String?
+  product     Product? @relation(fields: [productId], references: [id], onDelete: Cascade)
   name        String
   price       Decimal
   imageUrl    String?
   note        String?
-  isActive    Boolean @default(true)
-  sortOrder   Int     @default(0)
+  isActive    Boolean  @default(true)
+  sortOrder   Int      @default(0)
+  models      ProductSetAddonModel[]
+}
+
+/** Вариант дополнительной позиции к комплекту — своя цена у каждой модели. */
+model ProductSetAddonModel {
+  id        String          @id @default(cuid())
+  addonId   String
+  addon     ProductSetAddon @relation(fields: [addonId], references: [id], onDelete: Cascade)
+  name      String
+  price     Decimal
+  sortOrder Int             @default(0)
+  isActive  Boolean         @default(true)
 }
 
 model ProductCollection {
